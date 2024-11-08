@@ -60,8 +60,16 @@ export async function selectRow(table, rowIndex) {
   await table.locator('tbody > tr:nth-child(' + (rowIndex + 1) + ') > td:nth-child(1) > div').click();
 }
 
+export async function clickRow(table, rowIndex) {
+  await table.locator('tbody > tr:nth-child(' + (rowIndex + 1) + ')').click();
+}
+
 export async function expectSelectedItemsCount(sceneRoot, selectedItemsCount) {
   await expect(sceneRoot.getByTestId('selected-items-summary')).toHaveText(selectedItemsCount + ' items selected');
+}
+
+export async function expectClickedRowsCount(sceneRoot, clickedRowsCount) {
+  await expect(sceneRoot.getByTestId('clicked-rows-summary')).toHaveText(clickedRowsCount + ' rows clicked');
 }
 
 export async function expectPaginationState(page, table, paginationDiv, totalItems, pageSize, activeIndex, expectedIdxColumnData) {

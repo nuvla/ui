@@ -245,9 +245,12 @@
 
 (defn TableRow
   [{:keys [::row-id-fn ::!visible-columns ::!columns-by-key
-           ::!enable-row-selection?] :as control} row]
+           ::!enable-row-selection? ::on-row-click] :as control} row]
   (r/with-let [row-id (row-id-fn row)]
     [ui/TableRow
+     (when on-row-click
+       {:on-click #(on-row-click row)
+        :style    {:cursor "pointer"}})
      [dnd/SortableContext
       {:items    (mapv name @!visible-columns)
        :strategy dnd/horizontalListSortingStrategy}
@@ -383,7 +386,7 @@
 (defn Table
   [control]
   (r/with-let [{:keys [::!enable-column-customization? ::set-current-columns-fn
-                       ::!enable-pagination? ::!visible-columns ::!max-height] :as control}
+                       ::!enable-pagination? ::!visible-columns ::!max-height ::on-row-click] :as control}
                (->> control
                     set-!visible-columns
                     set-!columns-by-key
@@ -409,7 +412,8 @@
       [:div.table-wrapper
        {:style (cond-> {}
                        @!max-height (assoc :max-height @!max-height))}
-       [ui/Table {:style {:border :unset}}
+       [ui/Table (cond-> {:style {:border :unset}}
+                         on-row-click (assoc :class :selectable))
         [TableHeader control]
         [TableBody control]]]]
      (when @!enable-pagination?
@@ -476,6 +480,10 @@
            set-pagination-fn
 
            ;; Optional
+           ;; If present, makes table rows clickable. Rows will be highlighted on hover
+           on-row-click
+
+           ;; Optional
            ;; Translations
            tr-fn
 
@@ -529,6 +537,7 @@
                 ::tr-fn                         tr-fn
                 ::!sticky-headers?              !sticky-headers?
                 ::!max-height                   !max-height
+                ::on-row-click                  on-row-click
                 }]))
 
 ;; table

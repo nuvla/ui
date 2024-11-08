@@ -5,6 +5,7 @@
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table-refactor :refer [TableController]]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.pages.deployment-sets-detail.views :as detail]
             [sixsq.nuvla.ui.pages.deployment-sets.events :as events]
@@ -21,7 +22,7 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]))
 
-(def view-type (r/atom :cards))
+(def view-type (r/atom :table))
 
 (def ^:const NEW "NEW")
 (def ^:const STARTED "STARTED")
@@ -118,19 +119,6 @@
           :loading?   @loading?
           :on-refresh #(dispatch [::events/refresh])}]]])))
 
-(defn DeploymentSetRow
-  [{:keys [id name description created state auto-update tags] :as _deployment-set}]
-  (let [uuid (general-utils/id->uuid id)
-        tr   (subscribe [::i18n-subs/tr])]
-    [ui/TableRow {:on-click #(dispatch [::routing-events/navigate routes/deployment-groups-details {:uuid uuid}])
-                  :style    {:cursor "pointer"}}
-     [ui/TableCell (or name uuid)]
-     [ui/TableCell description]
-     [ui/TableCell state]
-     [ui/TableCell [uix/TimeAgo created]]
-     [ui/TableCell (when auto-update [AutoUpdateIcon])]
-     [ui/TableCell [uix/Tags tags]]]))
-
 (defn Pagination
   []
   (let [deployment-sets @(subscribe [::subs/deployment-sets])]
@@ -138,25 +126,64 @@
                                    :total-items  (get deployment-sets :count 0)
                                    :change-event [::events/refresh]}]))
 
+(defn CellName
+  [_cell-data {:keys [uuid name] :as _deployment-set} _column]
+  (or name uuid))
+
+(defn CellDescription
+  [description _row _column]
+  description)
+
+(defn CellState
+  [state _row _column]
+  state)
+
+(defn CellCreated
+  [created _row _column]
+  [uix/TimeAgo created])
+
+(defn CellAutoUpdate
+  [auto-update _row _column]
+  (when auto-update [AutoUpdateIcon]))
+
+(defn CellTags
+  [tags _row _column]
+  [uix/Tags tags])
+
 (defn DeploymentSetTable
   []
-  (let [deployment-sets (subscribe [::subs/deployment-sets])]
+  (r/with-let [!resources  (subscribe [::subs/deployment-sets-resources])
+               !pagination (r/atom {:page-index 0
+                                    :page-size  25})]
     [:div style/center-items
-     [ui/Table {:compact "very" :selectable true}
-      [ui/TableHeader
-       [ui/TableRow
-        [ui/TableHeaderCell "name"]
-        [ui/TableHeaderCell "description"]
-        [ui/TableHeaderCell "state"]
-        [ui/TableHeaderCell "created"]
-        [ui/TableHeaderCell "auto update"]
-        [ui/TableHeaderCell "tags"]]]
-
-      [ui/TableBody
-       (for [{:keys [id] :as deployment-set} (:resources @deployment-sets)]
-         (when id
-           ^{:key id}
-           [DeploymentSetRow deployment-set]))]]]))
+     [TableController {:!columns               (r/atom [{::table-refactor/field-key      :name
+                                                         ::table-refactor/header-content "Name"
+                                                         ::table-refactor/field-cell     CellName}
+                                                        {::table-refactor/field-key      :description
+                                                         ::table-refactor/header-content "Description"
+                                                         ::table-refactor/field-cell     CellDescription}
+                                                        {::table-refactor/field-key      :state
+                                                         ::table-refactor/header-content "State"
+                                                         ::table-refactor/field-cell     CellState}
+                                                        {::table-refactor/field-key      :created
+                                                         ::table-refactor/header-content "Created"
+                                                         ::table-refactor/field-cell     CellCreated}
+                                                        {::table-refactor/field-key      :auto-update
+                                                         ::table-refactor/header-content "Auto update"
+                                                         ::table-refactor/field-cell     CellAutoUpdate}
+                                                        {::table-refactor/field-key      :tags
+                                                         ::table-refactor/header-content "Tags"
+                                                         ::table-refactor/field-cell     CellTags}])
+                       :!default-columns       (r/atom [:name :description :state :created :auto-update :tags])
+                       :!current-columns       (subscribe [::subs/table-current-cols])
+                       :set-current-columns-fn #(dispatch [::subs/set-table-current-cols %])
+                       :!data                  !resources
+                       :on-row-click           #(dispatch [::routing-events/navigate routes/deployment-groups-details
+                                                           {:uuid (general-utils/id->uuid (:id %))}])
+                       :!enable-global-filter? (r/atom false)
+                       :!enable-sorting?       (r/atom false)
+                       :!enable-pagination?    (r/atom true)
+                       :!pagination            !pagination}]]))
 
 (defn ops-status-overview-string [tr-fn {:keys [deployments-to-add deployments-to-remove deployments-to-update] :as _ops-status}]
   (let [deployments-sum (+ (count deployments-to-add)
@@ -246,9 +273,10 @@
         [AddFirstButton]]
        [:<>
         (case @view-type
-          :cards [DeploymentSetCards]
-          :table [DeploymentSetTable])
-        [Pagination]])]))
+          :cards [:<>
+                  [DeploymentSetCards]
+                  [Pagination]]
+          :table [DeploymentSetTable])])]))
 
 
 (defn deployment-sets-views

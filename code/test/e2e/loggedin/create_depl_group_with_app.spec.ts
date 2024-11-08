@@ -42,13 +42,14 @@ import { test, expect } from '@playwright/test';
 
   await page.locator('a:has-text("Save")').click();
 
+  await page.waitForTimeout(1000);
+
   const mainMenu = await page.getByTestId('nuvla-ui-sidebar');
 
-  await mainMenu.getByRole('link', { name: 'deployments'}).click();
+  await mainMenu.getByRole('link', { name: 'Deployments'}).click();
+  await page.waitForTimeout(1000);
 
   await page.getByRole('link', { name: 'Deployment groups' }).click();
-
-  await page.locator('.ui > .ui > a:nth-child(3)').click();
 
   await expect(page.getByRole('cell', { name: 'nginx test' })).toBeVisible();
 
@@ -73,6 +74,8 @@ test('delete deployment group', async ({ page }, { config }) => {
   await page.getByPlaceholder('Search...').fill('nginx');
 
   await expect(page).toHaveURL(`${baseURL}/ui/deployment-groups?deployment-groups-search=nginx`);
+
+  await page.locator('a.icon.item > .icon.layout.grid').first().click();
 
   await page.getByRole('link', { name: /nginx test/i }).click();
 

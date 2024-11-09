@@ -22,7 +22,7 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]))
 
-(def view-type (r/atom :table))
+(def view-type (r/atom :cards))
 
 (def ^:const NEW "NEW")
 (def ^:const STARTED "STARTED")

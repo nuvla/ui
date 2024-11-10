@@ -21,11 +21,11 @@ import { test, expect } from '@playwright/test';
 
   await page.getByText('Check it out!').click();
 
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(2000);
 
   await page.getByRole('cell', { name: /Deployment Group/ }).locator('i').click();
 
-   await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').click();
+  await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').click();
 
   await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').fill('nginx test');
 
@@ -36,7 +36,7 @@ import { test, expect } from '@playwright/test';
   await page.getByPlaceholder('Search...').click();
   await page.getByPlaceholder('Search...').fill('e2e test');
 
-  await page.getByRole('link', { name: 'select row 0 e2e-Test-Do_not_delete NEW endtoend@sixsq.com' }).click();
+  await page.getByRole('link', { name: 'select row 0 e2e-Test-Do_not_delete NEW' }).click();
 
   await page.getByRole('button', { name: 'Add to deployment group' }).click();
 
@@ -51,7 +51,7 @@ import { test, expect } from '@playwright/test';
 
   await page.getByRole('link', { name: 'Deployment groups' }).click();
 
-await page.locator('.ui > .ui > a:nth-child(3)').click();
+  await page.locator('.ui > .ui > a:nth-child(3)').click();
 
   await expect(page.getByRole('cell', { name: 'nginx test' })).toBeVisible();
 
@@ -77,7 +77,7 @@ test('delete deployment group', async ({ page }, { config }) => {
 
   await expect(page).toHaveURL(`${baseURL}/ui/deployment-groups?deployment-groups-search=nginx`);
 
-  // await page.locator('a.icon.item > .icon.layout.grid').first().click();
+  await page.locator('a.icon.item > .icon.layout.grid').first().click();
 
   await page.getByRole('link', { name: /nginx test/i }).click();
 

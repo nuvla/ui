@@ -45,7 +45,7 @@
                         routes/deployment-groups-details
                         {:uuid :create}
                         {depl-group-subs/creation-temp-id-key id}]]
-            [:dispatch [::depl-group-events/add-app-from-picker (:module deployment)]]]})))
+            [:dispatch-later {:ms 200 :dispatch [::depl-group-events/add-app-from-picker (:module deployment)]}]]})))
 (reg-event-fx
   ::set-credentials
   (fn [{{:keys [::spec/selected-credential-id

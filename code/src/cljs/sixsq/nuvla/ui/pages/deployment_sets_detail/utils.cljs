@@ -17,7 +17,7 @@
   [{:keys [state] :as _deployment-set}]
   (#{state-starting state-stopping state-updating} state))
 
-(def editable-keys [:name :description :applications-sets :auto-update])
+(def editable-keys [:name :description :applications-sets :auto-update :auto-update-interval])
 
 (defn unsaved-changes?
   [deployment-set deployment-set-edited]

@@ -7,6 +7,7 @@
             [sixsq.nuvla.ui.common-components.job.subs :as job-subs]
             [sixsq.nuvla.ui.common-components.job.views :as job-views]
             [sixsq.nuvla.ui.common-components.plugins.bulk-progress :as bulk-progress-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.duration-picker :as duration-picker]
             [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.common-components.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab]
@@ -613,8 +614,13 @@
        [MissingEdgesPanel deployment-set missing-edges]])))
 
 (defn TabOverviewDeploymentSet
-  [{:keys [id created updated created-by state operational-status auto-update] :as deployment-set} creating?]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  [{:keys [id created updated created-by state operational-status auto-update auto-update-interval] :as deployment-set} creating?]
+  (r/with-let [tr                               (subscribe [::i18n-subs/tr])
+               !auto-update-interval-in-seconds (r/atom nil)
+               !minutes-options                 (r/atom nil)]
+    (reset! !auto-update-interval-in-seconds (if (pos? auto-update-interval) (* auto-update-interval 60) 300))
+    (reset! !minutes-options (into (if (>= @!auto-update-interval-in-seconds 3600) [0] [])
+                                   [1 2 5 10 20 30 40 50]))
     [ui/Segment {:secondary true
                  :color     "blue"}
      [:h4 (if creating?
@@ -657,10 +663,26 @@
            [ui/TableCell [uix/TimeAgo updated]]]
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:auto-update]))]
-           [ui/TableCell auto-update [ui/Checkbox {:checked  auto-update
-                                                   :basic    "true"
-                                                   :label    ""
-                                                   :on-click #(dispatch [::events/set-auto-update (not auto-update)])}]]]])]]]))
+           [ui/TableCell
+            [:div {:style {:display     :flex
+                           :align-items :center}}
+             [ui/Checkbox {:checked  auto-update
+                           :basic    "true"
+                           :label    ""
+                           :on-click #(dispatch [::events/set-auto-update (not auto-update)])}]
+             [:div {:style {:display     :flex
+                            :align-items :center
+                            :gap         10
+                            :visibility  (if auto-update :visible :hidden)}}
+              [:span (str/capitalize (@tr [:interval])) ":"]
+              [:span
+               [duration-picker/DurationPickerController
+                {:!value           !auto-update-interval-in-seconds
+                 :set-value-fn     #(dispatch [::events/set-auto-update-interval %])
+                 :!show-days?      (r/atom false)
+                 :!show-seconds?   (r/atom false)
+                 :!hours-options   (r/atom (range 0 24))
+                 :!minutes-options !minutes-options}]]]]]]])]]]))
 
 (defn AppsInAppsSetsCard
   [ids]
@@ -1304,7 +1326,7 @@
            [vc/TitledCard
             {:class :nuvla-edges
              :icon  icons/i-box
-             :label (str (@tr [:nuvlaedge]) "s")}
+             :label (@tr [:edges])}
             [EdgeOverviewContent @edges-stats creating?]]]
           [ui/GridColumn {:stretched true}
            [DeploymentsStatesCard]]]]))))

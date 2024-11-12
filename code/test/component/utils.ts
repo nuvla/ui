@@ -28,3 +28,16 @@ export async function dragAndDrop(page, from, to) {
   await page.mouse.move(toCoords.x + toCoords.width / 2, toCoords.y + toCoords.height / 2, {steps: 2});
   await page.mouse.up();
 }
+
+export async function selectOption(dropdownDiv, optionLabel) {
+  await dropdownDiv.click();
+  await dropdownDiv.getByText(new RegExp('^' + optionLabel + '$')).click();
+}
+
+export async function selectorOptions(dropdownDiv) {
+  await dropdownDiv.click();
+  const optionElements = await dropdownDiv.getByRole('option').elementHandles();
+  const options = await Promise.all(optionElements.map(async el => { return await el.textContent(); }));
+  await dropdownDiv.click();
+  return options;
+}

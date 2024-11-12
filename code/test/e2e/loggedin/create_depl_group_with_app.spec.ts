@@ -1,9 +1,12 @@
 import { test, expect } from '@playwright/test';
 
-let random_id = Math.random().toString(36).substring(2,7);
 
- test('create deployment group containing an app from deployment modal', async ({ page }, {config}) => {
+test('create deployment group containing an app from deployment modal', async ({ page }, {config}) => {
+
   const { baseURL } = config.projects[0].use;
+
+  const testDeplGroupName = 'Depl Group ' + Math.random().toString().substring(2, 5) + ' - Test should delete me!'
+
   await page.goto(baseURL + '/ui/welcome');
 
   await page.getByRole('link', { name: 'apps' }).click();
@@ -28,7 +31,7 @@ let random_id = Math.random().toString(36).substring(2,7);
 
   await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').click();
 
-  await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').fill(random_id + ' nginx test');
+  await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').fill(testDeplGroupName);
 
   await page.getByRole('row', { name: 'Name' }).getByRole('button').click();
 
@@ -37,44 +40,36 @@ let random_id = Math.random().toString(36).substring(2,7);
   await page.getByPlaceholder('Search...').click();
   await page.getByPlaceholder('Search...').fill('e2e test');
 
-  await page.getByRole('link', { name: 'select row 0 e2e-Test-Do_not_delete NEW endtoend@sixsq.com' }).click();
+  await page.getByRole('link', { name: 'select row 0 e2e-Test-Do_not_delete NEW' }).click();
 
   await page.getByRole('button', { name: 'Add to deployment group' }).click();
 
   await page.locator('a:has-text("Save")').click();
 
-  const mainMenu = await page.getByTestId('nuvla-ui-sidebar');
-
-  await mainMenu.getByRole('link', { name: 'deployments'}).click();
-
-  await page.getByRole('link', { name: 'Deployment groups' }).click();
-
-  await page.locator('.ui > .ui > a:nth-child(3)').click();
-
-  await expect(page.getByRole('cell', { name: random_id + ' nginx test' })).toBeVisible();
-
-});
-
-
-test('delete deployment group', async ({ page }, { config }) => {
-
- const { baseURL } = config.projects[0].use;
-  await page.goto(baseURL + '/ui/welcome');
+  const depSetUrlRegExp = new RegExp(`${baseURL}/ui/deployment-groups/([0-9a-f-]{20,})`.replace(/[/.]/g, '\\$&') + '(\\?.+)?');
+  await page.waitForURL(depSetUrlRegExp);
+  const depGroupUuid = page.url().match(depSetUrlRegExp)![1];
 
   const mainMenu = await page.getByTestId('nuvla-ui-sidebar');
 
+  await mainMenu.getByRole('link', { name: 'Deployments'}).click();
+
+  await expect(page).toHaveURL(baseURL + '/ui/deployments');
+
+  await page.getByRole('link', { name: 'Deployment Groups' }).click();
+  await expect(page).toHaveURL(baseURL + '/ui/deployment-groups');
+
+  await expect(page.getByRole('cell', { name: testDeplGroupName })).toBeVisible();
+
+  // delete the DG
   await mainMenu.getByRole('link', { name: 'deployments'}).click();
 
   await page.getByRole('link', { name: 'Deployment groups' }).click();
   await expect(page).toHaveURL(`${baseURL}/ui/deployment-groups`);
 
-  await page.getByPlaceholder('Search...').click();
+  await page.getByRole('cell', { name: testDeplGroupName }).first().click();
 
-  await page.getByPlaceholder('Search...').fill(random_id + ' nginx');
-
-  await expect(page).toHaveURL(`${baseURL}/ui/deployment-groups?deployment-groups-search=${random_id}%20nginx`);
-
-  await page.getByRole('link', { name: new RegExp(random_id + ' nginx') }).click();
+  await expect(page).toHaveURL(baseURL + '/ui/deployment-groups/' + depGroupUuid);
 
   await page.locator('div[role="listbox"]:has-text("CancelDelete")').click();
 
@@ -89,5 +84,3 @@ test('delete deployment group', async ({ page }, { config }) => {
   await expect(page).toHaveURL(`${baseURL}/ui/deployment-groups`);
 
 });
-
-

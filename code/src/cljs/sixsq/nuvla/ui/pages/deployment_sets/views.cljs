@@ -167,25 +167,25 @@
 (defn DeploymentSetTable
   []
   (r/with-let [deployment-sets (subscribe [::subs/deployment-sets])
-               !resources  (subscribe [::subs/deployment-sets-resources])
-               !pagination (r/atom {:page-index 0
-                                    :page-size  25})]
+               !resources      (subscribe [::subs/deployment-sets-resources])
+               !pagination     (r/atom {:page-index 0
+                                        :page-size  25})]
     [:div style/center-items
      #_[ui/Table {:compact "very" :selectable true}
-      [ui/TableHeader
-       [ui/TableRow
-        [ui/TableHeaderCell "name"]
-        [ui/TableHeaderCell "description"]
-        [ui/TableHeaderCell "state"]
-        [ui/TableHeaderCell "created"]
-        [ui/TableHeaderCell "auto update"]
-        [ui/TableHeaderCell "tags"]]]
+        [ui/TableHeader
+         [ui/TableRow
+          [ui/TableHeaderCell "name"]
+          [ui/TableHeaderCell "description"]
+          [ui/TableHeaderCell "state"]
+          [ui/TableHeaderCell "created"]
+          [ui/TableHeaderCell "auto update"]
+          [ui/TableHeaderCell "tags"]]]
 
-      [ui/TableBody
-       (for [{:keys [id] :as deployment-set} (:resources @deployment-sets)]
-         (when id
-           ^{:key id}
-           [DeploymentSetRow deployment-set]))]]
+        [ui/TableBody
+         (for [{:keys [id] :as deployment-set} (:resources @deployment-sets)]
+           (when id
+             ^{:key id}
+             [DeploymentSetRow deployment-set]))]]
      [TableController {:!columns               (r/atom [{::table-refactor/field-key      :name
                                                          ::table-refactor/header-content "Name"
                                                          ::table-refactor/field-cell     CellName}
@@ -208,13 +208,12 @@
                        :!current-columns       (subscribe [::subs/table-current-cols])
                        :set-current-columns-fn #(dispatch [::subs/set-table-current-cols %])
                        :!data                  !resources
-                       #_:on-row-click
-                       #_#(dispatch [::routing-events/navigate routes/deployment-groups-details
-                                   {:uuid (general-utils/id->uuid (:id %))}])
+                       :on-row-click           #(dispatch [::routing-events/navigate routes/deployment-groups-details
+                                                           {:uuid (general-utils/id->uuid (:id %))}])
                        :!enable-global-filter? (r/atom false)
-                       :!enable-sorting? (r/atom false)
-                       :!enable-pagination? (r/atom true)
-                       :!pagination !pagination}]]))
+                       :!enable-sorting?       (r/atom false)
+                       :!enable-pagination?    (r/atom true)
+                       :!pagination            !pagination}]]))
 
 (defn ops-status-overview-string [tr-fn {:keys [deployments-to-add deployments-to-remove deployments-to-update] :as _ops-status}]
   (let [deployments-sum (+ (count deployments-to-add)

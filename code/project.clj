@@ -87,7 +87,7 @@
                                "cljs-repl" "nuvla-ui"]
             "install"         ["do"
                                ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
-                                "release" "nuvla-ui"]
+                                "release" "nuvla-ui" "--debug"]
                                ["install"]]
             "build-portfolio" ["with-profile" "+scljs,+portfolio" "run" "-m" "shadow.cljs.devtools.cli"
                                "release" "nuvla-ui" "portfolio"]})

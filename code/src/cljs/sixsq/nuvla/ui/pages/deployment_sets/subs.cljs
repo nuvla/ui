@@ -16,7 +16,7 @@
   ::deployment-sets-resources
   :<- [::deployment-sets]
   (fn [deployment-sets-response]
-    (:resources deployment-sets-response)))
+    (vec (:resources deployment-sets-response))))
 
 (reg-sub
   ::deployment-sets-summary

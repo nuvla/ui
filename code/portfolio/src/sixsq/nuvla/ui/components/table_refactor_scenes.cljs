@@ -155,6 +155,15 @@
      [TableController {:!enable-row-selection? !enable-row-selection?
                        :!selected              !selected}]]))
 
+(defscene clickable-rows
+  (r/with-let [clicked-rows (r/atom #{})
+               on-row-click #(swap! clicked-rows conj %)]
+    [:div
+     [:div {:data-testid "clicked-rows-summary"
+            :style       {:margin "10px"}}
+      (str (count @clicked-rows) " rows clicked")]
+     [TableController {:on-row-click on-row-click}]]))
+
 (defn SearchInput
   [!global-filter]
   (js/console.info "Render SearchInput")

@@ -218,7 +218,9 @@
 (defn EditorCode
   [{:keys [value] :as props}]
   [ui/CodeMirror
-   (assoc props :value (or value ""))])
+   (assoc props :value (or value "")
+                ;; forceParsing upto 999999 and within 100ms timeout
+                :on-create-editor #(language/forceParsing % 999999 100))])
 
 (defn EditorJson
   [props]
@@ -366,7 +368,9 @@
                [:div {:className "ui input icon"}
                 [ui/TextArea (assoc common-opts :on-change input-cbk)]
                 (when @active-input? [icons/Icon {:name icons/i-pencil}])]]])
-           [SpanBlockJustified default-value])]))))
+           [SpanBlockJustified (if (coll? default-value)
+                                 (str/join ", " default-value)
+                                 default-value)])]))))
 
 
 (defn FieldLabel
@@ -711,8 +715,8 @@
        :reagent-render      (fn [args]
                               [:div
                                [:div {:ref   #(reset! ref %)
-                                      :style {:overflow-y   :hidden
-                                              :overflow-x   :auto
+                                      :style {:overflow-y :hidden
+                                              :overflow-x :auto
                                               :max-height (if @show-more? nil "15ch")}}
                                 [Component args]]
                                (when @overflow?

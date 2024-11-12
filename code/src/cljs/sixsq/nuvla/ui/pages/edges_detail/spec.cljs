@@ -36,8 +36,10 @@
 (s/def ::availability-15-min nil)
 
 (def defaults {::coe-resource-docker-available? false
+               ::coe-resource-k8s-available?    false
                ::nuvlabox                       nil
                ::nuvlabox-status                nil
+               ::nuvlabox-status-set-time       nil
                ::nuvlabox-associated-ssh-keys   nil
                ::nuvlabox-peripherals           nil
                ::vuln-severity-selector         nil

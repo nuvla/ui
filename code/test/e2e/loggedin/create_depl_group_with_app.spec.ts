@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+
 test('create deployment group containing an app from deployment modal', async ({ page }, {config}) => {
+
   const { baseURL } = config.projects[0].use;
 
   const testDeplGroupName = 'Depl Group ' + Math.random().toString().substring(2, 5) + ' - Test should delete me!'

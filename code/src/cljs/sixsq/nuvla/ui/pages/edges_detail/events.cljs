@@ -31,11 +31,16 @@
 
 (reg-event-fx
   ::set-nuvlabox-status
-  (fn [{{:keys [::spec/coe-resource-docker-available?] :as db} :db}
+  (fn [{{:keys [::spec/coe-resource-docker-available?
+                ::spec/coe-resource-k8s-available?] :as db} :db}
        [_ {:keys [vulnerabilities coe-resources] :as nuvlabox-status}]]
-    {:db (assoc db ::spec/nuvlabox-status nuvlabox-status
-                   ::spec/coe-resource-docker-available? (or coe-resource-docker-available?
-                                                             (some? (:docker coe-resources))))
+    {:db (assoc db
+           ::spec/nuvlabox-status nuvlabox-status
+           ::spec/nuvlabox-status-set-time (time/now)
+           ::spec/coe-resource-docker-available? (or coe-resource-docker-available?
+                                                     (some? (:docker coe-resources)))
+           ::spec/coe-resource-k8s-available? (or coe-resource-k8s-available?
+                                                  (some? (:kubernetes coe-resources))))
      :fx [[:dispatch [::get-nuvlaedge-release nuvlabox-status]]
           [:dispatch [::set-nuvlabox-vulns vulnerabilities]]]}))
 
@@ -72,6 +77,7 @@
 (def tab-key-consumption :consumption)
 (def tab-key-vulnerabilities :vulnerabilities)
 (def tab-key-docker :docker)
+(def tab-key-k8s :k8s)
 (def tab-key-playbooks :playbooks)
 
 (def nb-status-attrs "id, parent, version, created, updated, acl, name, description, tags,
@@ -91,7 +97,7 @@ cluster-nodes, cluster-managers, cluster-join-address, status-notes, orchestrato
                              (= active-tab tab-key-vulnerabilities) (str ", vulnerabilities")
                              (or
                                (false? coe-resource-docker-available?)
-                               (= active-tab tab-key-docker)) (str ", coe-resources"))]
+                               (#{tab-key-docker tab-key-k8s} active-tab)) (str ", coe-resources"))]
       {::cimi-api-fx/search [:nuvlabox-status
                              {:filter (str "id='" nb-status-id "'")
                               :select select-str

@@ -9,8 +9,8 @@ test('table-sorting', async ({ page }, { config }) => {
 
   await expectHeadersOrder(table, ['Id', 'Size', 'Created', 'Not sortable']);
 
-  expect(table.locator('thead tr')).toHaveCount(1);
-  expectTableRowCount(table, 3);
+  await expect(table.locator('thead tr')).toHaveCount(1);
+  await expectTableRowCount(table, 3);
 
   // Sorted by default by Created ascending by scene definition
   await expectColumnData(page, table, 'Created', ['1725666894','1725667915','1726074087']);

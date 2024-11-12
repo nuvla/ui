@@ -17,13 +17,17 @@
   :-> ::spec/nuvlabox-status)
 
 (reg-sub
-  ::stats-container-ordering
-  :-> ::spec/stats-container-ordering)
+  ::nuvlabox-status-set-time
+  :-> ::spec/nuvlabox-status-set-time)
 
 (reg-sub
-  ::container-stats
+  ::show-telemetry-outdated?
   :<- [::nuvlabox-status]
-  :-> (comp :container-stats :resources))
+  :<- [::nuvlabox-status-set-time]
+  (fn [[nb-status _set-time]]
+    ;; subscription to ::nuvlabox-status-set-time is only used to force re-evaluate
+    ;; only when new nb-status document is being set
+    (edges-utils/telemetry-outdated? nb-status)))
 
 (reg-sub
   ::coe-resources
@@ -31,18 +35,13 @@
   :-> :coe-resources)
 
 (reg-sub
-  ::coe-resource-docker-available?
-  :-> ::spec/coe-resource-docker-available?)
-
-(reg-sub
   ::docker
   :<- [::coe-resources]
   :-> :docker)
 
 (reg-sub
-  ::docker-images
-  :<- [::docker]
-  :-> :images)
+  ::coe-resource-docker-available?
+  :-> ::spec/coe-resource-docker-available?)
 
 (defn update-created
   [doc]
@@ -66,51 +65,81 @@
   [doc]
   (update doc :NetworkSettings (comp #(map name %) keys :Networks)))
 
-(reg-sub
-  ::docker-images-clean
-  :<- [::docker-images]
-  (fn [images]
-    (map (fn [image]
-           (-> image
-               (update :Id str/replace #"^sha256:" "")
-               update-created
-               (dissoc :SharedSize :Containers))) images)))
+(defn reg-sub-fn-coe-resource
+  [coe-key sub-key-resource-key-list]
+  (doseq [[resource-key sub-key clean-fn] sub-key-resource-key-list]
+    (reg-sub
+      sub-key
+      :<- [coe-key]
+      :-> (if clean-fn
+            (comp #(mapv clean-fn %) resource-key)
+            resource-key))))
+
+(reg-sub-fn-coe-resource
+  ::docker [[:images ::docker-images
+             (fn [image]
+               (-> image
+                   (update :Id str/replace #"^sha256:" "")
+                   update-created
+                   (dissoc :SharedSize :Containers)))]
+            [:volumes ::docker-volumes]
+            [:containers ::docker-containers
+             #(-> % update-ports update-created update-mounts update-network-settings)]
+            [:networks ::docker-networks
+             #(update % :IPAM (comp first :Config))]])
 
 (reg-sub
-  ::docker-images-ordering
-  :-> ::spec/docker-images-ordering)
+  ::kubernetes
+  :<- [::coe-resources]
+  :-> :kubernetes)
+
+(defn k8s-flat-metadata
+  [{:keys [metadata] :as resource}]
+  (assoc resource
+    :uid (:uid metadata)
+    :name (:name metadata)
+    :creation_timestamp (:creation_timestamp metadata)
+    :resource_version (:resource_version metadata)))
+
+(defn k8s-namespace-metadata
+  [{:keys [metadata] :as resource}]
+  (assoc resource :namespace (:namespace metadata)))
+
+(defn k8s-flat-metadata-namespace
+  [resource]
+  ((comp k8s-flat-metadata k8s-namespace-metadata) resource))
+
+(reg-sub-fn-coe-resource
+  ::kubernetes [[:images ::k8s-images]
+                [:namespaces ::k8s-namespaces k8s-flat-metadata]
+                [:pods ::k8s-pods
+                 (fn [{:keys [status] :as resource}]
+                   (-> (k8s-flat-metadata-namespace resource)
+                       (assoc :phase (:phase status))))]
+                [:nodes ::k8s-nodes
+                 (fn [{:keys [status] :as resource}]
+                   (-> (k8s-flat-metadata resource)
+                       (assoc :node_info (:node_info status))))]
+                [:configmaps ::k8s-configmaps k8s-flat-metadata-namespace]
+                [:secrets ::k8s-secrets k8s-flat-metadata-namespace]
+                [:statefulsets ::k8s-statefulsets k8s-flat-metadata-namespace]
+                [:persistentvolumes ::k8s-persistentvolumes k8s-flat-metadata-namespace]
+                [:persistentvolumeclaims ::k8s-persistentvolumeclaims k8s-flat-metadata-namespace]
+                [:daemonsets ::k8s-daemonsets k8s-flat-metadata-namespace]
+                [:deployments ::k8s-deployments k8s-flat-metadata-namespace]
+                [:jobs ::k8s-jobs k8s-flat-metadata-namespace]
+                [:ingresses ::k8s-ingresses k8s-flat-metadata-namespace]
+                [:cronjobs ::k8s-cronjobs k8s-flat-metadata-namespace]
+                [:services ::k8s-services k8s-flat-metadata-namespace]])
 
 (reg-sub
-  ::docker-volumes
-  :<- [::docker]
-  :-> :volumes)
+  ::coe-resource-k8s-available?
+  :-> ::spec/coe-resource-k8s-available?)
 
 (reg-sub
-  ::docker-containers
-  :<- [::docker]
-  :-> :containers)
-
-(reg-sub
-  ::docker-containers-clean
-  :<- [::docker-containers]
-  (fn [containers]
-    (map (fn [container]
-           (-> container
-               update-ports
-               update-created
-               update-mounts
-               update-network-settings)) containers)))
-
-(reg-sub
-  ::docker-networks
-  :<- [::docker]
-  :-> :networks)
-
-(reg-sub
-  ::docker-networks-clean
-  :<- [::docker-networks]
-  (fn [networks]
-    (map #(update % :IPAM (comp first :Config)) networks)))
+  ::container-stats
+  :<- [::nuvlabox-status]
+  :-> (comp :container-stats :resources))
 
 (reg-sub
   ::augmented-container-stats
@@ -125,7 +154,6 @@
 (reg-sub
   ::nuvlaedge-release
   :-> ::spec/nuvlaedge-release)
-
 
 (defn- version-string->number-vec [version]
   (map js/Number (str/split version ".")))
@@ -155,6 +183,11 @@
                (nil? (modules->bool :security)))
         (assoc modules->bool :security false)
         modules->bool))))
+
+(reg-sub
+  ::installation-parameters
+  :<- [::nuvlabox-status]
+  :-> :installation-parameters)
 
 (reg-sub
   ::nuvlabox-components

@@ -171,7 +171,7 @@
                !pagination (r/atom {:page-index 0
                                     :page-size  25})]
     [:div style/center-items
-     [ui/Table {:compact "very" :selectable true}
+     #_[ui/Table {:compact "very" :selectable true}
       [ui/TableHeader
        [ui/TableRow
         [ui/TableHeaderCell "name"]
@@ -186,7 +186,7 @@
          (when id
            ^{:key id}
            [DeploymentSetRow deployment-set]))]]
-     #_[TableController {:!columns               (r/atom [{::table-refactor/field-key      :name
+     [TableController {:!columns               (r/atom [{::table-refactor/field-key      :name
                                                          ::table-refactor/header-content "Name"
                                                          ::table-refactor/field-cell     CellName}
                                                         {::table-refactor/field-key      :description
@@ -205,15 +205,16 @@
                                                          ::table-refactor/header-content "Tags"
                                                          ::table-refactor/field-cell     CellTags}])
                        :!default-columns       (r/atom [:name :description :state :created :auto-update :tags])
-                       ;:!current-columns       (subscribe [::subs/table-current-cols])
-                       ;:set-current-columns-fn #(dispatch [::subs/set-table-current-cols %])
+                       :!current-columns       (subscribe [::subs/table-current-cols])
+                       :set-current-columns-fn #(dispatch [::subs/set-table-current-cols %])
                        :!data                  !resources
-                       :on-row-click           #(dispatch [::routing-events/navigate routes/deployment-groups-details
-                                                           {:uuid (general-utils/id->uuid (:id %))}])
+                       #_:on-row-click
+                       #_#(dispatch [::routing-events/navigate routes/deployment-groups-details
+                                   {:uuid (general-utils/id->uuid (:id %))}])
                        :!enable-global-filter? (r/atom false)
-                       :!enable-sorting?       (r/atom false)
-                       :!enable-pagination?    (r/atom true)
-                       :!pagination            !pagination}]]))
+                       :!enable-sorting? (r/atom false)
+                       :!enable-pagination? (r/atom true)
+                       :!pagination !pagination}]]))
 
 (defn ops-status-overview-string [tr-fn {:keys [deployments-to-add deployments-to-remove deployments-to-update] :as _ops-status}]
   (let [deployments-sum (+ (count deployments-to-add)

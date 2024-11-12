@@ -35,6 +35,8 @@
   (assoc control
     ::!processed-data
     (r/track (fn processed-data []
+               (when-not (vector? @!data)
+                 (throw (ex-info "Table data must be a vector" {})))
                (let [filtered-data (if @!enable-global-filter?
                                      (filterv #(or (nil? @!global-filter)
                                                    (some (partial global-filter-fn @!global-filter)

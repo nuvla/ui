@@ -72,10 +72,7 @@ test('test', async ({ page }, { config }) => {
   await page.getByRole('link', { name: 'Deployment Groups' }).click();
   await expect(page).toHaveURL(baseURL + '/ui/deployment-groups');
 
-  // await page.locator('a.icon.item > .icon.layout.grid').first().click();
-
   await page.getByRole('cell', { name: testDeplGroupName }).first().click();
-  //await page.locator('a.ui.card[href="/ui/deployment-groups/' + depGroupUuid + '"]').click();
 
   await expect(page).toHaveURL(baseURL + '/ui/deployment-groups/' + depGroupUuid);
 

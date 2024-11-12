@@ -23,7 +23,7 @@ test('create deployment group containing an app from deployment modal', async ({
 
   await page.getByText('Check it out!').click();
 
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(1000);
 
   await page.getByRole('cell', { name: /Deployment Group/ }).locator('i').click();
 
@@ -52,17 +52,11 @@ test('create deployment group containing an app from deployment modal', async ({
 
   await mainMenu.getByRole('link', { name: 'Deployments'}).click();
 
-  //await expect(page).toHaveURL(baseURL + '/ui/deployments');
-
-  //await page.getByRole('link', { name: 'Deployment groups' }).click();
   await expect(page).toHaveURL(baseURL + '/ui/deployments');
 
   await page.getByRole('link', { name: 'Deployment Groups' }).click();
   await expect(page).toHaveURL(baseURL + '/ui/deployment-groups');
 
-  // await page.locator('.ui > .ui > a:nth-child(3)').click();
-
-  await page.pause();
   await expect(page.getByRole('cell', { name: testDeplGroupName })).toBeVisible();
 
   // delete the DG
@@ -70,16 +64,6 @@ test('create deployment group containing an app from deployment modal', async ({
 
   await page.getByRole('link', { name: 'Deployment groups' }).click();
   await expect(page).toHaveURL(`${baseURL}/ui/deployment-groups`);
-
-  //await page.getByPlaceholder('Search...').click();
-
-  //await page.getByPlaceholder('Search...').fill('nginx');
-
-  //await expect(page).toHaveURL(`${baseURL}/ui/deployment-groups?deployment-groups-search=nginx`);
-
-  //await page.locator('a.icon.item > .icon.layout.grid').first().click();
-
-  //await page.getByRole('link', { name: /nginx test/i }).click();
 
   await page.getByRole('cell', { name: testDeplGroupName }).first().click();
 
@@ -98,5 +82,3 @@ test('create deployment group containing an app from deployment modal', async ({
   await expect(page).toHaveURL(`${baseURL}/ui/deployment-groups`);
 
 });
-
-

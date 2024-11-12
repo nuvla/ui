@@ -62,7 +62,7 @@ test('create deployment group containing an app from deployment modal', async ({
 
   // await page.locator('.ui > .ui > a:nth-child(3)').click();
 
-  await page.pause();
+  // await page.pause();
   await expect(page.getByRole('cell', { name: testDeplGroupName })).toBeVisible();
 
   // delete the DG

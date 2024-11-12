@@ -72,7 +72,7 @@
 
                                  :release           {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL ""}
                                                      :compiler-options {:infer-externs :auto
-                                                                        :optimizations :advanced
+                                                                        :optimizations :simple
                                                                         :pseudo-names  false
                                                                         :pretty-print  false}}}
                      :test      {:target    :karma

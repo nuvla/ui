@@ -175,8 +175,8 @@
                                                          ::table-refactor/header-content "Tags"
                                                          ::table-refactor/field-cell     CellTags}])
                        :!default-columns       (r/atom [:name :description :state :created :auto-update :tags])
-                       :!current-columns       (subscribe [::subs/table-current-cols])
-                       :set-current-columns-fn #(dispatch [::subs/set-table-current-cols %])
+                       ;:!current-columns       (subscribe [::subs/table-current-cols])
+                       ;:set-current-columns-fn #(dispatch [::subs/set-table-current-cols %])
                        :!data                  !resources
                        :on-row-click           #(dispatch [::routing-events/navigate routes/deployment-groups-details
                                                            {:uuid (general-utils/id->uuid (:id %))}])

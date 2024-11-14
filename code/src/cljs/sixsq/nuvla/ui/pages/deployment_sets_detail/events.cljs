@@ -362,15 +362,7 @@
 
                    (not unsaved-changes?)
                    (conj [:dispatch [::set-deployment-set deployment-set-from-server nil
-                                     (assoc opts :update-deployment-set-edited? true)]])
-
-                   (and (some? deployment-set) (some? server-side-changes) (not unsaved-changes?))
-                   (conj [:dispatch [::messages-events/add
-                                     {:header  (tr [:resource-changed-server-side])
-                                      :content (str (tr [:resource-changed-server-side-view-refreshed])
-                                                    "\n\n"
-                                                    (utils/pprint-server-side-changes-str server-side-changes))
-                                      :type    :info}]]))})))
+                                     (assoc opts :update-deployment-set-edited? true)]]))})))
 
 (reg-event-fx
   ::get-deployment-set

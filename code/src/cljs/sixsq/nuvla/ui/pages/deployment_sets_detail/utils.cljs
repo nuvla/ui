@@ -1,5 +1,7 @@
 (ns sixsq.nuvla.ui.pages.deployment-sets-detail.utils
-  (:require [sixsq.nuvla.ui.common-components.plugins.module :refer [get-version-id]]
+  (:require [clojure.data :as data]
+            [cljs.pprint :as pprint]
+            [sixsq.nuvla.ui.common-components.plugins.module :refer [get-version-id]]
             [sixsq.nuvla.ui.pages.apps.apps-store.spec :as spec]))
 
 (def state-new "NEW")
@@ -24,6 +26,19 @@
   (and (some? deployment-set-edited)
        (not= (select-keys deployment-set-edited editable-keys)
              (select-keys deployment-set editable-keys))))
+
+(defn server-side-changes
+  [deployment-set deployment-set-from-server]
+  (let [a (select-keys deployment-set-from-server editable-keys)
+        b (select-keys deployment-set editable-keys)]
+    (when (not= a b)
+      (vec (take 2 (data/diff a b))))))
+
+(defn pprint-server-side-changes-str
+  [[after before]]
+  (str (with-out-str (pprint/pprint before))
+       "=>\n"
+       (with-out-str (pprint/pprint after))))
 
 (defn enrich-app
   [app]

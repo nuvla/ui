@@ -65,15 +65,17 @@
   [doc]
   (update doc :NetworkSettings (comp #(map name %) keys :Networks)))
 
+(defn save-raw-data
+  [resource]
+  (assoc resource :raw resource))
+
 (defn reg-sub-fn-coe-resource
   [coe-key sub-key-resource-key-list]
   (doseq [[resource-key sub-key clean-fn] sub-key-resource-key-list]
     (reg-sub
       sub-key
       :<- [coe-key]
-      :-> (if clean-fn
-            (comp #(mapv clean-fn %) resource-key)
-            resource-key))))
+      :-> (comp #(mapv (comp (or clean-fn identity) save-raw-data) %) resource-key))))
 
 (reg-sub-fn-coe-resource
   ::docker [[:images ::docker-images

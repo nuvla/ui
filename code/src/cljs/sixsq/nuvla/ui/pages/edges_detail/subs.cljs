@@ -116,8 +116,7 @@
                 [:namespaces ::k8s-namespaces k8s-flat-metadata]
                 [:pods ::k8s-pods
                  (fn [{:keys [status] :as resource}]
-                   (-> resource
-                       k8s-flat-metadata-namespace
+                   (-> (k8s-flat-metadata-namespace resource)
                        (assoc :phase (:phase status))))]
                 [:nodes ::k8s-nodes
                  (fn [{:keys [status] :as resource}]
@@ -186,6 +185,11 @@
                (nil? (modules->bool :security)))
         (assoc modules->bool :security false)
         modules->bool))))
+
+(reg-sub
+  ::installation-parameters
+  :<- [::nuvlabox-status]
+  :-> :installation-parameters)
 
 (reg-sub
   ::nuvlabox-components

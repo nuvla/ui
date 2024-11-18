@@ -705,3 +705,5 @@
 (defn ZoomInIcon
   [opts]
   [I opts i-zoom-in])
+
+(def i-adjust "fas fa-adjust")

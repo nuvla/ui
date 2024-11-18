@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.pages.edges-detail.views-coe-resources-k8s
-  (:require [re-frame.core :refer [dispatch subscribe reg-event-fx reg-sub]]
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe reg-event-fx reg-sub]]
             [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table]
             [sixsq.nuvla.ui.pages.edges-detail.views-coe-resources :as coe]
             [reagent.core :as r]
@@ -20,6 +21,10 @@
                 ::table/header-content "Raw"
                 ::table/no-sort?       true
                 ::table/field-cell     coe/CellJson})
+
+(defn CellTimeAgoExtraFormat
+  [cell-data row column]
+  [table/CellTimeAgo (some-> cell-data (str/replace #" \+0000 UTC" "Z")) row column])
 
 (defn Tab []
   (r/with-let [k8s-images                 {::coe/!data            (subscribe [::subs/k8s-images])
@@ -177,7 +182,24 @@
                                                                            field-raw])
                                            ::coe/!default-columns (r/atom [:name :creation_timestamp :namespace :raw])
                                            ::coe/resource-type    "service"
-                                           ::coe/row-id-fn        :uid}]
+                                           ::coe/row-id-fn        :uid}
+               k8s-helmreleases           {::coe/!data            (subscribe [::subs/k8s-helmreleases])
+                                           ::coe/!columns         (r/atom [field-name
+                                                                           {::table/field-key      :chart
+                                                                            ::table/header-content "Chart"}
+                                                                           {::table/field-key      :app_version
+                                                                            ::table/header-content "App version"}
+                                                                           {::table/field-key      :revision
+                                                                            ::table/header-content "Revision"}
+                                                                           {::table/field-key      :status
+                                                                            ::table/header-content "Status"}
+                                                                           {::table/field-key      :updated
+                                                                            ::table/header-content "Updated"
+                                                                            ::table/field-cell     CellTimeAgoExtraFormat}
+                                                                           field-namespace])
+                                           ::coe/!default-columns (r/atom [:name :chart :app_version :status :updated :namespace])
+                                           ::coe/resource-type    "helm"
+                                           ::coe/row-id-fn        :name}]
     [coe/Tab
      [["Namespaces" ::k8s-namespaces k8s-namespaces]
       ["Images" ::k8s-images k8s-images]
@@ -193,4 +215,5 @@
       ["Cronjobs" ::k8s-cronjobs k8s-cronjobs]
       ["Persistent volumes" ::k8s-persistentvolumes k8s-persistentvolumes]
       ["Persistent volume claims" ::k8s-persistentvolumeclaims k8s-persistentvolumeclaims]
-      ["Ingresses" ::k8s-ingresses k8s-ingresses]]]))
+      ["Ingresses" ::k8s-ingresses k8s-ingresses]
+      ["Helm releases" ::k8s-helmreleases k8s-helmreleases]]]))

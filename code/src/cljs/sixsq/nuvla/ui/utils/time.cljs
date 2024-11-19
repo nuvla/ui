@@ -17,6 +17,7 @@
                                 isBefore
                                 isToday
                                 parseISO
+                                parseJSON
                                 startOfDay
                                 subDays
                                 subHours
@@ -100,6 +101,12 @@
   ([unix-timestamp _]
    (js/Date. (* 1000 unix-timestamp))))
 
+
+(defn parse-json
+  [s]
+  (try
+    (parseJSON s)
+    (catch :default _)))
 
 (defn invalid
   ([] "Invalid date")

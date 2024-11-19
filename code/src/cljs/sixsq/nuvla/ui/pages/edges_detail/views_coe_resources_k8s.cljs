@@ -1,10 +1,10 @@
 (ns sixsq.nuvla.ui.pages.edges-detail.views-coe-resources-k8s
-  (:require [clojure.string :as str]
-            [re-frame.core :refer [dispatch subscribe reg-event-fx reg-sub]]
+  (:require [re-frame.core :refer [dispatch subscribe reg-event-fx reg-sub]]
             [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table]
             [sixsq.nuvla.ui.pages.edges-detail.views-coe-resources :as coe]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]))
+            [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (def field-uid {::table/field-key      :uid
                 ::table/header-content "UID"})
@@ -24,7 +24,8 @@
 
 (defn CellTimeAgoExtraFormat
   [cell-data row column]
-  [table/CellTimeAgo (some-> cell-data (str/replace #" \+0000 UTC" "Z")) row column])
+  [table/CellTimeAgo
+   (some-> cell-data time/parse-json time/time->utc-str) row column])
 
 (defn Tab []
   (r/with-let [k8s-images                 {::coe/!data            (subscribe [::subs/k8s-images])

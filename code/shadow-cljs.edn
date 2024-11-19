@@ -53,7 +53,8 @@
                                                                              "css/semantic.min.css"
                                                                              "css/react-datepicker.min.css"
                                                                              "css/leaflet.css"
-                                                                             "css/leaflet.draw.css"]
+                                                                             "css/leaflet.draw.css"
+                                                                             "css/fontawesome/css/all.min.css"]
                                                         :release-mode-only? true})]
                                  :devtools          {:after-load        sixsq.nuvla.ui.core/mount-root
                                                      :preloads          [devtools.preload

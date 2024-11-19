@@ -9,6 +9,8 @@ target
 
 code/resources/public/ui/css/*
 !code/resources/public/ui/css/nuvla-ui.css
+!code/resources/public/ui/css/fontawesome
+code/resources/public/ui/css/fontawesome/css/all-*.css
 
 code/resources/public/ui/js/*
 code/resources/public/ui/index.html

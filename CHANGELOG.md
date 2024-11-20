@@ -2,6 +2,31 @@
 
 ## Released
 
+## [2.41.0](https://github.com/nuvla/ui/compare/2.40.1...2.41.0) (2024-11-20)
+
+
+### Features
+
+* **Deployment group detail page:** On refresh, auto-update ui content when DG edit page is not in dirty state ([#1680](https://github.com/nuvla/ui/issues/1680)) ([f173d1f](https://github.com/nuvla/ui/commit/f173d1f60bdb3fe022153ef821feb6ac69104fbe))
+* **Deployment group detail page:** Support for auto update at custom interval ([4aff51f](https://github.com/nuvla/ui/commit/4aff51faec2ee54e33ed7878cc8051026a4e16e4))
+* **Deployment group page:** Set default view to table view and use new table component ([4aff51f](https://github.com/nuvla/ui/commit/4aff51faec2ee54e33ed7878cc8051026a4e16e4))
+* **dg-no-apps-no-edges:** Allow DGs to have no edges and / or no apps defined ([#1678](https://github.com/nuvla/ui/issues/1678)) ([524a329](https://github.com/nuvla/ui/commit/524a329c32104061b179b5266d1a11d8a912fcdb))
+
+
+### Bug Fixes
+
+* **Apps detail page:** Minimum requirements architectures bugfix ([#1675](https://github.com/nuvla/ui/issues/1675)) ([58acbb7](https://github.com/nuvla/ui/commit/58acbb74386e8defff9e161bf5b8c686f9479336))
+* **Cimi api page:** Nuvlabox update modal releases not filled when reloading the page ([64af079](https://github.com/nuvla/ui/commit/64af07983799092bf8852b2d77ac1fee51a11e53))
+* **Component tests:** Flaky test fix because of missing await ([e429a4e](https://github.com/nuvla/ui/commit/e429a4eef1c4b90d9ca31ec8ceb9b0cba58d9209))
+* **e2e:** Deployment group use random id to avoid breaking when a precedent test run break ([544512e](https://github.com/nuvla/ui/commit/544512edb4a26296774c8afe56665b0b507ce083))
+* **Edge details page:** Support for helm releases coe resources ([#1681](https://github.com/nuvla/ui/issues/1681)) ([b2216ec](https://github.com/nuvla/ui/commit/b2216ec8e2932e54bfff2072e55d630b7b672140))
+* **Edge details page:** Support Kubernetes coe resources ([443fa4c](https://github.com/nuvla/ui/commit/443fa4c55a1db91f1c836a94b732853fb930c125))
+* **Edge details page:** Support Kubernetes coe resources raw data view ([15c1b2c](https://github.com/nuvla/ui/commit/15c1b2c7c7b0267c92d88b0b874ca832dead8094))
+* **Edge details:** When returning on Edge after some times, we should not show telemetry outdated message before that the status is retrieved ([#1670](https://github.com/nuvla/ui/issues/1670)) ([79e1cd8](https://github.com/nuvla/ui/commit/79e1cd8b600c6a9248fc6e7f2a7d841b2ea778bc))
+* **Editor component:** Force parsing within 100ms to handle folding big documents ([#1677](https://github.com/nuvla/ui/issues/1677)) ([fe8dc18](https://github.com/nuvla/ui/commit/fe8dc18e22811310dc9ce3b9c979749a528d2ae3))
+* **fontawesome:** Host fontawesome pro 6.6.0 ([6c4a7e1](https://github.com/nuvla/ui/commit/6c4a7e16e51733effe56dab4cd99fd2ae87d3c14))
+* **Nuvlaedge details page:** Update modal data not refreshed ([#1671](https://github.com/nuvla/ui/issues/1671)) ([64af079](https://github.com/nuvla/ui/commit/64af07983799092bf8852b2d77ac1fee51a11e53))
+
 ## [2.40.1](https://github.com/nuvla/ui/compare/2.40.0...2.40.1) (2024-10-21)
 
 

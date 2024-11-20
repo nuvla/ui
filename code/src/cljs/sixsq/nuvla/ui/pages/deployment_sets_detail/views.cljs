@@ -25,6 +25,7 @@
             [sixsq.nuvla.ui.pages.deployment-sets-detail.events :as events]
             [sixsq.nuvla.ui.pages.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.deployment-sets-detail.subs :as subs]
+            [sixsq.nuvla.ui.pages.deployment-sets-detail.utils :as utils]
             [sixsq.nuvla.ui.pages.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.pages.deployments.utils :as deployment-utils]
             [sixsq.nuvla.ui.pages.deployments.views :as dv]
@@ -479,29 +480,45 @@
       :button-text        button-text
       :with-confirm-step? true}]))
 
-(defn SaveButton
+(defn BasicSaveButton
   [{:keys [creating?]}]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        save-enabled? (subscribe [::subs/save-enabled? creating?])]
+    (fn [{:keys [on-click]}]
+      [uix/MenuItem
+       (cond->
+         {:name     (@tr [:save])
+          :icon     icons/i-floppy
+          :disabled (not @save-enabled?)
+          :class    (when @save-enabled? "primary-menu-item")}
+         on-click (assoc :on-click on-click))])))
+
+(defn SaveButton
+  [{:keys [creating?] :as opts}]
   (let [tr                         (subscribe [::i18n-subs/tr])
-        save-enabled?              (subscribe [::subs/save-enabled? creating?])
         validation                 (subscribe [::subs/deployment-set-validation])
-        is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])]
+        is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])
+        server-side-changes        (subscribe [::subs/server-side-changes])]
     (fn [{:keys [deployment-set]}]
-      [ui/Popup
-       {:trigger
-        (r/as-element
-          [:div
-           [uix/MenuItem
-            {:name     (@tr [:save])
-             :icon     icons/i-floppy
-             :disabled (not @save-enabled?)
-             :class    (when @save-enabled? "primary-menu-item")
+      (let [save-fn (if (:valid? @validation)
+                      #(dispatch [::events/do-edit {:deployment-set deployment-set
+                                                    :success-msg    (@tr [:updated-successfully])}])
+                      #(dispatch [::events/enable-form-validation]))]
+        (if @server-side-changes
+          [uix/ModalDanger
+           {:on-confirm         save-fn
+            :trigger            (r/as-element [:span [BasicSaveButton opts]])
+            :content            [:h3 "Resource was changed server side"]
+            :header             "Server side changes detected"
+            :danger-msg         (str "If you save the current view the following server side changes will be overridden:\n\n"
+                                     (utils/pprint-server-side-changes-str @server-side-changes))
+            :button-text        "Save"
+            :with-confirm-step? false}]
+          [BasicSaveButton
+           (assoc opts
              :on-click (if creating?
                          #(dispatch [::events/create @is-controlled-by-apps-set?])
-                         (if (:valid? @validation)
-                           #(dispatch [::events/do-edit {:deployment-set deployment-set
-                                                         :success-msg    (@tr [:updated-successfully])}])
-                           #(dispatch [::events/enable-form-validation])))}]])
-        :content (@tr [:depl-group-required-fields-before-save])}])))
+                         save-fn))])))))
 
 (def missing-edges-modal-id :modal/missing-edges)
 
@@ -2014,6 +2031,15 @@
           :menu                    {:secondary true
                                     :pointing  true}}]))))
 
+(defn WarningServerSideChanges
+  []
+  (let [tr                  (subscribe [::i18n-subs/tr])
+        server-side-changes (subscribe [::subs/server-side-changes])]
+    (when @server-side-changes
+      [ui/Message {:warning true}
+       [ui/MessageHeader (@tr [:warning])]
+       [ui/MessageContent (@tr [:warning-resource-changed-server-side])]])))
+
 (defn- DeploymentSetView
   [uuid]
   (let [depl-set (subscribe [::subs/deployment-set])]
@@ -2038,6 +2064,7 @@
            ::job-subs/jobs nil nil
            #(dispatch [::tab/change-tab {:db-path [::spec/tab]
                                          :tab-key :jobs}])]
+          [WarningServerSideChanges]
           [TabsDeploymentSet {:uuid uuid}]]]))))
 
 (defn DeploymentSetCreate

@@ -472,6 +472,10 @@
         (utils/unsaved-changes? stored edited))))
 
 (reg-sub
+  ::server-side-changes
+  :-> ::spec/server-side-changes)
+
+(reg-sub
   ::persist-in-progress?
   :-> ::spec/persist-in-progress?)
 

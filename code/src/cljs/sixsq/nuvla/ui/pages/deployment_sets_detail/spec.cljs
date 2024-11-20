@@ -61,6 +61,8 @@
 (s/def ::requirements (s/nilable any?))
 (s/def ::unmet-requirements-accepted boolean?)
 
+(s/def ::server-side-changes (s/nilable any?))
+
 (def defaults
   {::module-applications-sets    nil
    ::apps-sets                   nil
@@ -93,4 +95,5 @@
    ::fleet-filter-edited         nil
    ::persist-in-progress?        false
    ::requirements                nil
-   ::unmet-requirements-accepted false})
+   ::unmet-requirements-accepted false
+   ::server-side-changes         nil})

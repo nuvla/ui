@@ -162,7 +162,7 @@
   (fn [[_ db-path]]
     [(subscribe [::helpers/retrieve db-path ::events])])
   (fn [[events]]
-    (:resources events)))
+    (vec (:resources events))))
 
 (reg-sub
   ::event-count

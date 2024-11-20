@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.common-components.i18n.spec :as i18n-spec]
             [sixsq.nuvla.ui.common-components.job.events :as job-events]
             [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
             [sixsq.nuvla.ui.common-components.plugins.bulk-progress :as bulk-progress-plugin]
@@ -309,12 +310,13 @@
 
 (reg-event-fx
   ::set-deployment-set
-  (fn [{:keys [db]} [_ deployment-set fx {:keys [force-modules-reload?]}]]
+  (fn [{:keys [db]} [_ deployment-set fx {:keys [update-deployment-set-edited? force-modules-reload?]}]]
     (let [deployment-set-edited (get db ::spec/deployment-set-edited)]
       {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
                      ::spec/deployment-set deployment-set
                      ::main-spec/loading? false
-                     ::spec/deployment-set-edited (if (some? deployment-set-edited)
+                     ::spec/deployment-set-edited (if (and (some? deployment-set-edited)
+                                                           (not update-deployment-set-edited?))
                                                     deployment-set-edited
                                                     deployment-set)
                      ::spec/fleet-filter (-> deployment-set :applications-sets first :overwrites first :fleet-filter))
@@ -350,9 +352,22 @@
                                 :on-error on-error :data data]})))
 
 (reg-event-fx
+  ::deployment-set-from-server
+  (fn [{{:keys [::i18n-spec/tr ::spec/deployment-set ::spec/deployment-set-edited] :as db} :db}
+       [_ deployment-set-from-server opts]]
+    (let [server-side-changes (utils/server-side-changes deployment-set deployment-set-from-server)
+          unsaved-changes?    (utils/unsaved-changes? deployment-set deployment-set-edited)]
+      {:db (assoc db ::spec/server-side-changes (when unsaved-changes? server-side-changes))
+       :fx (cond-> []
+
+                   (not unsaved-changes?)
+                   (conj [:dispatch [::set-deployment-set deployment-set-from-server nil
+                                     (assoc opts :update-deployment-set-edited? true)]]))})))
+
+(reg-event-fx
   ::get-deployment-set
   (fn [_ [_ id opts]]
-    {::cimi-api-fx/get [id #(dispatch [::set-deployment-set % nil opts])
+    {::cimi-api-fx/get [id #(dispatch [::deployment-set-from-server % opts])
                         :on-error #(dispatch [::set-deployment-set nil])]
      :fx               [[:dispatch [::job-events/get-jobs id]]]}))
 

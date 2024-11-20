@@ -132,7 +132,8 @@
                 [:jobs ::k8s-jobs k8s-flat-metadata-namespace]
                 [:ingresses ::k8s-ingresses k8s-flat-metadata-namespace]
                 [:cronjobs ::k8s-cronjobs k8s-flat-metadata-namespace]
-                [:services ::k8s-services k8s-flat-metadata-namespace]])
+                [:services ::k8s-services k8s-flat-metadata-namespace]
+                [:helmreleases ::k8s-helmreleases]])
 
 (reg-sub
   ::coe-resource-k8s-available?

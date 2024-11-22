@@ -182,7 +182,7 @@
                                                            {:uuid (general-utils/id->uuid (:id %))}])
                        :!enable-global-filter? (r/atom false)
                        :!enable-sorting?       (r/atom false)
-                       :!enable-pagination?    (r/atom true)
+                       :!enable-pagination?    (r/atom false)
                        :!pagination            !pagination}]]))
 
 (defn ops-status-overview-string [tr-fn {:keys [deployments-to-add deployments-to-remove deployments-to-update] :as _ops-status}]
@@ -273,10 +273,9 @@
         [AddFirstButton]]
        [:<>
         (case @view-type
-          :cards [:<>
-                  [DeploymentSetCards]
-                  [Pagination]]
-          :table [DeploymentSetTable])])]))
+          :cards [DeploymentSetCards]
+          :table [DeploymentSetTable])
+        [Pagination]])]))
 
 
 (defn deployment-sets-views

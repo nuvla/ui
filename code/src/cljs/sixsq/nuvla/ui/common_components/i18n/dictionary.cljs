@@ -3,6 +3,8 @@
 
 (def dictionary
   {:en {
+        :experimental-feature-warn                     "Warning: Experimental feature"
+        :experimental-feature-warn-content-dg          "The Deployment Group feature is currently in an experimental phase. Please proceed with caution when using it."
         :do-you-want-to-proceed?                       "Do you want to proceed?"
         :you-selected                                  "You selected"
         :to-be-deleted                                 "to be deleted"
@@ -1183,6 +1185,8 @@
         }
 
    :fr {
+        :beta-feature-warn                             "Avertissement : Fonctionnalité expérimentale"
+        :beta-feature-warn-content-deployment-group    "La fonctionnalité Groupe de déploiement est actuellement en phase expérimentale. Utilisez avec précaution !"
         :you-selected                                  "Vous avez sélectionné "
         :to-be-deleted                                 "à être supprimer"
         :do-you-want-to-proceed?                       "Voulez-vous continuer ?"

@@ -279,10 +279,19 @@
           :table [DeploymentSetTable])])]))
 
 
+(defn BetaBanner
+  []
+
+  [:div {:style {:padding-top 10
+                 :padding-bottom 10}}
+   [uix/MsgWarn {:header  [uix/TR :experimental-feature-warn]
+                 :content [uix/TR :experimental-feature-warn-content-dg]}]])
+
 (defn deployment-sets-views
   []
   (let [path-params (subscribe [::routing-subs/path-params])]
     [ui/Segment style/basic
+     [BetaBanner]
      (if-let [uuid (:uuid @path-params)]
        [detail/Details uuid]
        [Main])]))

@@ -2,6 +2,15 @@
 
 ## Released
 
+## [2.41.1](https://github.com/nuvla/ui/compare/2.41.0...2.41.1) (2024-11-25)
+
+
+### Bug Fixes
+
+* **Deployment group pages:** Add experimental warning banner ([#1686](https://github.com/nuvla/ui/issues/1686)) ([c2fe2d5](https://github.com/nuvla/ui/commit/c2fe2d5f682835481c34318877decf6dac37c134))
+* **Deployment group pages:** table view pagination bugfix ([01fa246](https://github.com/nuvla/ui/commit/01fa246de600acefa40a210d20e10f6c365a4223))
+* **Deployment group page:** Use full width table ([01fa246](https://github.com/nuvla/ui/commit/01fa246de600acefa40a210d20e10f6c365a4223))
+
 ## [2.41.0](https://github.com/nuvla/ui/compare/2.40.1...2.41.0) (2024-11-20)
 
 

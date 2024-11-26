@@ -30,11 +30,14 @@
   (let [opts-fn   (fn [vals] (map (fn [i] {:key i :value i :content i :text i}) vals))
         {:keys [days hours minutes seconds] :as value} (decompose-duration @!value)
         set-value #(set-value-fn (->seconds %))]
-    [:div {:style {:display     :flex
-                   :align-items :center
-                   :gap         5}}
+    [:div {:style {:display               :grid
+                   :grid-template-columns "repeat(auto-fill, minmax(100px, 1fr))"
+                   :align-items           :center
+                   :gap                   5}}
      (when @!show-days?
-       [:<>
+       [:div {:style {:display :flex
+                      :align-items           :center
+                      :gap 5}}
         [:label (tr-fn [:days])]
         [ui/Dropdown {:class     :duration-days
                       :value     days
@@ -43,7 +46,9 @@
                       :style     {:min-width "70px"}
                       :on-change (ui-callback/value #(set-value (assoc value :days %)))}]])
      (when @!show-hours?
-       [:<>
+       [:div {:style {:display :flex
+                      :align-items           :center
+                      :gap 5}}
         [:label (tr-fn [:hours])]
         [ui/Dropdown {:class     :duration-hours
                       :value     hours
@@ -52,7 +57,9 @@
                       :style     {:min-width "70px"}
                       :on-change (ui-callback/value #(set-value (assoc value :hours %)))}]])
      (when @!show-minutes?
-       [:<>
+       [:div {:style {:display :flex
+                      :align-items           :center
+                      :gap 5}}
         [:label (tr-fn [:minutes])]
         [ui/Dropdown {:class     :duration-minutes
                       :value     minutes
@@ -61,7 +68,9 @@
                       :style     {:min-width "70px"}
                       :on-change (ui-callback/value #(set-value (assoc value :minutes %)))}]])
      (when @!show-seconds?
-       [:<>
+       [:div {:style {:display :flex
+                      :align-items           :center
+                      :gap 5}}
         [:label (tr-fn [:seconds])]
         [ui/Dropdown {:class     :duration-seconds
                       :value     seconds

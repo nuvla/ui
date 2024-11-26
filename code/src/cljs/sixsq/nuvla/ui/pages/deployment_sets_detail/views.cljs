@@ -688,11 +688,12 @@
                            :label    ""
                            :on-click #(dispatch [::events/set-auto-update (not auto-update)])}]
              [:div {:style {:display     :flex
+                            :width "90%"
                             :align-items :center
                             :gap         10
                             :visibility  (if auto-update :visible :hidden)}}
               [:span (str/capitalize (@tr [:interval])) ":"]
-              [:span
+              [:span {:style {:width "80%"}}
                [duration-picker/DurationPickerController
                 {:!value           !auto-update-interval-in-seconds
                  :set-value-fn     #(dispatch [::events/set-auto-update-interval %])

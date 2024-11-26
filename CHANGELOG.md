@@ -2,6 +2,14 @@
 
 ## Released
 
+## [2.41.2](https://github.com/nuvla/ui/compare/2.41.1...2.41.2) (2024-11-26)
+
+
+### Bug Fixes
+
+* **Deployment group detail page:** Make stats clickable only when items are available ([#1689](https://github.com/nuvla/ui/issues/1689)) ([25247d9](https://github.com/nuvla/ui/commit/25247d9ce37adaf533c29c23f0ea524db1304809))
+* **dg-overview-layout:** use css grid for duration picker ([#1690](https://github.com/nuvla/ui/issues/1690)) ([4fc869c](https://github.com/nuvla/ui/commit/4fc869c0194dd14769968030190b7b4d2f5b5fe7))
+
 ## [2.41.1](https://github.com/nuvla/ui/compare/2.41.0...2.41.1) (2024-11-25)
 
 

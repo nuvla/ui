@@ -1055,6 +1055,7 @@
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
   (let [current-route     @(subscribe [::route-subs/current-route])
         to-edges-tab      {:deployment-groups-detail-tab :edges}
+        edges             (subscribe [::subs/all-edges-ids])
         create-target-url (fn [status-filter]
                             {:resource (routes-utils/gen-href
                                          current-route
@@ -1065,30 +1066,40 @@
                                             (assoc events/edges-state-filter-key status-filter))})})]
     [ui/StatisticGroup {:size  "tiny"
                         :style {:padding "0.2rem"}}
-     [components/StatisticState {:clickable? true
+     [components/StatisticState {:clickable? (seq @edges)
                                  :value      total
                                  :stacked?   true
                                  :icons      [icons/i-box]
                                  :label      "TOTAL"
                                  :color      "black"
                                  :on-click   #(dispatch [::routing-events/navigate
-                                                         (:resource (create-target-url ""))])}]
-     [dashboard-views/Statistic {:value          online
-                                 :icon           icons/i-power
-                                 :label          edges-utils/status-online
-                                 :positive-color "green"
-                                 :color          "green"
-                                 :target         (create-target-url "ONLINE")}]
-     [dashboard-views/Statistic {:value  offline
-                                 :icon   icons/i-power
-                                 :label  edges-utils/status-offline
-                                 :color  "red"
-                                 :target (create-target-url "OFFLINE")}]
-     [dashboard-views/Statistic {:value  unknown
-                                 :icon   icons/i-power
-                                 :label  edges-utils/status-unknown
-                                 :color  "orange"
-                                 :target (create-target-url "UNKNOWN")}]]))
+                                                         (:resource (create-target-url ""))
+                                                         nil nil {:ignore-chng-protection? true}])}]
+     [dashboard-views/Statistic (cond-> {:value          online
+                                         :icon           icons/i-power
+                                         :label          edges-utils/status-online
+                                         :positive-color "green"
+                                         :color          "green"}
+                                        (seq @edges)
+                                        (assoc :on-click #(dispatch [::routing-events/navigate
+                                                                     (:resource (create-target-url "ONLINE"))
+                                                                     nil nil {:ignore-chng-protection? true}])))]
+     [dashboard-views/Statistic (cond-> {:value offline
+                                         :icon  icons/i-power
+                                         :label edges-utils/status-offline
+                                         :color "red"}
+                                        (seq @edges)
+                                        (assoc :on-click #(dispatch [::routing-events/navigate
+                                                                     (:resource (create-target-url "OFFLINE"))
+                                                                     nil nil {:ignore-chng-protection? true}])))]
+     [dashboard-views/Statistic (cond-> {:value unknown
+                                         :icon  icons/i-power
+                                         :label edges-utils/status-unknown
+                                         :color "orange"}
+                                        (seq @edges)
+                                        (assoc :on-click #(dispatch [::routing-events/navigate
+                                                                     (:resource (create-target-url "UNKNOWN"))
+                                                                     nil nil {:ignore-chng-protection? true}])))]]))
 
 (defn create-nav-fn
   ([tab added-params]
@@ -1101,16 +1112,16 @@
                   added-params)}])))
 
 (defn- DeploymentStatesFilter [state-filter]
-  [dv/StatisticStates true ::deployments-subs/deployments-summary-all
-   (mapv (fn [state] (assoc state
-                       :on-click
-                       (create-nav-fn "deployments" {:depl-state (:label state)})
-                       :selected? (or
-                                    (= state-filter (:label state))
-                                    (and
-                                      (nil? state-filter)
-                                      (= "TOTAL" (:label state))))))
-         dv/default-states)])
+  (let [deployments (subscribe [::deployments-subs/deployments])]
+    [dv/StatisticStates (pos? (:count @deployments)) ::deployments-subs/deployments-summary-all
+     (mapv (fn [state] (cond-> (assoc state
+                                 :selected? (or
+                                              (= state-filter (:label state))
+                                              (and
+                                                (nil? state-filter)
+                                                (= "TOTAL" (:label state))))
+                                 :on-click (create-nav-fn "deployments" {:depl-state (:label state)}))))
+           dv/default-states)]))
 
 (defn- DeploymentsStatesCard
   [state-filter]
@@ -2024,7 +2035,7 @@
                                                                  :content (tr [:depl-group-save-and-start-to-enable-tab])}])
                                                     tab-title))
                                                 :icon     icons/i-rocket
-                                                :disabled (zero? (:total @depl-all))}
+                                                :disabled (not (pos? (:count @depl-all)))}
                                      :render   #(r/as-element
                                                   [DeploymentsTab uuid])}]
           :ignore-chng-protection? true

@@ -1296,17 +1296,16 @@
         fleet-filter               (subscribe [::subs/fleet-filter])
         fleet-changes              (subscribe [::subs/fleet-changes])]
     [:<>
-     [:<>
-      [StatisticStatesEdgeView edges-stats]
-      (when @fleet-changes
-        [:div {:style {:margin "1.4rem auto"}}
-         [UnstoredEdgeChanges @fleet-changes]])
-      [uix/Button {:class    "center"
-                   :icon     icons/i-box
-                   :content  (@tr [:show-me])
-                   :disabled (or (nil? (:total edges-stats))
-                                 (= 0 (:total edges-stats)))
-                   :on-click (create-nav-fn "edges" {:edges-state nil})}]]
+     [StatisticStatesEdgeView edges-stats]
+     (when @fleet-changes
+       [:div {:style {:margin "1.4rem auto"}}
+        [UnstoredEdgeChanges @fleet-changes]])
+     [uix/Button {:class    "center"
+                  :icon     icons/i-box
+                  :content  (@tr [:show-me])
+                  :disabled (or (nil? (:total edges-stats))
+                                (= 0 (:total edges-stats)))
+                  :on-click (create-nav-fn "edges" {:edges-state nil})}]
      [:div
       {:style {:display :flex :justify-content :center :align-items :center :flex-direction :column}}
       (when (and @can-edit-data? (not @fleet-filter))

@@ -743,13 +743,17 @@
                                callback]}
         {:fx [[:dispatch [::set-edges {:resources []}]]]}))))
 
+(reg-event-db
+  ::set-edges-ids
+  (fn [{:keys [current-route] :as db} [_ response]]
+    (let [path (subs/current-route->edges-db-path current-route)]
+      (assoc-in db path (update response :resources #(mapv :id %))))))
+
 (reg-event-fx
   ::set-edges
-  (fn [{{:keys [current-route] :as db} :db} [_ response]]
-    (let [path (subs/current-route->edges-db-path current-route)]
-      {:db (assoc-in db path
-                     (update response :resources #(mapv :id %)))
-       :fx [[:dispatch [::get-edge-documents]]]})))
+  (fn [_ [_ response]]
+    {:fx [[:dispatch [::set-edges-ids response]]
+          [:dispatch [::get-edge-documents]]]}))
 
 (def edges-state-filter-key :edges-state)
 
@@ -1153,14 +1157,15 @@
 
 (reg-event-fx
   ::update-fleet-filter-edge-ids
-  (fn [{db :db} [_]]
+  (fn [{db :db} [_ creating?]]
     {::cimi-api-fx/search
      [:nuvlabox
       {:filter (get-full-filter-string db)
        :select "id"}
       #(do
          (dispatch [::set-opened-modal nil])
-         (dispatch [::set-edges %]))]}))
+         (dispatch [::set-edges-ids %])
+         (dispatch [::get-edges creating?]))]}))
 
 (reg-event-fx
   ::show-fleet-changes-only
@@ -1202,7 +1207,7 @@
                           deployment-set updated-deployment-set)]]
             (if creating?
               ;; implicitly recompute the fleet during DG creation
-              [:dispatch [::update-fleet-filter-edge-ids]]
+              [:dispatch [::update-fleet-filter-edge-ids creating?]]
               [:dispatch [::get-edges]])]})))
 
 (reg-event-fx

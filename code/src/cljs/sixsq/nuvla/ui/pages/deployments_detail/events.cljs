@@ -125,7 +125,7 @@
 (reg-event-fx
   ::detach
   (fn [_ [_ href]]
-    (let [on-success #(dispatch [::set-deployment %])]
+    (let [on-success #(dispatch [::get-deployment href])]
       {::cimi-api-fx/operation [href "detach" on-success]})))
 
 (reg-event-fx

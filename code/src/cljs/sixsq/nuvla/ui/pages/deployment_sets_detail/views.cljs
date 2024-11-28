@@ -688,7 +688,7 @@
                            :label    ""
                            :on-click #(dispatch [::events/set-auto-update (not auto-update)])}]
              [:div {:style {:display     :flex
-                            :width "90%"
+                            :width       "90%"
                             :align-items :center
                             :gap         10
                             :visibility  (if auto-update :visible :hidden)}}
@@ -1984,7 +1984,7 @@
   [{:keys [uuid creating?]}]
   (let [tr             @(subscribe [::i18n-subs/tr])
         deployment-set (subscribe [::subs/deployment-set])
-        apps-sets      (subscribe [::subs/applications-sets])
+        apps-row       (subscribe [::subs/apps-row-data])
         edges          (subscribe [::subs/all-edges-ids])
         depl-all       (subscribe [::deployments-subs/deployments-summary-all])]
     (fn []
@@ -2007,10 +2007,10 @@
                                                     (let [error? @(subscribe [::subs/apps-config-validation-error?])]
                                                       (r/as-element
                                                         [:span
-                                                         {:style {:color (if error? utils-forms/dark-red "black")}}
+                                                         {:style {:color (when error? utils-forms/dark-red)}}
                                                          tab-title]))))
                                                 :icon     icons/i-gear
-                                                :disabled (or creating? (empty? @apps-sets))}
+                                                :disabled (or creating? (empty? @apps-row))}
                                      :render   #(r/as-element [ConfigureAppsSet creating?])}
                                     {:menuItem {:key      :edges
                                                 :content
@@ -2037,7 +2037,8 @@
                                                 :icon     icons/i-rocket
                                                 :disabled (not (pos? (:count @depl-all)))}
                                      :render   #(r/as-element
-                                                  [DeploymentsTab uuid])}]
+                                                  [DeploymentsTab uuid])}
+                                    (when-not creating? (job-views/jobs-section))]
           :ignore-chng-protection? true
           :menu                    {:secondary true
                                     :pointing  true}}]))))

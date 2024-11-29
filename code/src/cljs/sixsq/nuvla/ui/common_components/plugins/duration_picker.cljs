@@ -24,7 +24,7 @@
                     seconds])))
 
 (defn DurationPicker
-  [{:keys [::!value ::set-value-fn ::tr-fn
+  [{:keys [::!value ::set-value-fn ::!disabled? ::tr-fn
            ::!show-days? ::!show-hours? ::!show-minutes? ::!show-seconds?
            ::!days-options ::!hours-options ::!minutes-options ::!seconds-options] :as _control}]
   (let [opts-fn   (fn [vals] (map (fn [i] {:key i :value i :content i :text i}) vals))
@@ -35,49 +35,53 @@
                    :align-items           :center
                    :gap                   5}}
      (when @!show-days?
-       [:div {:style {:display :flex
-                      :align-items           :center
-                      :gap 5}}
+       [:div {:style {:display     :flex
+                      :align-items :center
+                      :gap         5}}
         [:label (tr-fn [:days])]
-        [ui/Dropdown {:class     :duration-days
-                      :value     days
-                      :options   (opts-fn @!days-options)
-                      :selection true
-                      :style     {:min-width "70px"}
-                      :on-change (ui-callback/value #(set-value (assoc value :days %)))}]])
+        [ui/Dropdown (cond-> {:class     :duration-days
+                              :value     days
+                              :options   (opts-fn @!days-options)
+                              :selection true
+                              :style     {:min-width "70px"}
+                              :disabled  @!disabled?}
+                             (not @!disabled?) (assoc :on-change (ui-callback/value #(set-value (assoc value :days %)))))]])
      (when @!show-hours?
-       [:div {:style {:display :flex
-                      :align-items           :center
-                      :gap 5}}
+       [:div {:style {:display     :flex
+                      :align-items :center
+                      :gap         5}}
         [:label (tr-fn [:hours])]
-        [ui/Dropdown {:class     :duration-hours
-                      :value     hours
-                      :options   (opts-fn @!hours-options)
-                      :selection true
-                      :style     {:min-width "70px"}
-                      :on-change (ui-callback/value #(set-value (assoc value :hours %)))}]])
+        [ui/Dropdown (cond-> {:class     :duration-hours
+                              :value     hours
+                              :options   (opts-fn @!hours-options)
+                              :selection true
+                              :style     {:min-width "70px"}
+                              :disabled  @!disabled?}
+                             (not @!disabled?) (assoc :on-change (ui-callback/value #(set-value (assoc value :hours %)))))]])
      (when @!show-minutes?
-       [:div {:style {:display :flex
-                      :align-items           :center
-                      :gap 5}}
+       [:div {:style {:display     :flex
+                      :align-items :center
+                      :gap         5}}
         [:label (tr-fn [:minutes])]
-        [ui/Dropdown {:class     :duration-minutes
-                      :value     minutes
-                      :options   (opts-fn @!minutes-options)
-                      :selection true
-                      :style     {:min-width "70px"}
-                      :on-change (ui-callback/value #(set-value (assoc value :minutes %)))}]])
+        [ui/Dropdown (cond-> {:class     :duration-minutes
+                              :value     minutes
+                              :options   (opts-fn @!minutes-options)
+                              :selection true
+                              :style     {:min-width "70px"}
+                              :disabled  @!disabled?}
+                             (not @!disabled?) (assoc :on-change (ui-callback/value #(set-value (assoc value :minutes %)))))]])
      (when @!show-seconds?
-       [:div {:style {:display :flex
-                      :align-items           :center
-                      :gap 5}}
+       [:div {:style {:display     :flex
+                      :align-items :center
+                      :gap         5}}
         [:label (tr-fn [:seconds])]
-        [ui/Dropdown {:class     :duration-seconds
-                      :value     seconds
-                      :options   (opts-fn @!seconds-options)
-                      :selection true
-                      :style     {:min-width "70px"}
-                      :on-change (ui-callback/value #(set-value (assoc value :seconds %)))}]])]))
+        [ui/Dropdown (cond-> {:class     :duration-seconds
+                              :value     seconds
+                              :options   (opts-fn @!seconds-options)
+                              :selection true
+                              :style     {:min-width "70px"}
+                              :disabled  @!disabled?}
+                             (not @!disabled?) (assoc :on-change (ui-callback/value #(set-value (assoc value :seconds %)))))]])]))
 
 (defn DurationPickerController
   [{:keys [;; current value in seconds
@@ -99,6 +103,10 @@
            !seconds-options
 
            ;; Optional
+           ;; whether the picker should be disabled
+           !disabled?
+
+           ;; Optional
            ;; Translations
            tr-fn
            ]}]
@@ -112,6 +120,7 @@
                !hours-options   (or !hours-options (r/atom (range 0 24)))
                !minutes-options (or !minutes-options (r/atom (range 0 60)))
                !seconds-options (or !seconds-options (r/atom (range 0 60)))
+               !disabled?       (or !disabled? (r/atom false))
                tr-fn            (or tr-fn (comp str/capitalize name first))]
     [DurationPicker {::!value           !value
                      ::set-value-fn     set-value-fn
@@ -123,6 +132,6 @@
                      ::!hours-options   !hours-options
                      ::!minutes-options !minutes-options
                      ::!seconds-options !seconds-options
+                     ::!disabled?       !disabled?
                      ::tr-fn            tr-fn}]))
-
 

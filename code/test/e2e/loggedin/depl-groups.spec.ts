@@ -19,13 +19,9 @@ test('test', async ({ page }, { config }) => {
 
   await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/deployment-groups/create`));
 
-  await page.getByRole('row', { name: 'Name' }).locator('i').click();
-
   await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').click();
 
   await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').fill(testDeplGroupName);
-
-  await page.getByRole('row', { name: 'Name' }).getByRole('button').click();
 
   await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/deployment-groups/create`));
 

@@ -51,10 +51,10 @@
             [sixsq.nuvla.ui.utils.view-components :as vc]))
 
 (defn- ops-status-start-str
-  [tr-fn {:keys [deployments-to-add] :as _ops-status}
+  [tr-fn {:keys [deployments-to-add deployments-to-update] :as _ops-status}
    apps-count edges-count]
   (tr-fn [:depl-group-start-warning-msg]
-         [(count deployments-to-add)
+         [(+ (count deployments-to-add) (count deployments-to-update))
           (str apps-count " " (str/lower-case (tr-fn (if (> apps-count 1) [:apps] [:app]))))
           (str edges-count " " (str/lower-case (tr-fn (if (> edges-count 1) [:edges] [:edge]))))]))
 

@@ -27,13 +27,9 @@ test('create deployment group containing an app from deployment modal', async ({
 
   await page.waitForTimeout(1000);
 
-  await page.getByRole('cell', { name: /Deployment Group/ }).locator('i').click();
-
   await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').click();
 
   await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').fill(testDeplGroupName);
-
-  await page.getByRole('row', { name: 'Name' }).getByRole('button').click();
 
   await page.getByTestId('add-edges-button').click();
 

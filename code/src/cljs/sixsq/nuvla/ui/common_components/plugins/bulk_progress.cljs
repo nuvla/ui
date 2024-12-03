@@ -100,13 +100,13 @@
     (vals (get-in db (conj db-path ::jobs)))))
 
 (def job-action->header
-  {"bulk_stop_deployment"       :bulk-stop-in-progress
-   "bulk_update_deployment"     :bulk-update-in-progress
-   "bulk_delete_deployment"     :bulk-delete-in-progress
-   "bulk_deployment_set_start"  :depl-group-start-in-progress
-   "bulk_deployment_set_update" :depl-group-update-in-progress
-   "bulk_deployment_set_stop"   :depl-group-stop-in-progress
-   "bulk_update_nuvlabox"       :bulk-update-in-progress})
+  {"bulk_stop_deployment"       :bulk-stop
+   "bulk_update_deployment"     :bulk-update
+   "bulk_delete_deployment"     :bulk-delete
+   "bulk_deployment_set_start"  :depl-group-start
+   "bulk_deployment_set_update" :depl-group-update
+   "bulk_deployment_set_stop"   :depl-group-stop
+   "bulk_update_nuvlabox"       :bulk-update})
 
 (defn- ProgressLabel
   [{:keys [ACTIONS_CALLED ACTIONS_CALL_FAILED ACTIONS_COUNT JOBS_DONE JOBS_COUNT]
@@ -222,11 +222,12 @@
                         (and some-fail? some-success?) "yellow"
                         (or state-failed? some-fail?) "red"
                         :else "green")
-        Header        [uix/TR
-                       (or (job-action->header action)
-                           (some-> action
-                                   (str/replace #"_" " ")
-                                   (general-utils/capitalize-first-letter)))]
+        Header        (str (or (tr [(job-action->header action)])
+                               (some-> action
+                                       (str/replace #"_" " ")
+                                       (general-utils/capitalize-first-letter)))
+                           " "
+                           (tr [(if completed? :completed :in-progress)]))
         ProgressBar   (fn []
                         [ui/Progress
                          {:active   (not completed?)

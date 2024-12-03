@@ -283,9 +283,10 @@
                                 (reset! confirmed? false))]
     (fn [{:keys [id] :as deployment-set} warn-msg]
       [uix/ModalDanger
-       {:on-confirm         #(dispatch [::events/operation
-                                        {:resource-id id
-                                         :operation   "start"}])
+       {:on-confirm         #(do (dispatch [::events/operation
+                                            {:resource-id id
+                                             :operation   "start"}])
+                                 (close-start-modal))
         :trigger            (guarded-menu-item
                               {:enabled    @enabled?
                                :on-click   (fn []
@@ -358,9 +359,10 @@
                                 (reset! confirmed? false))]
     (fn [{:keys [id] :as deployment-set} warn-msg]
       [uix/ModalDanger
-       {:on-confirm         #(dispatch [::events/operation
-                                        {:resource-id id
-                                         :operation   "update"}])
+       {:on-confirm         #(do (dispatch [::events/operation
+                                            {:resource-id id
+                                             :operation   "update"}])
+                                 (close-update-modal))
         :trigger            (guarded-menu-item
                               {:enabled    @enabled?
                                :on-click   (fn []

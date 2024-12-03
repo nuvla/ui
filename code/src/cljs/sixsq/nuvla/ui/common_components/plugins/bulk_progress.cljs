@@ -187,39 +187,54 @@
        [GridColumnLinks (@tr [:successes]) "green" SUCCESS job-id status_message]
        [GridColumnLinks (@tr [:failures]) "red" FAILED job-id status_message]])))
 
+(defn- ActionCallErrorsTable
+  [{:keys [BOOTSTRAP_EXCEPTIONS] :as _status-message}]
+  (when-let [errors (seq (:other BOOTSTRAP_EXCEPTIONS))]
+    [ui/Table {:celled true}
+     [ui/TableHeader
+      [ui/TableRow
+       [ui/TableHeaderCell {:style {:color ""}} "Frequencies"]
+       [ui/TableHeaderCell "Action call error message"]]]
+     [ui/TableBody
+      (for [[error-msg n] (->> errors
+                               frequencies
+                               (sort-by second >))]
+        ^{:key error-msg}
+        [ui/TableRow {:warning true}
+         [ui/TableCell n]
+         [ui/TableCell error-msg]])]]))
+
 (defn- MonitoredJob
-  [{:keys [db-path]} {:keys [id state status-message progress action]
-                      :as   job}]
-  (let [tr                  @(subscribe [::i18n-subs/tr])
-        on-dismiss          #(dispatch [::dismiss db-path id])
-        {:keys [FAILED SUCCESS BOOTSTRAP_EXCEPTIONS ACTIONS_CALL_FAILED]
-         :or {ACTIONS_CALL_FAILED 0}
+  [{:keys [db-path]} {:keys [id state status-message progress action] :as job}]
+  (let [tr            @(subscribe [::i18n-subs/tr])
+        on-dismiss    #(dispatch [::dismiss db-path id])
+        {:keys [FAILED SUCCESS ACTIONS_CALL_FAILED]
+         :or   {ACTIONS_CALL_FAILED 0}
          :as   status-message} (when (not= state "FAILED")
                                  (try
                                    (general-utils/json->edn status-message)
                                    (catch :default _ nil)))
-        other-bootstrap-ex? (:other BOOTSTRAP_EXCEPTIONS)
-        some-fail?          (pos? (+ (count FAILED) ACTIONS_CALL_FAILED))
-        some-success?       (pos? (count SUCCESS))
-        completed?          (= progress 100)
-        state-failed?       (= state "FAILED")
-        color               (cond
-                              (and some-fail? some-success?) "yellow"
-                              (or state-failed? some-fail?) "red"
-                              :else "green")
-        Header              [uix/TR
-                             (or (job-action->header action)
-                                 (some-> action
-                                         (str/replace #"_" " ")
-                                         (general-utils/capitalize-first-letter)))]
-        ProgressBar         (fn []
-                              [ui/Progress
-                               {:active   (not completed?)
-                                :percent  progress
-                                :progress true
-                                :color    color
-                                :size     "small"}
-                               [ProgressLabel status-message]])]
+        some-fail?    (pos? (+ (count FAILED) ACTIONS_CALL_FAILED))
+        some-success? (pos? (count SUCCESS))
+        completed?    (= progress 100)
+        state-failed? (= state "FAILED")
+        color         (cond
+                        (and some-fail? some-success?) "yellow"
+                        (or state-failed? some-fail?) "red"
+                        :else "green")
+        Header        [uix/TR
+                       (or (job-action->header action)
+                           (some-> action
+                                   (str/replace #"_" " ")
+                                   (general-utils/capitalize-first-letter)))]
+        ProgressBar   (fn []
+                        [ui/Progress
+                         {:active   (not completed?)
+                          :percent  progress
+                          :progress true
+                          :color    color
+                          :size     "small"}
+                         [ProgressLabel status-message]])]
     [ui/Modal {:trigger    (r/as-element
                              [ui/Message (cond-> {:style {:cursor "pointer"}}
                                                  completed? (assoc :on-dismiss on-dismiss))
@@ -228,24 +243,17 @@
                                [ProgressBar]]])
                :close-icon true}
      [ui/ModalHeader Header]
-     [ui/ModalContent
+     [ui/ModalContent {:scrolling true}
       [ui/Grid {:stackable true}
        [ui/GridRow
         [ui/GridColumn
          [:h3 (str/capitalize (tr [:progress])) ": "]
          [ProgressBar]
          (when state-failed?
-           [:p {:style {:color "red"}} status-message])
-         (when (seq other-bootstrap-ex?)
-           [:p {:style {:color "red"}}
-            (->> other-bootstrap-ex?
-                 frequencies
-                 (sort-by second >)
-                 (take 10)
-                 (map (fn [[s n]] (str n " X " s)))
-                 (str/join "\n"))])]]
+           [:p {:style {:color "red"}} status-message])]]
        [ui/GridRow {:columns 4}
-        [SuccessFailedLinks id status-message]]]]
+        [SuccessFailedLinks id status-message]]]
+      [ActionCallErrorsTable status-message]]
      (when (general-utils/can-operation? "cancel" job)
        [ui/ModalActions
         [uix/ButtonAskingForConfirmation

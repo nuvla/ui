@@ -606,10 +606,10 @@
         on-change-fn     #(dispatch [::events/edit attribute %])]
     [ui/TableCell
      (if (and @can-edit-data? (or creating? @edit-op-allowed?))
-       [components/EditableInput
-        {:resource     @deployment-set
-         :attribute    attribute
-         :on-change-fn on-change-fn}]
+       [ui/Input
+        {:default-value (get @deployment-set attribute)
+         :on-change     (ui-callback/input-callback on-change-fn)
+         :style         {:width "100%"}}]
        (get @deployment-set attribute))]))
 
 (def ops-status->color

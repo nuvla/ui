@@ -642,10 +642,10 @@
     (reset! !minutes-options (into (if (>= @!auto-update-interval-in-seconds 3600) [0] [])
                                    [1 2 5 10 20 30 40 50]))
     (let [enabled? (and @can-edit-data? (or creating? @edit-op-allowed?))]
-      (reset! !disabled? (not enabled?))
+      (reset! !disabled? (or (not enabled?) (not auto-update)))
       [:div {:style {:display     :flex
                      :align-items :center}}
-       [ui/Checkbox (cond-> {:checked  auto-update
+       [ui/Checkbox (cond-> {:checked  (boolean auto-update)
                              :basic    "true"
                              :label    ""
                              :disabled (not enabled?)}
@@ -653,8 +653,7 @@
        [:div {:style {:display     :flex
                       :width       "90%"
                       :align-items :center
-                      :gap         10
-                      :visibility  (if auto-update :visible :hidden)}}
+                      :gap         10}}
         [:span (str/capitalize (@tr [:interval])) ":"]
         [:span {:style {:width "80%"}}
          [duration-picker/DurationPickerController

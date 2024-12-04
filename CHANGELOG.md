@@ -2,6 +2,23 @@
 
 ## Released
 
+## [2.42.0](https://github.com/nuvla/ui/compare/2.41.2...2.42.0) (2024-12-04)
+
+
+### Features
+
+* **Deployment group details page:** Make name&desc fields directly editable ([#1699](https://github.com/nuvla/ui/issues/1699)) ([e5b8865](https://github.com/nuvla/ui/commit/e5b88659eb9d5fcd430560312363cf179ee657fd))
+* **Deployment Group page:** Auto-refresh checkbox should be there at creation time before save ([c76f734](https://github.com/nuvla/ui/commit/c76f734b1f82fb15734d3bff6bfe60914c13fdbf))
+* **dg-jobs-tab:** Add a jobs tab related to DG ([#1696](https://github.com/nuvla/ui/issues/1696)) ([1661638](https://github.com/nuvla/ui/commit/1661638290f1e25cab3db054b322b228b5bf219f))
+
+
+### Bug Fixes
+
+* **Deployment details page:** Detach action do no refresh page bugfix ([#1693](https://github.com/nuvla/ui/issues/1693)) ([da5357e](https://github.com/nuvla/ui/commit/da5357ea99fa20bfec2b8381bd7355e7ccd93efc))
+* **Deployment group details page:** Set dynamic filter button remove edges stats in overview ([#1694](https://github.com/nuvla/ui/issues/1694)) ([d76414a](https://github.com/nuvla/ui/commit/d76414a44458112f22a74e1f15d9c6e871559e0f))
+* **Deployment group details:** Always display auto-update fields ([#1701](https://github.com/nuvla/ui/issues/1701)) ([66af2b6](https://github.com/nuvla/ui/commit/66af2b6c4fa4410b2924e3dee74e1b0eb362b656))
+* **inconsistent-msg-starting-dg:** also consider deployments-to-update ([#1698](https://github.com/nuvla/ui/issues/1698)) ([2a539c6](https://github.com/nuvla/ui/commit/2a539c6e5d7487b20302bbb44425cab136c7cf05))
+
 ## [2.41.2](https://github.com/nuvla/ui/compare/2.41.1...2.41.2) (2024-11-26)
 
 

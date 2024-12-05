@@ -50,6 +50,20 @@
             [sixsq.nuvla.ui.utils.values :as utils-values]
             [sixsq.nuvla.ui.utils.view-components :as vc]))
 
+
+(defmethod job-views/JobCell "bulk_deployment_set_start"
+  [resource]
+  [bulk-progress-plugin/MonitoredJobDetail resource :with-progress? false])
+
+(defmethod job-views/JobCell "bulk_deployment_set_update"
+  [resource]
+  [bulk-progress-plugin/MonitoredJobDetail resource :with-progress? false])
+
+(defmethod job-views/JobCell "bulk_deployment_set_stop"
+  [resource]
+  [bulk-progress-plugin/MonitoredJobDetail resource :with-progress? false])
+
+
 (defn- ops-status-start-str
   [tr-fn {:keys [deployments-to-add deployments-to-update] :as _ops-status}
    apps-count edges-count]

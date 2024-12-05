@@ -204,57 +204,72 @@
          [ui/TableCell n]
          [ui/TableCell error-msg]])]]))
 
-(defn- MonitoredJob
-  [{:keys [db-path]} {:keys [id state status-message progress action] :as job}]
-  (let [tr            @(subscribe [::i18n-subs/tr])
-        on-dismiss    #(dispatch [::dismiss db-path id])
+(defn parse-job-status-message
+  [{:keys [state status-message] :as _job}]
+  (when (not= state "FAILED")
+    (try
+      (general-utils/json->edn status-message)
+      (catch :default _ nil))))
+
+(defn ProgressBar
+  [{:keys [state progress] :as job}]
+  (let [completed?    (= progress 100)
+        state-failed? (= state "FAILED")
         {:keys [FAILED SUCCESS ACTIONS_CALL_FAILED]
-         :or   {ACTIONS_CALL_FAILED 0}
-         :as   status-message} (when (not= state "FAILED")
-                                 (try
-                                   (general-utils/json->edn status-message)
-                                   (catch :default _ nil)))
+         :or   {ACTIONS_CALL_FAILED 0} :as parsed-status-message} (parse-job-status-message job)
         some-fail?    (pos? (+ (count FAILED) ACTIONS_CALL_FAILED))
         some-success? (pos? (count SUCCESS))
-        completed?    (= progress 100)
-        state-failed? (= state "FAILED")
         color         (cond
                         (and some-fail? some-success?) "yellow"
                         (or state-failed? some-fail?) "red"
-                        :else "green")
-        Header        (str (or (tr [(job-action->header action)])
-                               (some-> action
-                                       (str/replace #"_" " ")
-                                       (general-utils/capitalize-first-letter)))
-                           " "
-                           (tr [(if completed? :completed :in-progress)]))
-        ProgressBar   (fn []
-                        [ui/Progress
-                         {:active   (not completed?)
-                          :percent  progress
-                          :progress true
-                          :color    color
-                          :size     "small"}
-                         [ProgressLabel status-message]])]
+                        :else "green")]
+    [ui/Progress
+     {:active   (not completed?)
+      :percent  progress
+      :progress true
+      :color    color
+      :size     "small"}
+     [ProgressLabel parsed-status-message]]))
+
+(defn MonitoredJobDetail
+  [{:keys [id state status-message] :as job} & {:keys [with-progress?]
+                                                :or   {with-progress? true}}]
+  (let [tr                    @(subscribe [::i18n-subs/tr])
+        parsed-status-message (parse-job-status-message job)]
+    [:<>
+     [ui/Grid {:stackable true}
+      [ui/GridRow
+       [ui/GridColumn
+        (when with-progress?
+          [:<>
+           [:h3 (str/capitalize (tr [:progress])) ": "]]
+          [ProgressBar job])
+        (when (= state "FAILED")
+          [:p {:style {:color "red"}} status-message])]]
+      [ui/GridRow {:columns 4}
+       [SuccessFailedLinks id parsed-status-message]]]
+     [ActionCallErrorsTable parsed-status-message]]))
+
+(defn- MonitoredJob
+  [{:keys [db-path]} {:keys [id progress action] :as job}]
+  (let [tr         @(subscribe [::i18n-subs/tr])
+        on-dismiss #(dispatch [::dismiss db-path id])
+        completed? (= progress 100)
+        Header     (str (or (tr [(job-action->header action)])
+                            (some-> action
+                                    (str/replace #"_" " ")
+                                    (general-utils/capitalize-first-letter)))
+                        " "
+                        (tr [(if completed? :completed :in-progress)]))]
     [ui/Modal {:trigger    (r/as-element
                              [ui/Message (cond-> {:style {:cursor "pointer"}}
                                                  completed? (assoc :on-dismiss on-dismiss))
                               [ui/MessageHeader Header]
-                              [ui/MessageContent
-                               [ProgressBar]]])
+                              [ui/MessageContent [ProgressBar job]]])
                :close-icon true}
      [ui/ModalHeader Header]
      [ui/ModalContent {:scrolling true}
-      [ui/Grid {:stackable true}
-       [ui/GridRow
-        [ui/GridColumn
-         [:h3 (str/capitalize (tr [:progress])) ": "]
-         [ProgressBar]
-         (when state-failed?
-           [:p {:style {:color "red"}} status-message])]]
-       [ui/GridRow {:columns 4}
-        [SuccessFailedLinks id status-message]]]
-      [ActionCallErrorsTable status-message]]
+      [MonitoredJobDetail job]]
      (when (general-utils/can-operation? "cancel" job)
        [ui/ModalActions
         [uix/ButtonAskingForConfirmation

@@ -56,7 +56,7 @@
 
 (reg-event-fx
   ::search-jobs
-  (fn [{{:keys [::session-spec/session] :as db} :db} [_ db-path]]
+  (fn [{db :db} [_ db-path]]
     (let [monitored-ids   (seq (get-in db (conj db-path ::monitored-ids)))
           target-resource (get-in db (conj db-path ::target-resource))]
       (when (or monitored-ids target-resource)
@@ -65,7 +65,6 @@
                 :orderby "created:desc"
                 :filter  (general-utils/join-and
                            "action^='bulk'"
-                           (str "created-by='" (session-utils/get-user-id session) "'")
                            (general-utils/join-or
                              (when monitored-ids
                                (general-utils/filter-eq-ids monitored-ids))
@@ -100,21 +99,23 @@
     (vals (get-in db (conj db-path ::jobs)))))
 
 (def job-action->header
-  {"bulk_stop_deployment"       :bulk-stop-in-progress
-   "bulk_update_deployment"     :bulk-update-in-progress
-   "bulk_delete_deployment"     :bulk-delete-in-progress
-   "bulk_deployment_set_start"  :depl-group-start-in-progress
-   "bulk_deployment_set_update" :depl-group-update-in-progress
-   "bulk_deployment_set_stop"   :depl-group-stop-in-progress
-   "bulk_update_nuvlabox"       :bulk-update-in-progress})
+  {"bulk_stop_deployment"       :bulk-stop
+   "bulk_update_deployment"     :bulk-update
+   "bulk_delete_deployment"     :bulk-delete
+   "bulk_deployment_set_start"  :depl-group-start
+   "bulk_deployment_set_update" :depl-group-update
+   "bulk_deployment_set_stop"   :depl-group-stop
+   "bulk_update_nuvlabox"       :bulk-update})
 
 (defn- ProgressLabel
-  [{:keys [ACTIONS_CALLED ACTIONS_COUNT JOBS_DONE JOBS_COUNT SUCCESS FAILED]
+  [{:keys [ACTIONS_CALLED ACTIONS_CALL_FAILED ACTIONS_COUNT JOBS_DONE JOBS_COUNT]
+    :or   {ACTIONS_CALLED      0
+           ACTIONS_CALL_FAILED 0}
     :as   _status_message}]
   [:span
    [:span {:style {:color "gray"}}
-    (when (and ACTIONS_CALLED ACTIONS_COUNT)
-      (str "Actions called " ACTIONS_CALLED "/" ACTIONS_COUNT ". "))]
+    (when ACTIONS_COUNT
+      (str "Actions called " (+ ACTIONS_CALLED ACTIONS_CALL_FAILED) "/" ACTIONS_COUNT ". "))]
    [:span (when (and JOBS_DONE (pos? JOBS_COUNT))
             (str "Jobs done " JOBS_DONE "/" JOBS_COUNT ". "))]])
 
@@ -145,7 +146,7 @@
         (some-> msg (str/replace #"\n" "\n"))]])]])
 
 (defn DotPopupController
-  [opts]
+  [_opts]
   (let [job-child (r/atom nil)]
     (fn [{:keys [id job-id color status-message]}]
       (let [bootstrap-exception (get-in status-message [:BOOTSTRAP_EXCEPTIONS (keyword id)])]
@@ -185,56 +186,89 @@
        [GridColumnLinks (@tr [:successes]) "green" SUCCESS job-id status_message]
        [GridColumnLinks (@tr [:failures]) "red" FAILED job-id status_message]])))
 
-(defn- MonitoredJob
-  [{:keys [db-path]} {:keys [id state status-message progress action]
-                      :as   job}]
-  (let [tr            @(subscribe [::i18n-subs/tr])
-        on-dismiss    #(dispatch [::dismiss db-path id])
-        {:keys [FAILED SUCCESS]
-         :as   status-message} (when (not= state "FAILED")
-                                 (try
-                                   (general-utils/json->edn status-message)
-                                   (catch :default _ nil)))
-        some-fail?    (pos? (count FAILED))
-        some-success? (pos? (count SUCCESS))
-        completed?    (= progress 100)
+(defn- ActionCallErrorsTable
+  [{:keys [BOOTSTRAP_EXCEPTIONS] :as _status-message}]
+  (when-let [errors (seq (:other BOOTSTRAP_EXCEPTIONS))]
+    [ui/Table {:celled true}
+     [ui/TableHeader
+      [ui/TableRow
+       [ui/TableHeaderCell {:style {:color ""}} "Frequencies"]
+       [ui/TableHeaderCell "Action call error message"]]]
+     [ui/TableBody
+      (for [[error-msg n] (->> errors
+                               frequencies
+                               (sort-by second >))]
+        ^{:key error-msg}
+        [ui/TableRow {:warning true}
+         [ui/TableCell n]
+         [ui/TableCell error-msg]])]]))
+
+(defn parse-job-status-message
+  [{:keys [state status-message] :as _job}]
+  (when (not= state "FAILED")
+    (try
+      (general-utils/json->edn status-message)
+      (catch :default _ nil))))
+
+(defn ProgressBar
+  [{:keys [state progress] :as job}]
+  (let [completed?    (= progress 100)
         state-failed? (= state "FAILED")
+        {:keys [FAILED SUCCESS ACTIONS_CALL_FAILED]
+         :or   {ACTIONS_CALL_FAILED 0} :as parsed-status-message} (parse-job-status-message job)
+        some-fail?    (pos? (+ (count FAILED) ACTIONS_CALL_FAILED))
+        some-success? (pos? (count SUCCESS))
         color         (cond
                         (and some-fail? some-success?) "yellow"
                         (or state-failed? some-fail?) "red"
-                        :else "green")
-        Header        [uix/TR
-                       (or (job-action->header action)
-                           (some-> action
-                                   (str/replace #"_" " ")
-                                   (general-utils/capitalize-first-letter)))]
-        ProgressBar   (fn []
-                        [ui/Progress
-                         {:active   (not completed?)
-                          :percent  progress
-                          :progress true
-                          :color    color
-                          :size     "small"}
-                         [ProgressLabel status-message]])]
+                        :else "green")]
+    [ui/Progress
+     {:active   (not completed?)
+      :percent  progress
+      :progress true
+      :color    color
+      :size     "small"}
+     [ProgressLabel parsed-status-message]]))
+
+(defn MonitoredJobDetail
+  [{:keys [id state status-message] :as job} & {:keys [with-progress?]
+                                                :or   {with-progress? true}}]
+  (let [tr                    @(subscribe [::i18n-subs/tr])
+        parsed-status-message (parse-job-status-message job)]
+    [:<>
+     [ui/Grid {:stackable true}
+      [ui/GridRow
+       [ui/GridColumn
+        (when with-progress?
+          [:<>
+           [:h3 (str/capitalize (tr [:progress])) ": "]
+           [ProgressBar job]])
+        (when (= state "FAILED")
+          [:p {:style {:color "red"}} status-message])]]
+      [ui/GridRow {:columns 4}
+       [SuccessFailedLinks id parsed-status-message]]]
+     [ActionCallErrorsTable parsed-status-message]]))
+
+(defn- MonitoredJob
+  [{:keys [db-path]} {:keys [id progress action] :as job}]
+  (let [tr         @(subscribe [::i18n-subs/tr])
+        on-dismiss #(dispatch [::dismiss db-path id])
+        completed? (= progress 100)
+        Header     (str (or (tr [(job-action->header action)])
+                            (some-> action
+                                    (str/replace #"_" " ")
+                                    (general-utils/capitalize-first-letter)))
+                        " "
+                        (tr [(if completed? :completed :in-progress)]))]
     [ui/Modal {:trigger    (r/as-element
                              [ui/Message (cond-> {:style {:cursor "pointer"}}
                                                  completed? (assoc :on-dismiss on-dismiss))
                               [ui/MessageHeader Header]
-                              [ui/MessageContent
-                               [ProgressBar]]])
+                              [ui/MessageContent [ProgressBar job]]])
                :close-icon true}
      [ui/ModalHeader Header]
-     [ui/ModalContent
-      [ui/Grid {:stackable true}
-       [ui/GridRow
-        [ui/GridColumn
-         [:h3 (str/capitalize (tr [:progress])) ": "]
-         [ProgressBar]
-         (when state-failed?
-           [:p {:style {:color "red"}} status-message])]]
-       [ui/GridRow {:columns 4}
-
-        [SuccessFailedLinks id status-message]]]]
+     [ui/ModalContent {:scrolling true}
+      [MonitoredJobDetail job]]
      (when (general-utils/can-operation? "cancel" job)
        [ui/ModalActions
         [uix/ButtonAskingForConfirmation

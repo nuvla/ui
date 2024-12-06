@@ -241,8 +241,8 @@
        [ui/GridColumn
         (when with-progress?
           [:<>
-           [:h3 (str/capitalize (tr [:progress])) ": "]]
-          [ProgressBar job])
+           [:h3 (str/capitalize (tr [:progress])) ": "]
+           [ProgressBar job]])
         (when (= state "FAILED")
           [:p {:style {:color "red"}} status-message])]]
       [ui/GridRow {:columns 4}

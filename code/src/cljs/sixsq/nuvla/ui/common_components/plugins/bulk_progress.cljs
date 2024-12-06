@@ -56,7 +56,7 @@
 
 (reg-event-fx
   ::search-jobs
-  (fn [{{:keys [::session-spec/session] :as db} :db} [_ db-path]]
+  (fn [{db :db} [_ db-path]]
     (let [monitored-ids   (seq (get-in db (conj db-path ::monitored-ids)))
           target-resource (get-in db (conj db-path ::target-resource))]
       (when (or monitored-ids target-resource)
@@ -65,7 +65,6 @@
                 :orderby "created:desc"
                 :filter  (general-utils/join-and
                            "action^='bulk'"
-                           (str "created-by='" (session-utils/get-user-id session) "'")
                            (general-utils/join-or
                              (when monitored-ids
                                (general-utils/filter-eq-ids monitored-ids))

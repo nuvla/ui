@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.components.job-cell-scenes]
             [sixsq.nuvla.ui.components.msg-scenes]
             [sixsq.nuvla.ui.components.duration-picker-scenes]
+            [sixsq.nuvla.ui.components.bulk-progress-monitored-job-scenes]
             [sixsq.nuvla.ui.portfolio-utils :refer [Scene]]))
 
 (defn init [])

@@ -53,15 +53,15 @@
 
 (defmethod job-views/JobCell "bulk_deployment_set_start"
   [resource]
-  [bulk-progress-plugin/MonitoredJobDetail resource :with-progress? false])
+  [bulk-progress-plugin/MonitoredJobDetail2 resource :with-progress? true])
 
 (defmethod job-views/JobCell "bulk_deployment_set_update"
   [resource]
-  [bulk-progress-plugin/MonitoredJobDetail resource :with-progress? false])
+  [bulk-progress-plugin/MonitoredJobDetail2 resource :with-progress? true])
 
 (defmethod job-views/JobCell "bulk_deployment_set_stop"
   [resource]
-  [bulk-progress-plugin/MonitoredJobDetail resource :with-progress? false])
+  [bulk-progress-plugin/MonitoredJobDetail2 resource :with-progress? true])
 
 
 (defn- ops-status-start-str

@@ -7,8 +7,8 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table-refactor]
             [sixsq.nuvla.ui.main.events :as main-events]
-            [sixsq.nuvla.ui.session.utils :as session-utils]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
@@ -248,6 +248,127 @@
       [ui/GridRow {:columns 4}
        [SuccessFailedLinks id parsed-status-message]]]
      [ActionCallErrorsTable parsed-status-message]]))
+
+(defn MonitoredJobDetail2
+  [{:keys [id state status-message progress] :as job} & {:keys [with-progress?]
+                                                         :or   {with-progress? true}}]
+  (r/with-let [selected-reason (r/atom nil)]
+    (let [tr             @(subscribe [::i18n-subs/tr])
+          {:keys [SUCCESS_COUNT FAILED_COUNT SKIPPED_COUNT ACTIONS_COUNT
+                  RUNNING_COUNT QUEUED_COUNT
+                  SKIP_REASONS FAIL_REASONS]
+           :as   parsed-status-message} (parse-job-status-message job)
+          EXECUTED_COUNT (+ SUCCESS_COUNT FAILED_COUNT SKIPPED_COUNT)
+          ERRORED_COUNT  (+ FAILED_COUNT SKIPPED_COUNT)]
+      [:<>
+       (str parsed-status-message)
+       [:h3 (str/capitalize (tr [:progress])) ": "]
+       #_[:span (str parsed-status-message)]
+
+       #_[:b "Queued Actions: " QUEUED_COUNT " | " "Running Actions: " RUNNING_COUNT]
+       [:div [:b "Total Actions: " ACTIONS_COUNT]]
+       [:div [:b "Ongoing Actions: " (+ QUEUED_COUNT RUNNING_COUNT)]
+        [:span
+         [:span {:style {:margin-left 20 :margin-right 20}}
+          [icons/CircleIcon]
+          "Queued" ": " QUEUED_COUNT]
+         [:span {:style {:margin-left 20 :margin-right 20}}
+          [icons/CircleIcon {:color "yellow"}]
+          "Running" ": " RUNNING_COUNT]]]
+       [:div [:b "Executed Actions: " EXECUTED_COUNT]
+        [:span
+         [:span {:style {:margin-left 20 :margin-right 20}}
+          [icons/CircleIcon {:color "green"}]
+          "Completed" ": " SUCCESS_COUNT]
+         [:span {:style {:margin-left 20 :margin-right 20}}
+          [icons/CircleIcon {:color "orange"}]
+          "Skipped" ": " SKIPPED_COUNT]
+         [:span {:style {:margin-left 20 :margin-right 20}}
+          [icons/CircleIcon {:color "red"}]
+          "Failed" ": " FAILED_COUNT]]]
+
+       [ui/Progress
+        {:active   (< progress 100)
+         :percent  progress
+         :progress true}
+        [:span EXECUTED_COUNT " Executed Actions " " / " ACTIONS_COUNT " Total Actions"
+         [uix/HelpPopup
+          (str "Executed actions"
+               " / "
+               "Total Actions")]]]
+       #_[:div [:b "Total Actions: " ACTIONS_COUNT]]
+       #_[ui/Divider]
+
+       [:br]
+       [:b
+        "Error Rate: " (general-utils/to-fixed (* (/ ERRORED_COUNT ACTIONS_COUNT) 100))
+        "%" [uix/HelpPopup
+             (str "(" FAILED_COUNT " " "failed" " + " SKIPPED_COUNT " " "skipped" ") / "
+                  ACTIONS_COUNT " " "actions count")]]
+       [ui/Divider]
+       (when (pos? ERRORED_COUNT)
+         [:div
+          [:b "Errors Breakdown:" [uix/HelpPopup
+                                   "Click on row to check details by Reason\n"]]
+          [table-refactor/TableController
+           {:on-row-click                  #(reset! selected-reason (:Reason %))
+            :!enable-pagination?           (r/atom true)
+            :!pagination                   (r/atom {:page-index 0
+                                                    :page-size  10})
+            :!enable-column-customization? (r/atom false)
+            :!enable-sorting?              (r/atom false)
+            :!columns                      (r/atom [{::table-refactor/field-key      :Reason
+                                                     ::table-refactor/header-content "Reason"}
+                                                    {::table-refactor/field-key      :Count
+                                                     ::table-refactor/header-content "Count"}
+                                                    {::table-refactor/field-key      :ErrorType
+                                                     ::table-refactor/header-content "Error Type"}
+                                                    {::table-refactor/field-key      :PercentTotal
+                                                     ::table-refactor/header-content "% of Total"}])
+            :!default-columns              (r/atom [:Reason :Count :ErrorType :PercentTotal])
+            :row-id-fn                     :Reason
+            :!data                         (r/atom (mapv (fn [{:keys [CATEGORY COUNT] :as skip-reason}]
+                                                           {:Reason       CATEGORY
+                                                            :Count        COUNT
+                                                            :ErrorType    "Skipped"
+                                                            :PercentTotal (general-utils/to-fixed (* (/ COUNT ACTIONS_COUNT) 100))}) SKIP_REASONS))}]])
+
+       (when @selected-reason
+         [:div {:style {:margin-top 20}}
+          [:b @selected-reason " " [icons/CloseIcon {:style {:cursor :pointer} :on-click #(reset! selected-reason nil)} "Close"]]
+          [table-refactor/TableController
+           {:!enable-column-customization? (r/atom false)
+            :!enable-sorting?              (r/atom false)
+            :!enable-pagination?           (r/atom true)
+            :!pagination                   (r/atom {:page-index 0
+                                                    :page-size  10})
+            :!columns                      (r/atom [{::table-refactor/field-key      :id
+                                                     ::table-refactor/header-content "id"}
+                                                    {::table-refactor/field-key      :name
+                                                     ::table-refactor/header-content "name"}
+                                                    {::table-refactor/field-key      :message
+                                                     ::table-refactor/header-content "Message"}
+                                                    {::table-refactor/field-key      :COUNT
+                                                     ::table-refactor/header-content "Count"}
+                                                    {::table-refactor/field-key      :PercentTotal
+                                                     ::table-refactor/header-content "% of Total"}])
+            :!default-columns              (r/atom [:id :name :message :COUNT :PercentTotal])
+            :row-id-fn                     :id
+            :!data                         (r/atom (some #(when (= (:CATEGORY %) @selected-reason)
+                                                            (mapv (fn [{:keys [COUNT] :as ID}]
+                                                                    (assoc ID :PercentTotal (general-utils/to-fixed (* (/ COUNT ACTIONS_COUNT) 100)))
+                                                                    ) (:IDS %))
+                                                            ) SKIP_REASONS))}]
+          ]
+
+         )
+
+       (when (= state "FAILED")
+         [:p {:style {:color "red"}} status-message])
+       ;| Executed Actions: 780 -> Completed: 700 | Failed: 30 | Skipped: 50   |
+       ;| Queued: 200 | Running: 20                   |
+       ]
+      )))
 
 (defn- MonitoredJob
   [{:keys [db-path]} {:keys [id progress action] :as job}]

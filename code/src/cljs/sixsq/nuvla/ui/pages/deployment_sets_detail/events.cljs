@@ -411,7 +411,6 @@
   ::edit
   (fn [{{:keys [::spec/deployment-set
                 ::spec/deployment-set-edited]} :db} [_ key value]]
-    (prn key value)
     (let [updated-deployment-set (-> deployment-set
                                      (merge deployment-set-edited)
                                      (assoc key value))]

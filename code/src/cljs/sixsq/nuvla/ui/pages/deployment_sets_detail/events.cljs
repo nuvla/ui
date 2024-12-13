@@ -100,7 +100,8 @@
   (fn []
     (let [current-timestamp (time/time->format (time/now))]
       {:fx [[:dispatch [::reset-create]]
-            [:dispatch [::set-deployment-set-edited {:name (str "Deployment Group " current-timestamp)}]]
+            [:dispatch [::set-deployment-set-edited {:name    (str "Deployment Group " current-timestamp)
+                                                     :subtype "docker-compose"}]]
             [:dispatch [::set-changes-protection false]]]})))
 
 (reg-event-fx
@@ -410,6 +411,7 @@
   ::edit
   (fn [{{:keys [::spec/deployment-set
                 ::spec/deployment-set-edited]} :db} [_ key value]]
+    (prn key value)
     (let [updated-deployment-set (-> deployment-set
                                      (merge deployment-set-edited)
                                      (assoc key value))]

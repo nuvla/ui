@@ -612,6 +612,22 @@
          :style         {:width "100%"}}]
        (get @deployment-set attribute))]))
 
+(defn CoeTypeCell
+  [creating?]
+  (let [deployment-set (subscribe [::subs/deployment-set])
+        on-change-fn   #(dispatch [::events/edit :subtype %])
+        opts           [["docker-compose" "Docker Compose"]
+                        ["docker-swarm" "Docker Swarm"]
+                        ["kubernetes" "Kubernetes"]]]
+    [ui/TableCell
+     (if creating?
+       [ui/Dropdown {:default-value (get @deployment-set :subtype)
+                     :options       (map (fn [[k t]] {:key k, :value k, :text t}) opts)
+                     :selection     true
+                     :on-change     (ui-callback/value on-change-fn)}]
+       (->> (get @deployment-set :subtype)
+            (get (into {} opts))))]))
+
 (def ops-status->color
   {"OK"  "green"
    "NOK" "red"})
@@ -696,6 +712,10 @@
         [ui/TableCell (str/capitalize (@tr [:description]))]
         ^{:key (or id "description")}
         [EditableCell :description creating?]]
+       [ui/TableRow
+        [ui/TableCell (str/capitalize (@tr [:dg-type]))]
+        ^{:key (or id "dg-type")}
+        [CoeTypeCell creating?]]
        (when-not creating?
          [:<>
           (when created-by

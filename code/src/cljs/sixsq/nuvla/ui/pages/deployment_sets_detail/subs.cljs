@@ -64,7 +64,7 @@
   ::deployment-set
   :<- [::deployment-set-stored-and-edited]
   (fn [[stored edited]]
-    (merge stored (select-keys edited [:name :description :applications-sets :auto-update :auto-update-interval]))))
+    (merge stored (select-keys edited [:name :description :subtype :applications-sets :auto-update :auto-update-interval]))))
 
 
 (reg-sub

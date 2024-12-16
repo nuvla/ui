@@ -612,7 +612,7 @@
          :style         {:width "100%"}}]
        (get @deployment-set attribute))]))
 
-(defn CoeTypeCell
+(defn DGTypeCell
   [creating?]
   (let [deployment-set (subscribe [::subs/deployment-set])
         on-change-fn   #(dispatch [::events/edit :subtype %])
@@ -715,7 +715,7 @@
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:dg-type]))]
         ^{:key (or id "dg-type")}
-        [CoeTypeCell creating?]]
+        [DGTypeCell creating?]]
        (when-not creating?
          [:<>
           (when created-by

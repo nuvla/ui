@@ -67,7 +67,7 @@
           [ui/TableHeader
            [ui/TableRow
             [ui/TableHeaderCell {:style {:width "26em"}} [uix/TR :job str/capitalize]]
-            [ui/TableHeaderCell [uix/TR :message str/capitalize]]]]
+            [ui/TableHeaderCell [uix/TR :details str/capitalize]]]]
           [ui/TableBody
            (for [resource resources]
              ^{:key (:id resource)}

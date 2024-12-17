@@ -254,59 +254,58 @@
                                                          :or   {with-progress? true}}]
   (r/with-let [selected-reason (r/atom nil)]
     (let [tr             @(subscribe [::i18n-subs/tr])
-          {:keys [SUCCESS_COUNT FAILED_COUNT SKIPPED_COUNT ACTIONS_COUNT
-                  RUNNING_COUNT QUEUED_COUNT
-                  SKIP_REASONS FAIL_REASONS]
+          {:keys [success_count failed_count skipped_count total_actions
+                  running_count queued_count error_reasons]
            :as   parsed-status-message} (parse-job-status-message job)
-          EXECUTED_COUNT (+ SUCCESS_COUNT FAILED_COUNT SKIPPED_COUNT)
-          ERRORED_COUNT  (+ FAILED_COUNT SKIPPED_COUNT)]
+          executed-count (+ success_count failed_count skipped_count)
+          error-count  (+ failed_count skipped_count)]
       [:<>
        (str parsed-status-message)
        [:h3 (str/capitalize (tr [:progress])) ": "]
        #_[:span (str parsed-status-message)]
 
-       #_[:b "Queued Actions: " QUEUED_COUNT " | " "Running Actions: " RUNNING_COUNT]
-       [:div [:b "Total Actions: " ACTIONS_COUNT]]
-       [:div [:b "Ongoing Actions: " (+ QUEUED_COUNT RUNNING_COUNT)]
+       #_[:b "Queued Actions: " queued_count " | " "Running Actions: " running_count]
+       [:div [:b "Total Actions: " total_actions]]
+       [:div [:b "Ongoing Actions: " (+ queued_count running_count)]
         [:span
          [:span {:style {:margin-left 20 :margin-right 20}}
           [icons/CircleIcon]
-          "Queued" ": " QUEUED_COUNT]
+          "Queued" ": " queued_count]
          [:span {:style {:margin-left 20 :margin-right 20}}
           [icons/CircleIcon {:color "yellow"}]
-          "Running" ": " RUNNING_COUNT]]]
-       [:div [:b "Executed Actions: " EXECUTED_COUNT]
+          "Running" ": " running_count]]]
+       [:div [:b "Executed Actions: " executed-count]
         [:span
          [:span {:style {:margin-left 20 :margin-right 20}}
           [icons/CircleIcon {:color "green"}]
-          "Completed" ": " SUCCESS_COUNT]
+          "Completed" ": " success_count]
          [:span {:style {:margin-left 20 :margin-right 20}}
           [icons/CircleIcon {:color "orange"}]
-          "Skipped" ": " SKIPPED_COUNT]
+          "Skipped" ": " skipped_count]
          [:span {:style {:margin-left 20 :margin-right 20}}
           [icons/CircleIcon {:color "red"}]
-          "Failed" ": " FAILED_COUNT]]]
+          "Failed" ": " failed_count]]]
 
        [ui/Progress
         {:active   (< progress 100)
          :percent  progress
          :progress true}
-        [:span EXECUTED_COUNT " Executed Actions " " / " ACTIONS_COUNT " Total Actions"
+        [:span executed-count " Executed Actions " " / " total_actions " Total Actions"
          [uix/HelpPopup
           (str "Executed actions"
                " / "
                "Total Actions")]]]
-       #_[:div [:b "Total Actions: " ACTIONS_COUNT]]
+       #_[:div [:b "Total Actions: " total_actions]]
        #_[ui/Divider]
 
        [:br]
        [:b
-        "Error Rate: " (general-utils/to-fixed (* (/ ERRORED_COUNT ACTIONS_COUNT) 100))
+        "Error Rate: " (general-utils/to-fixed (* (/ error-count total_actions) 100))
         "%" [uix/HelpPopup
-             (str "(" FAILED_COUNT " " "failed" " + " SKIPPED_COUNT " " "skipped" ") / "
-                  ACTIONS_COUNT " " "actions count")]]
+             (str "(" failed_count " " "failed" " + " skipped_count " " "skipped" ") / "
+                  total_actions " " "actions count")]]
        [ui/Divider]
-       (when (pos? ERRORED_COUNT)
+       (when (pos? error-count)
          [:div
           [:b "Errors Breakdown:" [uix/HelpPopup
                                    "Click on row to check details by Reason\n"]]
@@ -327,11 +326,11 @@
                                                      ::table-refactor/header-content "% of Total"}])
             :!default-columns              (r/atom [:Reason :Count :ErrorType :PercentTotal])
             :row-id-fn                     :Reason
-            :!data                         (r/atom (mapv (fn [{:keys [CATEGORY COUNT] :as skip-reason}]
-                                                           {:Reason       CATEGORY
-                                                            :Count        COUNT
-                                                            :ErrorType    "Skipped"
-                                                            :PercentTotal (general-utils/to-fixed (* (/ COUNT ACTIONS_COUNT) 100))}) SKIP_REASONS))}]])
+            :!data                         (r/atom (mapv (fn [{:keys [reason category count]}]
+                                                           {:Reason       reason
+                                                            :Count        count
+                                                            :ErrorType    category
+                                                            :PercentTotal (general-utils/to-fixed (* (/ count total_actions) 100))}) error_reasons))}]])
 
        (when @selected-reason
          [:div {:style {:margin-top 20}}
@@ -354,11 +353,11 @@
                                                      ::table-refactor/header-content "% of Total"}])
             :!default-columns              (r/atom [:id :name :message :COUNT :PercentTotal])
             :row-id-fn                     :id
-            :!data                         (r/atom (some #(when (= (:CATEGORY %) @selected-reason)
-                                                            (mapv (fn [{:keys [COUNT] :as ID}]
-                                                                    (assoc ID :PercentTotal (general-utils/to-fixed (* (/ COUNT ACTIONS_COUNT) 100)))
-                                                                    ) (:IDS %))
-                                                            ) SKIP_REASONS))}]
+            :!data                         (r/atom (some #(when (= (:reason %) @selected-reason)
+                                                            (mapv (fn [{:keys [count] :as entry}]
+                                                                    (assoc entry :PercentTotal (general-utils/to-fixed (* (/ count total_actions) 100)))
+                                                                    ) (:data %))
+                                                            ) error_reasons))}]
           ]
 
          )

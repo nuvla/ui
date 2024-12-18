@@ -61,7 +61,6 @@
       :header      (@tr [:decommission-nuvlabox])
       :content     [:h3 content]}]))
 
-
 (defn DeleteButton
   [nuvlabox]
   (let [tr      (subscribe [::i18n-subs/tr])
@@ -78,7 +77,6 @@
                            (@tr [:delete-nuvlabox])]
       :content            [:h3 content]
       :header-class       [:nuvla-edges :delete-modal-header]}]))
-
 
 (defn SshKeysDropdown
   [operation _on-change-fn]
@@ -103,7 +101,6 @@
                               {:key id, :text (or name id), :value id}) @ssh-keys)
           :selection   true}]))))
 
-
 (defn DropdownReleases
   [_opts]
   (let [releases (subscribe [::edges-subs/nuvlabox-releases-options])
@@ -120,7 +117,6 @@
                                                                 :color  "darkorange"}}
                                                  (r/as-element [ui/Icon {:class icons/i-triangle-exclamation}])
                                                  (@tr [:nuvlabox-pre-release])])]))))
-
 
 (defn AddRevokeSSHButton
   [{:keys [id] :as _resource} operation show? _title _icon _button-text]
@@ -402,7 +398,6 @@
                               {:key id, :text name, :value id})) @managers)
         :selection   true}])))
 
-
 (defn ClusterButton
   [{:keys [id] :as _resource} operation show?]
   (let [tr               (subscribe [::i18n-subs/tr])
@@ -535,7 +530,6 @@
             :disabled has-active-dp
             :on-click on-click-fn}]]]))))
 
-
 (defn EmergencyPlaybooksDropdown
   [_nuvlabox-id _on-change]
   (let [em-playbooks (subscribe [::subs/nuvlabox-emergency-playbooks])
@@ -568,7 +562,6 @@
                      [values/AsLink id :label (or name id)]])
                   em-enabled)]])]))))
 
-
 (defn TextActionButton
   [{:keys [id] :as _nuvlabox} operation show? title icon button-text]
   (let [tr          (subscribe [::i18n-subs/tr])
@@ -591,7 +584,6 @@
        {:text     button-text
         :primary  true
         :on-click on-click-fn}]]]))
-
 
 (defn EnableEmergencyPlaybooksButton
   [{:keys [id] :as _resource} operation show? _title _icon _button-text]
@@ -633,7 +625,6 @@
             :disabled (empty? playbooks)
             :loading  (true? @loading?)
             :on-click on-click-fn}]]]))))
-
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "cluster-nuvlabox"]
   [_resource _operation]
@@ -731,11 +722,9 @@
                           (refresh-nuvlaedge-data uuid))}
            {:max-items-to-show 3}]]]))))
 
-
 (defn get-available-actions
   [operations]
   (filter some? (map #(nth (str/split % #"/") 2 nil) (map :href operations))))
-
 
 (defn Peripheral
   [id]
@@ -895,7 +884,6 @@
                    nil)
                  nil)]))))
 
-
 (defn BytesUsage
   [used limit]
   (let [[unit used limit perc] (data-utils/bytes-usage used limit)]
@@ -969,7 +957,6 @@
       :row-id-fn              :name
       :!data                  (r/atom augmented-container-stats)}]))
 
-
 (defn- OldStatsTable [container-stats]
   [ui/GridRow {:centered true
                :columns  1}
@@ -1006,9 +993,9 @@
            [ui/TableCell restart-count]]))]]]])
 
 (defn- StatsTable [container-stats]
-  (if (:cpu-usage (first container-stats))
-    [NewStatsTable]
-    [OldStatsTable container-stats]))
+  (if (:cpu-percent (first container-stats))
+    [OldStatsTable container-stats]
+    [NewStatsTable]))
 
 (defn Load
   [resources]
@@ -1096,7 +1083,6 @@
      (when container-stats
        [ui/Container {:fluid true}
         [StatsTable (sort-by :name container-stats)]])]))
-
 
 (defn Editable
   [{:keys [attribute]}]
@@ -1342,7 +1328,6 @@
                                   {:name interface
                                    :ip   (str/join ", " (map :address ips))}) interfaces)}])])]])))
 
-
 (defn TabOverviewHost
   [nb-status ssh-creds]
   [ui/Segment {:secondary true}
@@ -1479,7 +1464,6 @@
      [components/EditableTags nuvlabox #(dispatch [::events/edit id {:tags %}
                                                    (@tr [:updated-successfully])])]]))
 
-
 (defn ServiceIcon
   [subtype]
   (let [[kind path] (get {:swarm      [:icon icons/i-docker]
@@ -1498,7 +1482,6 @@
                                 :padding-bottom 7}}]
       [ui/Icon {:name path}])))
 
-
 (defn BoxInfraServices
   []
   (let [services @(subscribe [::subs/infra-services])]
@@ -1513,7 +1496,6 @@
           [ui/ListHeader
            [uix/Link (str "clouds/" (general-utils/id->uuid id)) (or name id)]]
           [ui/ListDescription description]]])]]))
-
 
 (defn TabOverviewCluster
   [{:keys [node-id cluster-id swarm-node-cert-expiry-date cluster-join-address
@@ -1605,7 +1587,6 @@
                            :font-style "italic"}}
             (@tr [:no-labels-defined])])]]]]]))
 
-
 (defn TabOverview
   []
   (let [nuvlabox       (subscribe [::subs/nuvlabox])
@@ -1652,7 +1633,6 @@
             [ui/GridColumn
              [BoxInfraServices]])]]))))
 
-
 (defn TabLocationMap
   []
   (let [tr           (subscribe [::i18n-subs/tr])
@@ -1694,12 +1674,10 @@
                       :disabled (nil? @new-location)}
            (@tr [:save])]]]))))
 
-
 (defn TabLocation
   []
   [ui/TabPane
    [TabLocationMap]])
-
 
 (defn TabLoad
   []
@@ -1713,7 +1691,6 @@
            [ui/Message
             {:warning true
              :content (@tr [:nuvlabox-resources-unavailable])}])]))))
-
 
 (defn TabPeripherals
   []
@@ -1735,7 +1712,6 @@
               :styled? false
               :count (count peripherals)
               :label interface]))]))))
-
 
 ; there's a similar function in edge.views which can maybe be generalized
 (defn VulnStatisticState
@@ -1762,7 +1738,6 @@
                           :on             "hover"
                           :size           "tiny"
                           :hide-on-scroll true}]]]))
-
 
 (defn VulnerabilitiesTableBody
   [vulnerability-id product vulnerability-score color matching-vuln-db]
@@ -1791,7 +1766,6 @@
    [ui/TableCell product]
    [ui/TableCell {:style {:background-color color
                           :font-weight      "bold"}} vulnerability-score]])
-
 
 (defn TabVulnerabilities
   []
@@ -1909,7 +1883,6 @@
                     ^{:key vulnerability-id}
                     [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color (get vulns-in-db vulnerability-id)]))]]]]]
            [ui/Message {:content (@tr [:nuvlabox-vuln-unavailable])}])]))))
-
 
 (defn AddPlaybookModal
   []
@@ -2118,7 +2091,6 @@
                       (@tr [:nuvlabox-playbooks-no-outputs])])]]]]
                (@tr [:nuvlabox-playbooks-not-selected]))]]]]]))))
 
-
 (defn tabs
   []
   (let [tr                        @(subscribe [::i18n-subs/tr])
@@ -2221,7 +2193,6 @@
                                :flex-wrap      "wrap"}}
     :change-event [::events/refresh uuid]
     :panes        (tabs)}])
-
 
 (defn PageHeader
   []

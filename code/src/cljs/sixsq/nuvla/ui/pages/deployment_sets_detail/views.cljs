@@ -43,6 +43,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.tooltip :as tt]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.validation :as utils-validation]
@@ -50,18 +51,26 @@
             [sixsq.nuvla.ui.utils.values :as utils-values]
             [sixsq.nuvla.ui.utils.view-components :as vc]))
 
+(defn JobDetailParse
+  [job]
+  (let [parsed-job (bulk-progress-plugin/append-parsed-job-status-message job)]
+    (if (or (get-in parsed-job [:parsed-status-message :skipped_count])
+            (bulk-progress-plugin/job-queued? job)
+            (bulk-progress-plugin/job-running? job))
+      [bulk-progress-plugin/JobDetail parsed-job]
+      [job-views/DefaultJobCell job])))
 
 (defmethod job-views/JobCell "bulk_deployment_set_start"
   [resource]
-  [bulk-progress-plugin/MonitoredJobDetail2 resource :with-progress? true])
+  [JobDetailParse resource])
 
 (defmethod job-views/JobCell "bulk_deployment_set_update"
   [resource]
-  [bulk-progress-plugin/MonitoredJobDetail2 resource :with-progress? true])
+  [JobDetailParse resource])
 
 (defmethod job-views/JobCell "bulk_deployment_set_stop"
   [resource]
-  [bulk-progress-plugin/MonitoredJobDetail2 resource :with-progress? true])
+  [JobDetailParse resource])
 
 
 (defn- ops-status-start-str

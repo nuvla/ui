@@ -357,6 +357,7 @@
                                                :text    (str n-per-page " per page")})
                              [10 25 50 100])]
       [:div {:style {:display         :flex
+                     :position        :relative
                      :justify-content :space-between
                      :align-items     :baseline
                      :flex-wrap       :wrap-reverse

@@ -51,7 +51,8 @@
        [:<>
         [:dt [:b [uix/TR k str/capitalize] ":"]]
         [:dd v]])]]
-   [ui/TableCell {:verticalAlign "top"}
+   [ui/TableCell {:verticalAlign "top"
+                  :style {:overflow :visible}}
     [JobCell resource]]])
 
 (defn JobsTable

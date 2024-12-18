@@ -5,6 +5,7 @@
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.common-components.plugins.table :as table-plugin]
+            [sixsq.nuvla.ui.pages.data.utils :as data-utils]
             [sixsq.nuvla.ui.pages.edges.spec :as spec]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
@@ -132,9 +133,11 @@
 (defn disk-stats
   [{:keys [device capacity used topic raw-sample]}]
   (let [percent (-> (general-utils/percentage used capacity)
-                    (general-utils/round-up :n-decimal 0))]
+                    (general-utils/round-up :n-decimal 0))
+        bytes   (if (< capacity 100000000) (* capacity 1073741824) capacity)
+        title   (data-utils/format-bytes bytes)]
     {:label        ["used" "free"]
-     :title        (str device " partition: " capacity " GB (%)")
+     :title        (str device " partition: " title " (%)")
      :percentage   percent
      :value        (- 100 percent)
      :data-gateway (if (nil? topic) [] [topic raw-sample])}))

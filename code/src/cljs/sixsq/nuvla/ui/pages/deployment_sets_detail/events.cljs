@@ -100,7 +100,8 @@
   (fn []
     (let [current-timestamp (time/time->format (time/now))]
       {:fx [[:dispatch [::reset-create]]
-            [:dispatch [::set-deployment-set-edited {:name (str "Deployment Group " current-timestamp)}]]
+            [:dispatch [::set-deployment-set-edited {:name    (str "Deployment Group " current-timestamp)
+                                                     :subtype "docker-compose"}]]
             [:dispatch [::set-changes-protection false]]]})))
 
 (reg-event-fx

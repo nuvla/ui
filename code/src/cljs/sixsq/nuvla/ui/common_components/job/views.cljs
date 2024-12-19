@@ -34,14 +34,14 @@
   [{:keys [id action state time-of-status-change updated progress return-code] :as resource}]
   [ui/TableRow
    [ui/TableCell {:verticalAlign "top"}
-    [:dl {:style {:overflow              :auto
+    [:dl {:style {:overflow-wrap         :anywhere
                   :display               :grid
                   :grid-template-columns "repeat(2,auto)"
                   :width                 "max-content"
                   :max-width             "100%"}}
      (for [[k v] [[:id [values/AsLink id
                         :label (general-utils/id->short-uuid id)]]
-                  [:action action]
+                  [:action (some-> action (str/replace #"_" " "))]
                   [:state state]
                   [:timestamp (or time-of-status-change
                                   updated)]
@@ -51,7 +51,8 @@
        [:<>
         [:dt [:b [uix/TR k str/capitalize] ":"]]
         [:dd v]])]]
-   [ui/TableCell {:verticalAlign "top"}
+   [ui/TableCell {:verticalAlign "top"
+                  :style {:overflow :visible}}
     [JobCell resource]]])
 
 (defn JobsTable
@@ -67,7 +68,7 @@
           [ui/TableHeader
            [ui/TableRow
             [ui/TableHeaderCell {:style {:width "26em"}} [uix/TR :job str/capitalize]]
-            [ui/TableHeaderCell [uix/TR :message str/capitalize]]]]
+            [ui/TableHeaderCell [uix/TR :details str/capitalize]]]]
           [ui/TableBody
            (for [resource resources]
              ^{:key (:id resource)}

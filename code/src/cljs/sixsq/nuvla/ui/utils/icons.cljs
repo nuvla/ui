@@ -637,6 +637,11 @@
   [opts]
   [I opts i-circle-outline])
 
+(def i-circle "circle")
+(defn CircleIcon
+  [opts]
+  [I opts i-circle])
+
 (def i-question-circle-outline "question circle outline")
 (defn QuestionCircleOutlineIcon
   [opts]

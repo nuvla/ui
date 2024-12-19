@@ -77,7 +77,7 @@ jobs:
           restore-keys: cache/${{github.repository}}/refs/heads/master
           path: code/test/component/snapshots/**
       - name: Update snapshots
-        if: ${{steps.cache.outputs.cache-hit != 'true' || inputs.update-snapshots == 'true'}}
+        if: ${{steps.cache.outputs.cache-hit != 'true' || inputs.update-snapshots}}
         run: npm run test:components:ci:update-snapshots
       - name: Serve Portfolio and run tests
         run: npm run test:components:ci

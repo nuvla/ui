@@ -73,8 +73,8 @@ jobs:
         id: cache
         uses: actions/cache@v4
         with:
-          key: cache/${{github.repository}}/${{github.ref}}
-          restore-keys: cache/${{github.repository}}/refs/heads/master
+          key: cache/playwright-snapshots/${{github.repository}}/${{github.ref}}/${{ github.event.repository.updated_at}}
+          restore-keys: cache/playwright-snapshots/${{github.repository}}/refs/heads/master
           path: code/test/component/snapshots/**
       - name: Update snapshots
         if: ${{steps.cache.outputs.cache-hit != 'true' || inputs.update-snapshots}}

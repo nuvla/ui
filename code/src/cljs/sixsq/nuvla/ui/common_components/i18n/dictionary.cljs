@@ -3,6 +3,16 @@
 
 (def dictionary
   {:en {
+        :executed-actions                              "Executed Actions"
+        :total-actions                                 "Total Actions"
+        :skipped                                       "skipped"
+        :ongoing-actions                               "Ongoing Actions"
+        :error-rate                                    "Error Rate"
+        :by-reason                                     "By reason"
+        :errors-breakdown                              "Errors Breakdown"
+        :click-row-details-by-reason                   "Click on row to check details by Reason"
+        :reason                                        "Reason"
+        :percent-of-total                              "% of Total"
         :in-progress                                   "in progress"
         :completed                                     "completed"
         :experimental-feature-warn                     "Warning: Experimental feature"
@@ -1186,6 +1196,16 @@
         }
 
    :fr {
+        :executed-actions                              "Actions exécutées"
+        :total-actions                                 "Actions totales"
+        :skipped                                       "Ignoré"
+        :ongoing-actions                               "Actions en cours"
+        :error-rate                                    "Taux d'erreur"
+        :by-reason                                     "Par raison"
+        :errors-breakdown                              "Répartition des erreurs"
+        :click-row-details-by-reason                   "Cliquez sur une ligne pour vérifier les détails par raison"
+        :reason                                        "Raison"
+        :percent-of-total                              "% du total"
         :in-progress                                   "en cours"
         :completed                                     "terminé"
         :beta-feature-warn                             "Avertissement : Fonctionnalité expérimentale"
@@ -1359,7 +1379,7 @@
         :copy-command-to-clipboard                     "Copier la command vers le presse papiers"
         :copy-nuvlabox-id                              "Copier l'ID de la NuvlaEdge"
         :core-license                                  "license de base"
-        :count                                         "décompte"
+        :count                                         "nombre"
         :country                                       "Pays"
         :coupon                                        "Coupon"
         :coupon-code                                   "Code coupon"

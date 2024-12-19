@@ -156,7 +156,7 @@
                 :size     "small"
                 :style    {:margin-top 10}}
    [:span (executed-count parsed-status-message)
-    " Executed Actions " " / " total_actions " Total Actions"]])
+    " " [uix/TR :executed-actions] " / " total_actions " " [uix/TR :total-actions]]])
 
 (defn JobCounters
   [{{:keys [success_count failed_count skipped_count total_actions
@@ -165,23 +165,24 @@
   [ui/Grid {:stackable true}
    [ui/GridRow {:columns 4}
     [ui/GridColumn
-     [:b "Total Actions: " total_actions]]
+     [:b [uix/TR :total-actions] ": " total_actions]]
     [ui/GridColumn
-     [:b "Executed Actions: " (executed-count parsed-status-message)]
-     [:div [icons/CircleIcon {:color "green"}] "Completed" ": " success_count]
-     [:div [icons/CircleIcon {:color "orange"}] "Skipped" ": " skipped_count]
-     [:div [icons/CircleIcon {:color "red"}] "Failed" ": " failed_count]]
+     [:b [uix/TR :executed-actions] ": " (executed-count parsed-status-message)]
+     [:div [icons/CircleIcon {:color "green"}] [uix/TR :completed str/capitalize] ": " success_count]
+     [:div [icons/CircleIcon {:color "orange"}] [uix/TR :skipped str/capitalize] ": " skipped_count]
+     [:div [icons/CircleIcon {:color "red"}] [uix/TR :failed str/capitalize] ": " failed_count]]
     [ui/GridColumn
-     [:b "Ongoing Actions: " (+ queued_count running_count)]
-     [:div [icons/CircleIcon] "Queued" ": " queued_count]
-     [:div [icons/CircleIcon {:color "yellow"}] "Running" ": " running_count]]
+     [:b [uix/TR :ongoing-actions] ": " (+ queued_count running_count)]
+     [:div [icons/CircleIcon] [uix/TR :queued str/capitalize] ": " queued_count]
+     [:div [icons/CircleIcon {:color "yellow"}] [uix/TR :running str/capitalize] ": " running_count]]
     (let [er-count (error-count parsed-status-message)]
       (when (and (pos? total_actions) (int? er-count))
         [ui/GridColumn
-         [:b "Error Rate: " (or (general-utils/to-fixed (* (/ er-count total_actions) 100)) 0) "%"]
+         [:b [uix/TR :error-rate] ": " (or (general-utils/to-fixed (* (/ er-count total_actions) 100)) 0) "%"]
          [uix/HelpPopup
-          (str "(" failed_count " " "Failed" " + " skipped_count " " "Skipped" ") / "
-               total_actions " " "Total actions")]]))]])
+          (r/as-element
+            [:span "(" failed_count " " [uix/TR :failed str/capitalize] " + " skipped_count " "
+             [uix/TR :skipped str/capitalize] ") / " total_actions " " [uix/TR :total-actions]])]]))]])
 
 (defn JobErrorBreakdownByReason
   [selected-reason {{:keys [total_actions error_reasons]} :parsed-status-message :as _parsed-job}]
@@ -195,10 +196,11 @@
                        ) error_reasons))
       [:div {:style {:margin-top 20}}
        [:span
-        [:b "By reason: "]
+        [:b [uix/TR :by-reason] ": "]
         (str @selected-reason " ")
-        [icons/CloseIcon {:color :red
-                          :style {:cursor :pointer} :on-click #(reset! selected-reason nil)} "Close"]]
+        [icons/CloseIcon {:color    :red
+                          :style    {:cursor :pointer}
+                          :on-click #(reset! selected-reason nil)} [uix/TR :close str/capitalize]]]
        [table-refactor/TableController
         {:!enable-column-customization? (r/atom false)
          :!enable-sorting?              (r/atom false)
@@ -206,17 +208,17 @@
          :!pagination                   (r/atom {:page-index 0
                                                  :page-size  10})
          :!columns                      (r/atom [{::table-refactor/field-key      :id
-                                                  ::table-refactor/header-content "Resource"
+                                                  ::table-refactor/header-content [uix/TR :resource str/capitalize]
                                                   ::table-refactor/field-cell     (fn [id row-data]
                                                                                     [values/AsPageLink id
                                                                                      :label (:name row-data)
                                                                                      :new-tab true])}
                                                  {::table-refactor/field-key      :count
-                                                  ::table-refactor/header-content "Count"}
+                                                  ::table-refactor/header-content [uix/TR :count str/capitalize]}
                                                  {::table-refactor/field-key      :PercentTotal
-                                                  ::table-refactor/header-content "% of Total"}
+                                                  ::table-refactor/header-content [uix/TR :percent-of-total]}
                                                  {::table-refactor/field-key      :message
-                                                  ::table-refactor/header-content "Message"}])
+                                                  ::table-refactor/header-content [uix/TR :message str/capitalize]}])
          :!default-columns              (r/atom [:id :name :count :PercentTotal :message])
          :row-id-fn                     :id
          :!data                         !table-data}]])))
@@ -234,8 +236,8 @@
                        :PercentTotal (general-utils/to-fixed (* (/ count total_actions) 100))}) error_reasons))
       [:div
        [ui/Divider]
-       [:b "Errors Breakdown:"
-        [uix/HelpPopup "Click on row to check details by Reason"]]
+       [:b [uix/TR :errors-breakdown] ":"
+        [uix/HelpPopup (r/as-element [uix/TR :click-row-details-by-reason])]]
        [table-refactor/TableController
         {:on-row-click                  #(reset! selected-reason (:Reason %))
          :!enable-pagination?           (r/atom true)
@@ -244,13 +246,13 @@
          :!enable-column-customization? (r/atom false)
          :!enable-sorting?              (r/atom false)
          :!columns                      (r/atom [{::table-refactor/field-key      :Reason
-                                                  ::table-refactor/header-content "Reason"}
+                                                  ::table-refactor/header-content [uix/TR :reason str/capitalize]}
                                                  {::table-refactor/field-key      :ErrorType
-                                                  ::table-refactor/header-content "Type"}
+                                                  ::table-refactor/header-content [uix/TR :type str/capitalize]}
                                                  {::table-refactor/field-key      :Count
-                                                  ::table-refactor/header-content "Count"}
+                                                  ::table-refactor/header-content [uix/TR :count str/capitalize]}
                                                  {::table-refactor/field-key      :PercentTotal
-                                                  ::table-refactor/header-content "% of Total"}])
+                                                  ::table-refactor/header-content [uix/TR :percent-of-total]}])
          :!default-columns              (r/atom [:Reason :Count :ErrorType :PercentTotal])
          :row-id-fn                     :Reason
          :!data                         !table-data}]

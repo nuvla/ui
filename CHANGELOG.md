@@ -2,6 +2,28 @@
 
 ## Released
 
+## [2.42.1](https://github.com/nuvla/ui/compare/2.42.0...2.42.1) (2024-12-23)
+
+
+### Bug Fixes
+
+* **Bulk progress component:** job completed should be displayed as so in the progress bar header ([1af2f6d](https://github.com/nuvla/ui/commit/1af2f6dc6d49a6148ab11e689953dda501596b8c))
+* **Bulk progress:** Bulk progress not visible when session is empty bugfix ([1af2f6d](https://github.com/nuvla/ui/commit/1af2f6dc6d49a6148ab11e689953dda501596b8c))
+* **Bulk progress:** Display frequencies bootstrap errors and action c… ([#1700](https://github.com/nuvla/ui/issues/1700)) ([1af2f6d](https://github.com/nuvla/ui/commit/1af2f6dc6d49a6148ab11e689953dda501596b8c))
+* **Bulk progress:** Show bulk progress for all users without filtering other users actions ([1af2f6d](https://github.com/nuvla/ui/commit/1af2f6dc6d49a6148ab11e689953dda501596b8c))
+* **Bulk progress:** Support new format of status message with error_reasons ([1af2f6d](https://github.com/nuvla/ui/commit/1af2f6dc6d49a6148ab11e689953dda501596b8c))
+* **CI Components test:** cache key bugfix ([a93cb40](https://github.com/nuvla/ui/commit/a93cb40b2d71a1fb9ebbd34728fca4cc0e672de9))
+* **Deployment group details page:** Start modal, update modal reset on confirm ([1af2f6d](https://github.com/nuvla/ui/commit/1af2f6dc6d49a6148ab11e689953dda501596b8c))
+* **Deployment group details:** Render job cell related to bulk actions ([1af2f6d](https://github.com/nuvla/ui/commit/1af2f6dc6d49a6148ab11e689953dda501596b8c))
+* **Edge detail page:** Improved "Resource Consumption" display ([#1704](https://github.com/nuvla/ui/issues/1704)) ([ade725b](https://github.com/nuvla/ui/commit/ade725bf73cdba24d95b39329d08fc2d93c18d69))
+* **Edge detail page:** Show the new container stats table by default ([ade725b](https://github.com/nuvla/ui/commit/ade725bf73cdba24d95b39329d08fc2d93c18d69))
+* **Edge detail page:** Use format-bytes to display disk capacity ([ade725b](https://github.com/nuvla/ui/commit/ade725bf73cdba24d95b39329d08fc2d93c18d69))
+* **Edge details page:** Container stats table not update received values [#3443](https://github.com/nuvla/ui/issues/3443) ([#1707](https://github.com/nuvla/ui/issues/1707)) ([f67cd54](https://github.com/nuvla/ui/commit/f67cd54fb545b06c8f483044fd2d543bfe649626))
+* **Github component test:** Not taking into account update-snapshots input bugfix ([1af2f6d](https://github.com/nuvla/ui/commit/1af2f6dc6d49a6148ab11e689953dda501596b8c))
+* **Job tab component:** Hide scroll bar and break word instead ([1af2f6d](https://github.com/nuvla/ui/commit/1af2f6dc6d49a6148ab11e689953dda501596b8c))
+* **Table component:** Pagination style fix dropdown too much on the left in job tab table ([1af2f6d](https://github.com/nuvla/ui/commit/1af2f6dc6d49a6148ab11e689953dda501596b8c))
+* **wrong_infra_selected:** Add type selector to DG creation page ([#1703](https://github.com/nuvla/ui/issues/1703)) ([1099dd0](https://github.com/nuvla/ui/commit/1099dd0490374a7e4d232a7bdc0d3fb4cf2dd2df))
+
 ## [2.42.0](https://github.com/nuvla/ui/compare/2.41.2...2.42.0) (2024-12-04)
 
 

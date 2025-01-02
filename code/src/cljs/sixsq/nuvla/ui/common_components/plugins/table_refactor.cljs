@@ -7,6 +7,7 @@
             [sixsq.nuvla.ui.pages.data.utils :as data-utils]
             [sixsq.nuvla.ui.utils.dnd :as dnd]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.common-components.plugins.pagination-refactor :as pagination]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -51,13 +52,9 @@
   [{:keys [::!pagination ::!enable-pagination? ::!processed-data] :as control}]
   (assoc control
     ::!paginated-data
-    (r/track (fn paginated-data-fn []
-               (if @!enable-pagination?
-                 (let [{:keys [page-index page-size]} @!pagination
-                       start (* page-index page-size)
-                       end   (min (+ start page-size) (count @!processed-data))]
-                   (subvec @!processed-data start end))
-                 @!processed-data)))))
+    (pagination/!paginated-data-fn {:!pagination         !pagination
+                                    :!enable-pagination? !enable-pagination?
+                                    :!data               !processed-data})))
 
 (defn !selected?-fn
   [{:keys [::!selected] :as _control} row-id]
@@ -332,10 +329,6 @@
                         (set-current-columns-fn* control @!local-current-columns)
                         (close-fn))}]]]))))
 
-(defn- icon
-  [icon-name]
-  {:content (r/as-element [ui/Icon {:class icon-name}]) :icon true})
-
 (defn Pagination
   [{:keys [::!global-filter ::!pagination ::set-pagination-fn] :as _control}]
   ;; whenever the global filter changes, reset the pagination index to point to the first page
@@ -344,52 +337,18 @@
                (fn [_key _ref old-value new-value]
                  (when-not (= old-value new-value)
                    (set-pagination-fn (assoc @!pagination :page-index 0))))))
-  (fn [{:keys [::tr-fn ::!pagination ::set-pagination-fn ::!processed-data] :as _control}]
-    (let [{:keys [page-index page-size] :as pagination} @!pagination
-          total-items   (count @!processed-data)
-          page-count    (cond-> (quot total-items page-size)
-                                (pos? (rem total-items page-size)) inc)
-          goto-page     #(set-pagination-fn (assoc pagination :page-index (max 0 (min (dec page-count) %))))
-          set-page-size #(set-pagination-fn (assoc pagination :page-size % :page-index 0))
-          per-page-opts (map (fn [n-per-page] {:key     n-per-page
-                                               :value   n-per-page
-                                               :content n-per-page
-                                               :text    (str n-per-page " per page")})
-                             [10 25 50 100])]
-      [:div {:style {:display         :flex
-                     :position        :relative
-                     :justify-content :space-between
-                     :align-items     :baseline
-                     :flex-wrap       :wrap-reverse
-                     :margin-top      10}
-             :class :uix-pagination}
-       [:div {:style {:display :flex}
-              :class :uix-pagination-control}
-        [:div {:style {:display :flex}}
-         [:div {:style {:margin-right "0.5rem"}}
-          (str (str/capitalize (tr-fn [:total])) ":")]
-         [:div (or total-items 0)]]
-        [:div {:style {:color "#C10E12" :margin-right "1rem" :margin-left "1rem"}} "| "]
-        [ui/Dropdown {:value     page-size
-                      :options   per-page-opts
-                      :pointing  true
-                      :on-change (ui-callback/value set-page-size)}]]
-       [ui/Pagination
-        {:size          :tiny
-         :class         :uix-pagination-navigation
-         :total-pages   page-count
-         :first-item    (icon "angle double left")
-         :last-item     (icon "angle double right")
-         :prev-item     (icon "angle left")
-         :next-item     (icon "angle right")
-         :ellipsis-item nil
-         :active-page   (inc page-index)
-         :onPageChange  (ui-callback/callback :activePage #(goto-page (dec %)))}]])))
+  (fn [{:keys [::tr-fn ::!enable-pagination? ::!pagination ::set-pagination-fn ::!processed-data] :as _control}]
+    [pagination/PaginationController {:total-items         (count @!processed-data)
+                                      :!enable-pagination? !enable-pagination?
+                                      :!pagination         !pagination
+                                      :set-pagination-fn   set-pagination-fn
+                                      :tr-fn               tr-fn}]))
 
 (defn Table
   [control]
   (r/with-let [{:keys [::!enable-column-customization? ::set-current-columns-fn
-                       ::!enable-pagination? ::!visible-columns ::!max-height ::on-row-click] :as control}
+                       ::!enable-pagination? ::!processed-data ::!pagination ::set-pagination-fn
+                       ::!visible-columns ::!max-height ::on-row-click ::tr-fn] :as control}
                (->> control
                     set-!visible-columns
                     set-!columns-by-key

@@ -127,7 +127,8 @@
                                                  :text     @!text-filter})))
         set-active-pane-fn  (fn [active-pane-key]
                               (reset! !active-pane active-pane-key)
-                              (set-pagination-fn (assoc @!pagination :page-index 0))
+                              (when @!enable-pagination?
+                                (set-pagination-fn (assoc @!pagination :page-index 0)))
                               (filters-changed))
         text-filter-changed (fn [text]
                               (reset! !text-filter text)

@@ -5,6 +5,8 @@
             [sixsq.nuvla.ui.common-components.i18n.events :as i18n-events]
             [reagent.dom :as rdom]
             [goog.dom :as gdom]
+            [sixsq.nuvla.ui.components.module-selector-scenes]
+            [sixsq.nuvla.ui.components.nav-tab-scenes]
             [sixsq.nuvla.ui.components.tooltip-scenes]
             [sixsq.nuvla.ui.components.overflow-tooltip-scenes]
             [sixsq.nuvla.ui.components.table-refactor-scenes]
@@ -12,6 +14,7 @@
             [sixsq.nuvla.ui.components.msg-scenes]
             [sixsq.nuvla.ui.components.duration-picker-scenes]
             [sixsq.nuvla.ui.components.bulk-progress-monitored-job-scenes]
+            [sixsq.nuvla.ui.components.pagination-scenes]
             [sixsq.nuvla.ui.portfolio-utils :refer [Scene]]))
 
 (defn init [])

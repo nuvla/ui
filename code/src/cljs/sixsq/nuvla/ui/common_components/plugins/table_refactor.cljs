@@ -330,7 +330,7 @@
                         (close-fn))}]]]))))
 
 (defn Pagination
-  [{:keys [::!global-filter ::!pagination ::set-pagination-fn] :as _control}]
+  [{:keys [::!global-filter ::!pagination ::set-pagination-fn ::!page-sizes] :as _control}]
   ;; whenever the global filter changes, reset the pagination index to point to the first page
   (when !global-filter
     (add-watch !global-filter :watcher
@@ -342,6 +342,7 @@
                                       :!enable-pagination? !enable-pagination?
                                       :!pagination         !pagination
                                       :set-pagination-fn   set-pagination-fn
+                                      :!page-sizes         !page-sizes
                                       :tr-fn               tr-fn}]))
 
 (defn Table
@@ -440,6 +441,7 @@
            !enable-pagination?
            !pagination
            set-pagination-fn
+           !page-sizes
 
            ;; Optional
            ;; If present, makes table rows clickable. Rows will be highlighted on hover
@@ -496,6 +498,7 @@
                 ; ::!manual-pagination
                 ::!pagination                   !pagination
                 ::set-pagination-fn             set-pagination-fn
+                ::!page-sizes                   !page-sizes
                 ::tr-fn                         tr-fn
                 ::!sticky-headers?              !sticky-headers?
                 ::!max-height                   !max-height

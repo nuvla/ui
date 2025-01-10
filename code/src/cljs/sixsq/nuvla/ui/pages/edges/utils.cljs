@@ -38,6 +38,10 @@
 
 (def capability-heartbeat "NUVLA_HEARTBEAT")
 
+(def ^:const coe-type-docker "docker")
+(def ^:const coe-type-swarm "swarm")
+(def ^:const coe-type-kubernetes "kubernetes")
+
 (defn score-vulnerability
   [{:keys [vulnerability-score] :as item}]
   (let [set-fn #(assoc item :severity %1 :color %2)]

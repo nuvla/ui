@@ -5,6 +5,7 @@
             [sixsq.nuvla.ui.common-components.i18n.events :as i18n-events]
             [reagent.dom :as rdom]
             [goog.dom :as gdom]
+            [sixsq.nuvla.ui.components.edge-selector-scenes]
             [sixsq.nuvla.ui.components.module-selector-scenes]
             [sixsq.nuvla.ui.components.nav-tab-scenes]
             [sixsq.nuvla.ui.components.tooltip-scenes]

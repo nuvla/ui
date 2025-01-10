@@ -1,11 +1,9 @@
 (ns sixsq.nuvla.ui.components.module-selector-scenes
   (:require [clojure.string :as str]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.pages.apps.apps-applications-sets.spec :as apps-sets-spec]
             [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.portfolio-utils :refer [defscene]]
             [sixsq.nuvla.ui.common-components.plugins.module-selector-refactor :refer [ModuleSelectorController]]
-            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (def modules
@@ -43,8 +41,8 @@
                                                (= :all-apps category-filter)
                                                (= category-filter category))
                                            (or (nil? text-filter)
-                                               (or (str/includes? name text-filter)
-                                                   (str/includes? description text-filter)))
+                                               (or (some-> name (str/includes? text-filter))
+                                                   (some-> description (str/includes? text-filter))))
                                            (or (nil? !subtypes)
                                                (contains? @!subtypes subtype))))
                                     modules)]
@@ -127,4 +125,3 @@
                                  :set-filters-fn      (set-filters-fn !modules !subtypes)
                                  :!selected           !selected}]]
      [SelectedCount !selected]]))
-

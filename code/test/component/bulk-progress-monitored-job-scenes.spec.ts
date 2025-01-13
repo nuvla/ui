@@ -4,9 +4,9 @@ import { expectMsg } from './job-cell';
 
 test('monitored-job-without-progress', async ({ page }, { config }) => {
   const sceneRoot = await gotoScene(config, page, 'bulk-progress-monitored-job-scenes', 'monitored-job-without-progress');
-  await expect(page).toHaveScreenshot();
+  await expect(sceneRoot).toHaveScreenshot();
   await sceneRoot.getByRole('cell', { name: 'Offline Edges' }).locator('div').first().click();
-  await expect(page).toHaveScreenshot();
+  await expect(sceneRoot).toHaveScreenshot();
   await sceneRoot.getByRole('cell', { name: 'Error reason foobar' }).locator('div').first().click();
-  await expect(page).toHaveScreenshot();
+  await expect(sceneRoot).toHaveScreenshot();
 });

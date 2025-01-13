@@ -17,13 +17,13 @@ export async function onRequest(context) {
   try {
     let response = await fetch(apiEndpoint + url.pathname, request);
 
-    // override all location responses for /api/session
     let body = await response.json();
     // override base-uri for /api/cloud-entry-point responses
     if (firstPathPart === 'cloud-entry-point') {
       body = { ...body, 'base-uri': url.origin + '/api/' };
     }
-    if (body.status == 303 && body.location && body.status != 202) {
+    // override all location responses for /api/session and status code 303 when location in body
+    if ((body.status == 303 || url.pathname=='/api/session') && body.location) {
       let locationUrl = new URL(body.location);
       locationUrl.host = url.host;
       locationUrl.protocol = url.protocol;

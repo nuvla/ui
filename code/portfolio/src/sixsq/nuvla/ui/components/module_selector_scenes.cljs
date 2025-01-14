@@ -9,26 +9,31 @@
 (def modules
   [{:id          "application/0"
     :name        "app 0"
+    :parent-path "folder01/project01"
     :category    :app-store
     :subtype     apps-utils/subtype-application
     :description "This is application 0"}
    {:id          "application/1"
     :name        "app 1"
+    :parent-path "folder01/project01"
     :category    :my-apps
     :subtype     apps-utils/subtype-application
     :description "This is application 1"}
    {:id          "application/2"
     :name        "app 2"
+    :parent-path "folder02/project02"
     :category    :my-apps
     :subtype     apps-utils/subtype-application-k8s
     :description "This is application 2"}
    {:id          "application/3"
     :name        "app 3"
+    :parent-path "folder02/project02"
     :category    :my-apps
     :subtype     apps-utils/subtype-application-helm
     :description "This is application 3"}
    {:id          "application/4"
     :name        "app 4"
+    :parent-path "folder02/project03"
     :category    :app-store
     :subtype     apps-utils/subtype-application-k8s
     :description "This is application 4"}])

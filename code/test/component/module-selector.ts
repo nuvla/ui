@@ -21,13 +21,16 @@ export async function fillTextFilter(sceneRoot, textFilter) {
     await filterInput.fill(textFilter);
 }
 
+// selectable items locator: exclude project folders
+const itemsLocator = '.ui.segment.active.tab .ui.list .item > i.square';
+
 export async function toggleNthModule(sceneRoot, n) {
-  const itemDiv = await sceneRoot.locator('.ui.segment.active.tab .list .item').nth(n);
+  const itemDiv = await sceneRoot.locator(itemsLocator).nth(n);
   await itemDiv.click();
 }
 
 export async function expectItemsCount(sceneRoot, expectedItemsCount) {
-  const items = await sceneRoot.locator('.ui.list .item');
+  const items = await sceneRoot.locator(itemsLocator);
   await expect(items).toHaveCount(expectedItemsCount);
 }
 

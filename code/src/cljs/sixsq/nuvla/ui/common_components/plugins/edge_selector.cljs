@@ -4,11 +4,14 @@
             [sixsq.nuvla.ui.common-components.plugins.pagination-refactor :as pagination]
             [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table-refactor]
             [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
+            [sixsq.nuvla.ui.pages.edges.utils :as utils]
             [sixsq.nuvla.ui.pages.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 (defn !selected?-fn
   [{:keys [::!selected] :as _control} edge-id]
@@ -84,9 +87,13 @@
   [_cell-data {:keys [uuid name] :as _nuvlabox} _column]
   (or name uuid))
 
+(defn CellOnline
+  [online _row _column]
+  [OnlineStatusIcon online nil true])
+
 (defn CellState
   [state _row _column]
-  state)
+  [ui/Icon {:class (utils/state->icon state) :title state}])
 
 (defn CellCreatedBy
   [created-by _row _column]
@@ -106,6 +113,10 @@
                                            :display :inline-block}}]
        edges-utils/coe-type-kubernetes
        ^{:key coe-type} [apps-utils/IconK8s false]))])
+
+(defn CellTags
+  [tags _row _column]
+  [uix/Tags tags])
 
 (defn EdgeSelector
   [control]
@@ -137,19 +148,29 @@
        [FullTextSearch {:tr-fn     tr-fn
                         :on-change text-filter-changed}]
        [table-refactor/TableController
-        {:!columns               (r/atom [{::table-refactor/field-key      :name
-                                           ::table-refactor/header-content "Name"
-                                           ::table-refactor/field-cell     CellName}
+        {:!columns               (r/atom [{::table-refactor/field-key      :online
+                                           ::table-refactor/header-content [icons/HeartbeatIcon]
+                                           ::table-refactor/field-cell     CellOnline
+                                           ::table-refactor/no-delete      true
+                                           ::table-refactor/collapsing     true}
                                           {::table-refactor/field-key      :state
                                            ::table-refactor/header-content "State"
-                                           ::table-refactor/field-cell     CellState}
+                                           ::table-refactor/field-cell     CellState
+                                           ::table-refactor/no-delete      true
+                                           ::table-refactor/collapsing     true}
+                                          {::table-refactor/field-key      :name
+                                           ::table-refactor/header-content "Name"
+                                           ::table-refactor/field-cell     CellName}
                                           {::table-refactor/field-key      :created-by
                                            ::table-refactor/header-content "User"
                                            ::table-refactor/field-cell     CellCreatedBy}
                                           {::table-refactor/field-key      :coe-list
                                            ::table-refactor/header-content "COE"
-                                           ::table-refactor/field-cell     CellCOEList}])
-         :!default-columns       (r/atom [:name :state :created-by :coe-list])
+                                           ::table-refactor/field-cell     CellCOEList}
+                                          {::table-refactor/field-key      :tags
+                                           ::table-refactor/header-content "Tags"
+                                           ::table-refactor/field-cell     CellTags}])
+         :!default-columns       (r/atom [:online :state :name :created-by :coe-list :tags])
          :!data                  !edges
          :!enable-global-filter? (r/atom false)
          :!enable-sorting?       (r/atom true)

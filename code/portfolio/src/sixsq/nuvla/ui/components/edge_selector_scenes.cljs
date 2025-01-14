@@ -11,21 +11,26 @@
   [{:id         "nuvlabox/0"
     :name       "nb-0"
     :state      "COMMISSIONED"
+    :online     true
     :created-by "user a"
-    :coe-list   [{:coe-type edges-utils/coe-type-docker}]}
+    :coe-list   [{:coe-type edges-utils/coe-type-docker}]
+    :tags       ["tag 1" "tag 2"]}
    {:id         "nuvlabox/1"
     :name       "nb-1"
     :state      "DECOMMISSIONED"
+    :online     false
     :created-by "user a"
     :coe-list   [{:coe-type edges-utils/coe-type-swarm}]}
    {:id         "nuvlabox/2"
     :name       "nb-2"
     :state      "COMMISSIONED"
+    :online     true
     :created-by "user a"
     :coe-list   [{:coe-type edges-utils/coe-type-kubernetes}]}
    {:id         "nuvlabox/3"
     :name       "nb-3"
     :state      "COMMISSIONED"
+    :online     false
     :created-by "user b"
     :coe-list   [{:coe-type edges-utils/coe-type-docker}
                  {:coe-type edges-utils/coe-type-kubernetes}]}
@@ -38,17 +43,21 @@
     :name       "nb-5"
     :state      "ACTIVATED"
     :created-by "user a"
-    :coe-list   [{:coe-type edges-utils/coe-type-docker}]}
+    :coe-list   [{:coe-type edges-utils/coe-type-docker}]
+    :tags       ["tag 3"]}
    {:id         "nuvlabox/6"
     :name       "nb-6"
     :state      "COMMISSIONED"
+    :online     false
     :created-by "user b"
     :coe-list   [{:coe-type edges-utils/coe-type-kubernetes}]}
    {:id         "nuvlabox/7"
     :name       "nb-7"
     :state      "COMMISSIONED"
+    :online     false
     :created-by "user c"
-    :coe-list   [{:coe-type edges-utils/coe-type-docker}]}])
+    :coe-list   [{:coe-type edges-utils/coe-type-docker}]
+    :tags       ["tag 4" "tag 5"]}])
 
 (defn set-filters-fn
   [!edges !coe-types]

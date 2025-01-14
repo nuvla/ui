@@ -160,13 +160,14 @@
                !selected?            (r/track (fn selected? []
                                                 (and (seq @!selected)
                                                      (every? @!selected @!current-page-row-ids))))]
-    [:th [ui/Checkbox {:data-testid "checkbox-select-all"
-                       :style       {:position       :relative
-                                     :vertical-align :middle}
-                       :checked     @!selected?
-                       :on-click    #(set-selected-fn (if @!selected?
-                                                        (set/difference (set @!selected) (set @!current-page-row-ids))
-                                                        (set/union (set @!selected) (set @!current-page-row-ids))))}]]))
+    [:th {:class "collapsing"}
+     [ui/Checkbox {:data-testid "checkbox-select-all"
+                   :style       {:position       :relative
+                                 :vertical-align :middle}
+                   :checked     @!selected?
+                   :on-click    #(set-selected-fn (if @!selected?
+                                                    (set/difference (set @!selected) (set @!current-page-row-ids))
+                                                    (set/union (set @!selected) (set @!current-page-row-ids))))}]]))
 
 (defn TableCellCheckbox
   [{:keys [::!selected ::set-selected-fn] :as control} row-id]
@@ -180,7 +181,7 @@
 
 (defn TableHeaderCell
   [{:keys [::!enable-column-customization? ::!enable-sorting? ::!sorting ::set-sorting-fn ::!sticky-headers?] :as control}
-   {:keys [::no-sort? ::field-key ::div-class] :as column}]
+   {:keys [::no-sort? ::field-key ::collapsing ::div-class] :as column}]
   (let [sortable       (dnd/useSortable #js {"id" (name field-key)})
         setNodeRef     (.-setNodeRef sortable)
         sort-direction (get-field-sort-direction @!sorting field-key)
@@ -189,7 +190,8 @@
                              (calc-new-sorting @!sorting field-key)
                              set-sorting-fn)]
     ;Using html th tag instead of semantic ui TableHeaderCell, because for some reason it's not taking into account ref fn
-    [:th (merge {:class    ["show-child-on-hover" "single line"]
+    [:th (merge {:class    (cond-> ["show-child-on-hover" "single line"]
+                                   collapsing (conj "collapsing"))
                  :style    (cond-> {:user-select :none}
                                    (and @!enable-sorting? (not no-sort?))
                                    (assoc :cursor :pointer)
@@ -306,7 +308,8 @@
          [ui/ModalContent {:scrolling true}
           [ui/Form
            (doall
-             (for [{:keys [::field-key ::header-content]} @!columns]
+             (for [{:keys [::field-key ::header-content ::no-delete]} @!columns
+                   :when (not no-delete)]
                ^{:key (str "checkbox-" field-key)}
                [ui/FormCheckbox {:label     (or header-content field-key)
                                  :on-change (ui-callback/checked

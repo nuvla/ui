@@ -22,9 +22,7 @@
   (when (and @(subscribe [::route-subs/protected-page?])
              (not @(subscribe [::session-subs/session])))
     (dispatch [::routing-events/navigate routes/sign-in nil
-               {:redirect (-> @(subscribe [::route-subs/current-route])
-                              (routing-utils/gen-href nil)
-                              routing-utils/strip-base-path)}])))
+               {:redirect (name @(subscribe [::route-subs/route-name]))}])))
 
 (defn FollowRedirect
   []

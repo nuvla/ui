@@ -790,8 +790,7 @@
                                :class    :table-select-fields-button
                                :style    {:padding    0
                                           :box-shadow :none
-                                          :position   :relative
-                                          :z-index    1000}
+                                          :position   :relative}
                                :on-click (fn []
                                            (reset! selected-cols (set @current-cols))
                                            (reset! show? true))}]}])))

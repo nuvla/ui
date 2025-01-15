@@ -2,6 +2,16 @@
 
 ## Released
 
+## [2.42.2](https://github.com/nuvla/ui/compare/2.42.1...2.42.2) (2025-01-15)
+
+
+### Bug Fixes
+
+* **Cloudflare:** Two factor authentication stopped working bugfix ([#1710](https://github.com/nuvla/ui/issues/1710)) ([d07d892](https://github.com/nuvla/ui/commit/d07d89205e3b553c48e2e9ed4f1592441db9c53e))
+* **Components test:** Screenshot only sceneroot to avoid breaking when adding new scenes ([#1713](https://github.com/nuvla/ui/issues/1713)) ([da14712](https://github.com/nuvla/ui/commit/da147125488df9db5c4ad6476beecca3a4a20043))
+* **e2e:** Teardown redirection flaky test bugfix ([#1714](https://github.com/nuvla/ui/issues/1714)) ([d4f5530](https://github.com/nuvla/ui/commit/d4f55301350ed1af5489072d204dcd7252638488))
+* **select-fields-icon-render-bug:** removing z-index from table select fields icon ([#1712](https://github.com/nuvla/ui/issues/1712)) ([0708550](https://github.com/nuvla/ui/commit/0708550a09cc8852065539de71a020725ef54d4d))
+
 ## [2.42.1](https://github.com/nuvla/ui/compare/2.42.0...2.42.1) (2024-12-23)
 
 

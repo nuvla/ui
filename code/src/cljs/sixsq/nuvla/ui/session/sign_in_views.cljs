@@ -33,7 +33,7 @@
         :FormFields [ui/FormInput
                      {:label    (str/capitalize (@tr [:code]))
                       :required true}
-                     [uix/TokenSubmiter
+                     [uix/TokenSubmitter
                       {:on-submit on-submit}]]}])))
 
 

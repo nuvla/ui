@@ -34,3 +34,14 @@
        [ui/Button {:on-click #(swap! reset-atom inc)} "Reset"]]
       ^{:key @reset-atom}
       [SceneRoot scene-id]]]))
+
+(defn BoolParam
+  [!value? test-id label]
+  [:div {:style {:margin-bottom "5px"}}
+   [ui/Checkbox {:data-testid test-id
+                 :label       label
+                 :style       {:position       :relative
+                               :vertical-align :middle}
+                 :checked     @!value?
+                 :on-click    #(swap! !value? not)}]])
+

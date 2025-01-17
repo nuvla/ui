@@ -23,7 +23,7 @@ export async function onRequest(context) {
       body = { ...body, 'base-uri': url.origin + '/api/' };
     }
     // override all location responses for /api/session and status code 303 when location in body
-    if ((body.status == 303 || url.pathname=='/api/session') && body.location) {
+    if ((body.status == 303 || url.pathname=='/api/session') && body.location || url.pathname.endsWith('able-2fa')) {
       let locationUrl = new URL(body.location);
       locationUrl.host = url.host;
       locationUrl.protocol = url.protocol;

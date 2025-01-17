@@ -254,7 +254,7 @@
                   :two-factor-auth-enter-code-enable
                   :two-factor-auth-enter-code-disable)]
         ": "
-        [uix/TokenSubmiter ops]]
+        [uix/TokenSubmitter ops]]
        (when @error
          [ui/Label {:basic true :color "red" :pointing "left"}
           [uix/TR :code-validation-failed]])])))

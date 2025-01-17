@@ -676,7 +676,7 @@
                 extra])])
 
 
-(defn TokenSubmiter
+(defn TokenSubmitter
   [_opts]
   (let [token (r/atom nil)]
     (fn [{:keys [character-count
@@ -692,7 +692,7 @@
        {:icon          "key"
         :icon-position "left"
         :auto-focus    "on"
-        :auto-complete "off"
+        :auto-complete "one-time-code"
         :value         (or @token "")
         :on-change     (ui-callback/input-callback
                          #(do

@@ -272,19 +272,19 @@
   :<- [::module-compatibility]
   :<- [::i18n-subs/tr]
   (fn [[module-subtype module-compatibility tr]
-       [_ {:keys [swarm-enabled swarm-manager parent] infra-subtype :subtype
+       [_ {:keys [swarm-enabled swarm-manager] infra-subtype :subtype
            :as   _infra-service}]]
     (cond
       (= [module-subtype module-compatibility infra-subtype swarm-enabled]
-         ["application" "swarm" "swarm" false])
+         [apps-utils/subtype-application apps-utils/compatibility-swarm "swarm" false])
       (tr [:swarm-app-cant-be-deployed-compose-node])
 
       (= [module-subtype module-compatibility infra-subtype swarm-enabled swarm-manager]
-         ["application" "swarm" "swarm" true false])
+         [apps-utils/subtype-application apps-utils/compatibility-swarm "swarm" true false])
       (tr [:swarm-app-cant-be-deployed-worker-node])
 
       (= [module-subtype module-compatibility infra-subtype swarm-enabled]
-         ["application" "docker-compose" "swarm" true])
+         [apps-utils/subtype-application apps-utils/compatibility-docker-compose "swarm" true])
       (tr [:compose-app-deployed-swarm-node]))))
 
 (reg-sub

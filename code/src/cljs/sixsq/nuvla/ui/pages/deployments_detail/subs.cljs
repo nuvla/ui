@@ -50,6 +50,12 @@
   (fn [{:keys [subtype]}]
     (= subtype apps-utils/subtype-application)))
 
+(reg-sub
+  ::is-deployment-docker-compose?
+  :<- [::deployment-module]
+  (fn [{:keys [compatibility]}]
+    (= compatibility apps-utils/compatibility-docker-compose)))
+
 
 (reg-sub
   ::is-deployment-application-kubernetes?

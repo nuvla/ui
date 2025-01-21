@@ -28,6 +28,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.spec :as spec-utils]
             [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.view-components :as vc]))
 
@@ -267,10 +268,18 @@
 
 (defn StopButton
   [_deployment & _opts]
-  (let [tr        (subscribe [::i18n-subs/tr])
-        open?     (r/atom false)
-        checked?  (r/atom false)
-        icon-name icons/i-stop]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        compose?        (subscribe [::subs/is-deployment-docker-compose?])
+        initial-state   {:open?           false
+                         :checked?        false
+                         :remove-images?  false
+                         :remove-volumes? false}
+        !state          (r/atom initial-state)
+        open?           (r/cursor !state [:open?])
+        checked?        (r/cursor !state [:checked?])
+        remove-images?  (r/cursor !state [:remove-images?])
+        remove-volumes? (r/cursor !state [:remove-volumes?])
+        icon-name       icons/i-stop]
     (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
       (let [{:keys [id name description module]} deployment
             text1  (str (or name id) (when description " - ") description)
@@ -289,18 +298,31 @@
         ^{:key (random-uuid)}
         [uix/ModalDanger
          {:on-close           (fn [event]
-                                (reset! open? false)
-                                (reset! checked? false)
+                                (reset! !state initial-state)
                                 (.stopPropagation event)
                                 (.preventDefault event))
           :on-confirm         #(do
-                                 (dispatch [::events/stop-deployment id])
-                                 (reset! open? false)
-                                 (reset! checked? false))
+                                 (dispatch [::events/stop-deployment id
+                                            {:remove-images  @remove-images?
+                                             :remove-volumes @remove-volumes?}])
+                                 (reset! !state initial-state))
           :open               @open?
           :control-confirmed? checked?
           :trigger            (r/as-element button)
-          :content            [:<> [:h3 text1] [:p text2]]
+          :content            [:<>
+                               [:h3 text1]
+                               [:p text2]
+                               (when @compose?
+                                 [ui/Segment
+                                  [ui/Form {:warning true}
+                                   [uix/MsgWarn {:size    :small
+                                                 :content (@tr [:stop-deployment-remove-opts-require-ne-2.19])}]
+                                   [ui/FormCheckbox {:label     (@tr [:stop-deployment-remove-images])
+                                                     :checked   @remove-images?
+                                                     :on-change (ui-callback/checked #(swap! remove-images? not))}]
+                                   [ui/FormCheckbox {:label     (@tr [:stop-deployment-remove-volumes])
+                                                     :checked   @remove-volumes?
+                                                     :on-change (ui-callback/checked #(swap! remove-volumes? not))}]]])]
           :header             (@tr [:stop-deployment])
           :danger-msg         (@tr [:deployment-stop-msg])
           :button-text        (@tr [:stop])}]))))
@@ -513,8 +535,8 @@
         resolved-owners (subscribe [::session-subs/resolve-users owners])
         urls            (get-in module [:content :urls])]
 
-    [ui/SegmentGroup {:style  {:display    "flex", :justify-content "space-between",
-                               :background "#f3f4f5"}}
+    [ui/SegmentGroup {:style {:display    "flex", :justify-content "space-between",
+                              :background "#f3f4f5"}}
      [ui/Segment {:secondary true}
 
       [:h4 {:style {:margin-top 0}} (str/capitalize (@tr [:summary]))]

@@ -73,11 +73,11 @@
 
 (reg-event-fx
   ::stop-deployment
-  (fn [_ [_ href]]
+  (fn [_ [_ href params]]
     (let [on-success #(do
                         (dispatch [::get-deployment href])
                         (dispatch [::deployments-events/get-deployments]))]
-      {::cimi-api-fx/operation [href "stop" on-success]})))
+      {::cimi-api-fx/operation [href "stop" on-success :data params]})))
 
 (reg-event-db
   ::set-node-parameters

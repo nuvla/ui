@@ -14,6 +14,8 @@
 (def subtype-application-k8s "application_kubernetes")
 (def subtype-application-helm "application_helm")
 (def subtype-applications-sets "applications_sets")
+(def compatibility-docker-compose "docker-compose")
+(def compatibility-swarm "swarm")
 
 (def apps-description-template "# App Description Placeholder
 

@@ -3,6 +3,9 @@
 
 (def dictionary
   {:en {
+        :stop-deployment-remove-volumes                "Remove volumes"
+        :stop-deployment-remove-images                 "Remove images"
+        :stop-deployment-remove-opts-require-ne-2.19   "The selected options require NuvlaEdge version 2.19 or higher to be taken into account."
         :executed-actions                              "Executed Actions"
         :total-actions                                 "Total Actions"
         :skipped                                       "skipped"
@@ -1197,6 +1200,9 @@
         }
 
    :fr {
+        :stop-deployment-remove-volumes                "Supprimer les volumes"
+        :stop-deployment-remove-images                 "Supprimer les images"
+        :stop-deployment-remove-opts-require-ne-2.19   "Les options sélectionnées nécessitent la version 2.19 ou supérieure de NuvlaEdge pour être prises en compte."
         :executed-actions                              "Actions exécutées"
         :total-actions                                 "Actions totales"
         :skipped                                       "Ignoré"

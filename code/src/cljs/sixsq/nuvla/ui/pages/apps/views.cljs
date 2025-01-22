@@ -34,18 +34,19 @@
 
 (defn ModuleDetails
   []
-  (let [module (subscribe [::subs/module])
-        new-subtype (subscribe [::route-subs/query-param :subtype])]
+  (let [module            (subscribe [::subs/module])
+        module-content-id (subscribe [::subs/module-content-id])
+        new-subtype       (subscribe [::route-subs/query-param :subtype])]
     (fn []
-      (let [subtype (or (:subtype @module) @new-subtype)]
-        (condp = subtype
-          utils/subtype-component [apps-component-views/view-edit]
-          utils/subtype-application [apps-application-views/ViewEdit]
-          utils/subtype-application-k8s [apps-application-views/ViewEdit]
-          utils/subtype-application-helm [apps-application-views/ViewEdit]
-          utils/subtype-applications-sets [apps-applications-sets-views/ViewEdit]
-          ^{:key subtype}
-          [apps-project-views/ViewEdit])))))
+      (let [subtype (or (:subtype @module) @new-subtype)
+            comp-fn (cond
+                      (#{utils/subtype-application
+                         utils/subtype-application-k8s
+                         utils/subtype-application-helm} subtype) apps-application-views/ViewEdit
+                      (utils/component? subtype) apps-component-views/view-edit
+                      :else apps-project-views/ViewEdit)]
+        ^{:key (or @module-content-id subtype)}
+        [comp-fn]))))
 
 
 (defn Module
@@ -73,11 +74,11 @@
 
 (defn AppDetails
   []
-  (let [version      (subscribe [::route-subs/query-param :version])
-        sub-type     (subscribe [::route-subs/query-param :subtype])]
+  (let [version  (subscribe [::route-subs/query-param :version])
+        sub-type (subscribe [::route-subs/query-param :subtype])]
     (fn []
       (dispatch [::events/reset-version])
-      (let [is-new?  (boolean (seq @sub-type))]
+      (let [is-new? (boolean (seq @sub-type))]
         (dispatch [::events/is-new? is-new?])
         (if is-new?
           (dispatch-clear-events @sub-type)

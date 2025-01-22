@@ -199,14 +199,12 @@
 
 (reg-event-fx
   ::switch-group
-  (fn [{{:keys [::spec/session ::main-spec/changes-protection?] :as db} :db} [_ claim extended]]
-    (if changes-protection?
-      {:db (assoc db ::main-spec/ignore-changes-modal {:fx [[:dispatch [::switch-group claim extended]]]})}
-      (let [claim    (if (= (session-utils/get-identifier session) claim) (session-utils/get-user-id session) claim)
-            data     {:claim    claim
-                      :extended extended}
-            callback #(dispatch [::initialize])]
-        {::cimi-api-fx/operation [(:id session) "switch-group" callback :on-error callback :data data]}))))
+  (fn [{{:keys [::spec/session] } :db} [_ claim extended]]
+    (let [claim    (if (= (session-utils/get-identifier session) claim) (session-utils/get-user-id session) claim)
+          data     {:claim    claim
+                    :extended extended}
+          callback #(dispatch [::initialize])]
+      {::cimi-api-fx/operation [(:id session) "switch-group" callback :on-error callback :data data]})))
 
 
 (reg-event-db

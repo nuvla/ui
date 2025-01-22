@@ -103,7 +103,7 @@
     [uix/ModalDanger
      {:with-confirm-step? true
       :on-confirm         (fn [] (dispatch [::events/delete-module id]))
-      :trigger            (r/as-element [ui/MenuItem {:disabled (or @is-new? (seq (:children module)))}
+      :trigger            (r/as-element [ui/MenuItem {:disabled (or @is-new? (some? (seq (:children module))))}
                                          [icons/TrashIcon]
                                          (str/capitalize (@tr [:delete]))])
       :content            [:h3 content]
@@ -436,14 +436,16 @@
          [ui/Message {:warning true}
           [ui/MessageHeader (@tr [:warning])]
           [ui/MessageContent (@tr [:warning-draft-version-1])
-           [:a {:on-click #(dispatch [::events/get-module @latest-published-index])
+           [:a {:on-click (fn [] (dispatch [::main-events/changes-protected-f?
+                                            #(dispatch [::events/get-module @latest-published-index])]))
                 :style    {:cursor :pointer}} (@tr [:here])]
            (@tr [:warning-draft-version-2])]])
        (when (and (not @is-module-published?) (not @is-latest?))
          [ui/Message {:warning true}
           [ui/MessageHeader (@tr [:warning])]
           [ui/MessageContent (@tr [:warning-not-latest-version-1])
-           [:a {:on-click #(dispatch [::events/get-module -1])
+           [:a {:on-click (fn [] (dispatch [::main-events/changes-protected-f?
+                                            #(dispatch [::events/get-module -1])]))
                 :style    {:cursor :pointer}} (@tr [:here])]
            (@tr [:warning-not-latest-version-2])]])])))
 

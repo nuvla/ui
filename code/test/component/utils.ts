@@ -31,7 +31,7 @@ export async function dragAndDrop(page, from, to) {
 
 export async function selectOption(dropdownDiv, optionLabel) {
   await dropdownDiv.click();
-  await dropdownDiv.getByText(new RegExp('^' + optionLabel + '$')).click();
+  await dropdownDiv.locator('.menu').first().getByText(new RegExp('^' + optionLabel + '$')).click();
 }
 
 export async function selectorOptions(dropdownDiv) {

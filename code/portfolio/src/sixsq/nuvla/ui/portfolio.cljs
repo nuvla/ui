@@ -8,6 +8,7 @@
             [sixsq.nuvla.ui.components.edge-selector-scenes]
             [sixsq.nuvla.ui.components.module-selector-scenes]
             [sixsq.nuvla.ui.components.nav-tab-scenes]
+            [sixsq.nuvla.ui.components.resource-filter-scenes]
             [sixsq.nuvla.ui.components.tooltip-scenes]
             [sixsq.nuvla.ui.components.overflow-tooltip-scenes]
             [sixsq.nuvla.ui.components.table-refactor-scenes]

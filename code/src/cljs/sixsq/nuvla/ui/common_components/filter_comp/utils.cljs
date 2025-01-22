@@ -137,14 +137,15 @@ NullValue           = WS 'null' WS
 
 (defn filter-str->data
   [filter-str]
-  (let [parsed-filter (parse-filter filter-str)]
-    (when-not (insta/failure? parsed-filter)
-      (as-> (transform->data parsed-filter) res
-            (interpose {:el "empty"} res)
-            (concat [{:el "empty"}]
-                    res
-                    [{:el "empty"}])
-            (into [] res)))))
+  (when filter-str
+    (let [parsed-filter (parse-filter filter-str)]
+      (when-not (insta/failure? parsed-filter)
+        (as-> (transform->data parsed-filter) res
+              (interpose {:el "empty"} res)
+              (concat [{:el "empty"}]
+                      res
+                      [{:el "empty"}])
+              (into [] res))))))
 
 
 (defn data->filter-str

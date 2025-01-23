@@ -688,6 +688,10 @@ body .ui.card:hover,
 .ui.cards > .card:hover {
   box-shadow: 5px 5px 20px 0 rgb(0 0 0 / 25%), 0 0 0 1px rgb(0 0 0 / 20%) !important;
 }
+body .ui.card.disabled:hover,
+.ui.cards > .card:hover {
+  box-shadow: 5px 5px 15px 0 rgb(0 0 0 / 15%), 0 0 0 1px rgb(0 0 0 / 20%) !important;
+}
 
 @media only screen and (max-width: 767px) {
   .card-image-centered {

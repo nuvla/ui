@@ -1,18 +1,7 @@
 (ns sixsq.nuvla.ui.components.duration-picker-scenes
   (:require [reagent.core :as r]
-            [sixsq.nuvla.ui.portfolio-utils :refer [defscene]]
-            [sixsq.nuvla.ui.common-components.plugins.duration-picker :refer [DurationPickerController]]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
-
-(defn BoolParam
-  [!value? test-id label]
-  [:div {:style {:margin-bottom "5px"}}
-   [ui/Checkbox {:data-testid test-id
-                 :label       label
-                 :style       {:position       :relative
-                               :vertical-align :middle}
-                 :checked     @!value?
-                 :on-click    #(swap! !value? not)}]])
+            [sixsq.nuvla.ui.portfolio-utils :refer [defscene BoolParam]]
+            [sixsq.nuvla.ui.common-components.plugins.duration-picker :refer [DurationPickerController]]))
 
 (defscene basic-picker
   (r/with-let [!seconds       (r/atom 0)

@@ -611,9 +611,15 @@
                  ;; as we navigate away from the page and we don't want to re-enable the save button.
                  (dispatch [::routing-events/navigate routes/deployment-groups-details
                             {:uuid (general-utils/id->uuid (:resource-id %))}]))
-              :on-error (fn []
+              :on-error (fn [response]
                           (dispatch [::set-changes-protection true])
-                          (dispatch [::set ::spec/persist-in-progress? false]))]]]})))
+                          (dispatch [::set ::spec/persist-in-progress? false])
+                          (let [{:keys [status message]} (response/parse-ex-info response)]
+                            (dispatch [::messages-events/add
+                                       {:header  (cond-> (str "error creating deployment group")
+                                                         status (str " (" status ")"))
+                                        :content message
+                                        :type    :error}])))]]]})))
 
 (defn overwritten-app-version
   [deployment-set app]

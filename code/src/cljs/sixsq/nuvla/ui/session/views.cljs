@@ -4,6 +4,7 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
@@ -23,7 +24,9 @@
         search       (r/atom "")
         open         (r/atom false)
         cursor       (r/atom 0)
-        on-click     #(dispatch [::events/switch-group % @extended?])
+        on-click     (fn [claim]
+                       (dispatch [::main-events/changes-protected-f?
+                                  #(dispatch [::events/switch-group claim @extended?])]))
         options      (subscribe [::subs/switch-group-options])
         tr           (subscribe [::i18n-subs/tr])
         is-mobile?   (subscribe [::main-subs/is-mobile-device?])
@@ -106,9 +109,11 @@
                {:text     (@tr [:show-subgroups-resources])
                 :icon     (str (when @extended? "check ")
                                icons/i-square-outline)
-                :on-click #(do (swap! extended? not)
-                               (on-click @active-claim)
-                               (.stopPropagation %))}]])])))))
+                :on-click (fn [event]
+                            (dispatch [::main-events/changes-protected-f?
+                                       #(do (swap! extended? not)
+                                            (on-click @active-claim)
+                                            (.stopPropagation event))]))}]])])))))
 
 
 (defn UserMenuItem

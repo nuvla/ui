@@ -177,7 +177,7 @@
 
 (reg-event-fx
   ::do-not-ignore-changes
-  (fn [{{:keys [::spec/do-not-ignore-changes-modal] :as db} :db} _]
+  (fn [{{:keys [::spec/do-not-ignore-changes-modal] :as db} :db}]
     (let [base-fx        (if (::opened-by-browser-back db)
                            {:fx [[:dispatch [::routing-events/reset-ignore-changes-protection]]]}
                            {:fx (or (:fx do-not-ignore-changes-modal) [])})]
@@ -203,9 +203,17 @@
          :fx clear-fx}
 
         (fn? ignore-changes-modal)
-        (do (ignore-changes-modal)
+        (do
+          (ignore-changes-modal)
           {:db db-chng-unprtd
            :fx clear-fx})))))
+
+(reg-event-fx
+  ::changes-protected-f?
+  (fn [{{:keys [::spec/changes-protection?] :as db} :db} [_ f]]
+    (if changes-protection?
+      {:db (assoc db ::spec/ignore-changes-modal f)}
+      (f))))
 
 (reg-event-fx
   ::after-clear-event
@@ -237,13 +245,6 @@
   ::enable-browser-back
   (fn [_ [_ payload]]
     {:fx [[::fx/enable-browser-back payload]]}))
-
-
-
-(reg-event-db
-  ::ignore-changes-modal
-  (fn [db [_ callback-fn]]
-    (assoc db ::spec/ignore-changes-modal callback-fn)))
 
 (reg-event-fx
   ::set-notifications

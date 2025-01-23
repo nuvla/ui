@@ -4,6 +4,7 @@
             [reagent.core :as reagent]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.pages.apps.events :as events]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.pages.apps.subs :as subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
@@ -117,8 +118,7 @@
 
 
 (defn Versions []
-  (let [tr              (subscribe [::i18n-subs/tr])
-        versions        (subscribe [::subs/versions])
+  (let [versions        (subscribe [::subs/versions])
         current-version (subscribe [::subs/module-content-id])]
     (fn []
       [:div {:class :uix-apps-details-details}
@@ -129,5 +129,5 @@
             [:div
              [versions-compare @versions]])
           [versions-table versions current-version
-           :on-click #(dispatch [::events/get-module %])]]
+           :on-click (fn [v] (dispatch [::main-events/changes-protected-f? #(dispatch [::events/get-module v])]))]]
          [uix/MsgNoItemsToShow [uix/TR :no-versions]])])))

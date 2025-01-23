@@ -74,13 +74,13 @@ jobs:
           UI_E2E_TEST_PASSWORD: ${{ secrets.UI_E2E_TEST_PASSWORD }}
           CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
           CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright
           path: code/playwright-report/
           retention-days: 30
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-logout

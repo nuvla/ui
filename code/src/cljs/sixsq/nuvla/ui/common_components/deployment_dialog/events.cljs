@@ -4,6 +4,7 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.common-components.deployment-dialog.spec :as spec]
             [sixsq.nuvla.ui.common-components.deployment-dialog.utils :as utils]
+            [sixsq.nuvla.ui.common-components.job.events :as job-events]
             [sixsq.nuvla.ui.common-components.i18n.spec :as i18n-spec]
             [sixsq.nuvla.ui.common-components.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
@@ -294,29 +295,12 @@
       db)))
 
 (reg-event-fx
-  ::set-job-check-dct
-  (fn [_ [_ {:keys [id state] :as job}]]
-    (let [job-finished? (-> state
-                            (#{"STOPPED" "SUCCESS" "FAILED"})
-                            boolean)]
-      (if job-finished?
-        (dispatch [::set-check-dct-result job])
-        (dispatch [::check-dct-later id])))))
-
-(reg-event-fx
-  ::get-job-check-dct
-  (fn [_ [_ job-id]]
-    {::cimi-api-fx/get [job-id #(dispatch [::set-job-check-dct %])]}))
-
-(reg-event-fx
-  ::check-dct-later
-  (fn [_ [_ job-id]]
-    {:dispatch-later [{:ms 3000 :dispatch [::get-job-check-dct job-id]}]}))
-
-(reg-event-fx
   ::check-dct
   (fn [_ [_ {:keys [id] :as _deployment}]]
-    (let [on-success #(dispatch [::check-dct-later (:location %)])]
+    (let [on-success #(dispatch [::job-events/wait-job-to-complete
+                                 {:job-id              (:location %)
+                                  :on-complete         (fn [job] (dispatch [::set-check-dct-result job]))
+                                  :refresh-interval-ms 5000}])]
       {::cimi-api-fx/operation [id "check-dct" on-success]})))
 
 ; What's the difference with the same event in deployment

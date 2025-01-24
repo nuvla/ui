@@ -191,21 +191,22 @@
 
 (defn format-update-data
   [form-data]
-  (let [payload-releated (select-keys form-data [:project-name :working-dir
-                                                 :environment :force-restart
-                                                 :current-version])
-        nuvlabox-release (:nuvlabox-release form-data)
-        selected-modules (->> (:modules form-data)
-                              (filter val)
-                              (map key)
-                              (remove nil?))
-        config-files     (concat ["docker-compose.yml"]
-                                 (map #(str "docker-compose." (name %) ".yml") selected-modules))
-        payload?         (some (fn [[_ v]] (not (str/blank? v))) payload-releated)
-        payload          (when payload?
-                           (-> payload-releated
-                               (update :environment str/split #"\n")
-                               (assoc :config-files config-files)))]
+  (let [payload-releated         (select-keys form-data [:project-name :working-dir
+                                                         :environment :force-restart
+                                                         :current-version])
+        nuvlabox-release         (:nuvlabox-release form-data)
+        release-supported-scopes (set (mapv (comp keyword :scope) (:compose-files nuvlabox-release)))
+        selected-modules         (->> (:modules form-data)
+                                      (keep (fn [[k v]] (when (and v (contains? release-supported-scopes k))
+                                                          k)))
+                                      (remove nil?))
+        config-files             (concat ["docker-compose.yml"]
+                                         (map #(str "docker-compose." (name %) ".yml") selected-modules))
+        payload?                 (some (fn [[_ v]] (not (str/blank? v))) payload-releated)
+        payload                  (when payload?
+                                   (-> payload-releated
+                                       (update :environment str/split #"\n")
+                                       (assoc :config-files config-files)))]
     (when payload
       (assoc {:nuvlabox-release (:id nuvlabox-release)}
         :payload (general-utils/edn->json payload)))))

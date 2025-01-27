@@ -544,7 +544,7 @@
     (when-not @helm-app?
       (dispatch [::apps-events/set-form-spec ::spec/module-application])
       (when-not @compatibility
-        (dispatch [::events/update-compatibility "docker-compose"])))
+        (dispatch [::events/update-compatibility apps-utils/compatibility-docker-compose])))
     (fn []
       (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))
       (let [name  (get @module-common ::apps-spec/name)

@@ -2,6 +2,35 @@
 
 ## Released
 
+## [2.43.0](https://github.com/nuvla/ui/compare/2.42.1...2.43.0) (2025-01-27)
+
+
+### Features
+
+* **Deployment details page:** Support remove-images, remove-volumes for docker compose on stop action ([#1717](https://github.com/nuvla/ui/issues/1717)) ([8d3dc00](https://github.com/nuvla/ui/commit/8d3dc008ba6ff878f2fa218e84222dd0672aa86c))
+* **dg-sub-type-selector:** new component for the selection of DG sub type ([#1715](https://github.com/nuvla/ui/issues/1715)) ([6263e49](https://github.com/nuvla/ui/commit/6263e4901512b6c583864a8affdc367e63f1d88b))
+* **resource-filter-comp:** Add new resource filter component ([#1718](https://github.com/nuvla/ui/issues/1718)) ([30ccc89](https://github.com/nuvla/ui/commit/30ccc8922e1f9d11f5b237f58ee718af8264a447))
+
+
+### Bug Fixes
+
+* **Apps details page:** Ask user if he wants to ignore ongoing changes when switching to different app version ([7d270c2](https://github.com/nuvla/ui/commit/7d270c26af8a8b214cec4e80b97a1034becd4fdc))
+* **Apps details page:** Switching between app version is not refreshing helm fields ([#1719](https://github.com/nuvla/ui/issues/1719)) ([7d270c2](https://github.com/nuvla/ui/commit/7d270c26af8a8b214cec4e80b97a1034becd4fdc))
+* **Apps details page:** Switching between generalize key to reload on module content change ([7d270c2](https://github.com/nuvla/ui/commit/7d270c26af8a8b214cec4e80b97a1034becd4fdc))
+* **Apps details page:** Warning delete button disabled prop should be a boolean fix ([7d270c2](https://github.com/nuvla/ui/commit/7d270c26af8a8b214cec4e80b97a1034becd4fdc))
+* **CI:** Deprecated github upload-artifact@v3 upgraded to upload-artifact@v4 ([92f4df6](https://github.com/nuvla/ui/commit/92f4df68de29209cbf29117151975ec5d6d281cf))
+* **Cloudflare:** fix location for enable-2fa and disable-2fa ([c604209](https://github.com/nuvla/ui/commit/c604209bfa212d6183022fce36990c3bf934a861))
+* **Cloudflare:** Two factor authentication stopped working bugfix ([#1710](https://github.com/nuvla/ui/issues/1710)) ([d07d892](https://github.com/nuvla/ui/commit/d07d89205e3b553c48e2e9ed4f1592441db9c53e))
+* **Component tests:** Wait reset button to be visible before taking screenshots ([92f4df6](https://github.com/nuvla/ui/commit/92f4df68de29209cbf29117151975ec5d6d281cf))
+* **Components test:** Reduce workers to 2 to avoid flakyness ([#1722](https://github.com/nuvla/ui/issues/1722)) ([92f4df6](https://github.com/nuvla/ui/commit/92f4df68de29209cbf29117151975ec5d6d281cf))
+* **Components test:** Screenshot only sceneroot to avoid breaking when adding new scenes ([#1713](https://github.com/nuvla/ui/issues/1713)) ([da14712](https://github.com/nuvla/ui/commit/da147125488df9db5c4ad6476beecca3a4a20043))
+* **Deployment dialog:** Reuse fetch job mechanism ([#1721](https://github.com/nuvla/ui/issues/1721)) ([12c9463](https://github.com/nuvla/ui/commit/12c94634135fbf3f2f596395049a96266c2ec569))
+* **Deployment group details page:** Show save error message during creation phase ([#1720](https://github.com/nuvla/ui/issues/1720)) ([08829ab](https://github.com/nuvla/ui/commit/08829abfe714df001bd718e88e6aaae243da5ef8))
+* **e2e:** Teardown redirection flaky test bugfix ([#1714](https://github.com/nuvla/ui/issues/1714)) ([d4f5530](https://github.com/nuvla/ui/commit/d4f55301350ed1af5489072d204dcd7252638488))
+* **NuvlaEdge update modal:** When selecting a version with no/less optional modules, current ones will try to be installed bugfix ([#1723](https://github.com/nuvla/ui/issues/1723)) ([39d5ea0](https://github.com/nuvla/ui/commit/39d5ea04fac6df329829a075d07a488d532b4a68))
+* **select-fields-icon-render-bug:** removing z-index from table select fields icon ([#1712](https://github.com/nuvla/ui/issues/1712)) ([0708550](https://github.com/nuvla/ui/commit/0708550a09cc8852065539de71a020725ef54d4d))
+* **UIX:** Autocomplete one time code ([c604209](https://github.com/nuvla/ui/commit/c604209bfa212d6183022fce36990c3bf934a861))
+
 ## [2.42.1](https://github.com/nuvla/ui/compare/2.42.0...2.42.1) (2024-12-23)
 
 

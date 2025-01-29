@@ -10,6 +10,10 @@
 
 (def state-summary-agg-term "terms:online,terms:state")
 
+(def coe-type-docker "docker")
+(def coe-type-swarm "swarm")
+(def coe-type-kubernetes "kubernetes")
+
 (s/def ::stale-count nat-int?)
 (s/def ::active-count nat-int?)
 (s/def ::nuvlaboxes any?)

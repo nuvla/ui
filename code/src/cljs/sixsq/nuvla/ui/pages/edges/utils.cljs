@@ -109,6 +109,9 @@
     "TOTAL" nil
     (str "state='" state "'")))
 
+(defn coe-filter
+  [coes]
+  (general-utils/filter-eq-vals "coe-list/coe-type" coes))
 
 (defn cpu-stats
   [{:keys [capacity load topic raw-sample]}]

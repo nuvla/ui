@@ -464,6 +464,19 @@
                      %
                      "Failed to recompute fleet")]})))
 
+(reg-event-fx
+  ::recompute-fleet-on-create
+  (fn [{{:keys [::spec/deployment-set-edited] :as db} :db} [_ on-complete]]
+    (let [id         (:id deployment-set-edited)
+          on-success (fn []
+                       (when on-complete (on-complete))
+                       (refresh))]
+      {::cimi-api-fx/operation
+       [id "recompute-fleet" on-success
+        :on-error #(cimi-api-fx/default-error-message
+                     %
+                     "Failed to recompute fleet")]})))
+
 (defn- update-fleets [update-fleet apps-set]
   (mapv
     (fn [app-set]
@@ -762,7 +775,22 @@
     {:fx [[:dispatch [::set-edges-ids response]]
           [:dispatch [::get-edge-documents]]]}))
 
+(reg-event-fx
+  ::clear-edges
+  (fn []
+    {:fx [[:dispatch [::set-edges {}]]]}))
+
 (def edges-state-filter-key :edges-state)
+
+(defn dg-subtype-filter
+  [{:keys [subtype] :as _deployment-set}]
+  (condp = subtype
+    spec/subtype-docker-compose
+    (edges-utils/coe-filter [edges-spec/coe-type-docker edges-spec/coe-type-swarm])
+    spec/subtype-docker-swarm
+    (edges-utils/coe-filter [edges-spec/coe-type-swarm])
+    spec/subtype-kubernetes
+    (edges-utils/coe-filter [edges-spec/coe-type-kubernetes])))
 
 (reg-event-fx
   ::get-edge-documents
@@ -1010,13 +1038,15 @@
 
 (defn get-full-filter-string
   [{:keys [::spec/edge-picker-state-selector
-           ::spec/edge-picker-additional-filter] :as db}]
+           ::spec/edge-picker-additional-filter] :as db}
+   deployment-set]
   (general-utils/join-and
     "id!=null"
     (when edge-picker-state-selector (edges-utils/state-filter edge-picker-state-selector))
     edge-picker-additional-filter
     (full-text-search-plugin/filter-text
-      db [::spec/edge-picker-full-text-search])))
+      db [::spec/edge-picker-full-text-search])
+    (dg-subtype-filter deployment-set)))
 
 (reg-event-fx
   ::get-edges-for-edge-picker-modal
@@ -1029,6 +1059,7 @@
 (reg-event-fx
   ::get-picker-edges
   (fn [{{:keys [current-route
+                ::spec/deployment-set-edited
                 ::spec/edge-picker-ordering] :as db} :db} _]
     (let [ordering     (or edge-picker-ordering spec/default-ordering)
           fleet-filter (or (get-in db (subs/current-route->fleet-filter-db-path current-route))
@@ -1038,9 +1069,10 @@
        [:nuvlabox
         (->> {:orderby (ordering->order-string ordering)
               :filter  (general-utils/join-and
-                         (get-full-filter-string db)
+                         (get-full-filter-string db deployment-set-edited)
                          ;; when edges are NOT based on a filter, exclude the already selected edges
-                         (when-not fleet-filter (general-utils/filter-neq-ids (:resources edges))))}
+                         (when-not fleet-filter (general-utils/filter-neq-ids (:resources edges)))
+                         (dg-subtype-filter deployment-set-edited))}
              (pagination-plugin/first-last-params
                db [::spec/edge-picker-pagination]))
         #(dispatch [::set-edge-picker-edges %])]})))
@@ -1151,12 +1183,12 @@
 
 (reg-event-fx
   ::get-selected-edge-ids
-  (fn [{{:keys [:sixsq.nuvla.ui.pages.deployment-sets-detail.spec/edge-picker-select] :as db} :db} [_ creating?]]
+  (fn [{{:keys [:sixsq.nuvla.ui.pages.deployment-sets-detail.spec/edge-picker-select] :as db} :db} [_ deployment-set creating?]]
     {::cimi-api-fx/search
      [:nuvlabox
       {:filter (table-plugin/build-bulk-filter
                  edge-picker-select
-                 (get-full-filter-string db))
+                 (get-full-filter-string db deployment-set))
        :select "id"}
       #(do
          (dispatch [::set-opened-modal nil])
@@ -1164,10 +1196,10 @@
 
 (reg-event-fx
   ::update-fleet-filter-edge-ids
-  (fn [{db :db} [_ creating?]]
+  (fn [{db :db} [_ deployment-set creating?]]
     {::cimi-api-fx/search
      [:nuvlabox
-      {:filter (get-full-filter-string db)
+      {:filter (get-full-filter-string db deployment-set)
        :select "id"}
       #(do
          (dispatch [::set-opened-modal nil])

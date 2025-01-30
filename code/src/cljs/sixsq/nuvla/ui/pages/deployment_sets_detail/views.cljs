@@ -640,10 +640,17 @@
 (defn DGTypeCell
   [creating?]
   (let [deployment-set (subscribe [::subs/deployment-set])
-        on-change-fn   #(dispatch [::events/edit :subtype %])
-        opts           [["docker-compose" "Docker Compose"]
-                        ["docker-swarm" "Docker Swarm"]
-                        ["kubernetes" "Kubernetes"]]]
+        fleet-filter   (subscribe [::subs/fleet-filter])
+        on-change-fn   (fn [subtype]
+                         (dispatch [::events/edit :subtype subtype])
+                         (if @fleet-filter
+                           (when creating?
+                             (dispatch [::events/update-fleet-filter-edge-ids
+                                        (assoc @deployment-set :subtype subtype) creating?]))
+                           (dispatch [::events/clear-edges])))
+        opts           [[spec/subtype-docker-compose "Docker Compose"]
+                        [spec/subtype-docker-swarm "Docker Swarm"]
+                        [spec/subtype-kubernetes "Kubernetes"]]]
     [ui/TableCell
      (if creating?
        [ui/Dropdown {:default-value (get @deployment-set :subtype)
@@ -1304,14 +1311,15 @@
 
 (defn EdgesPickerModal
   [creating?]
-  (let [tr            (subscribe [::i18n-subs/tr])
-        open?         (subscribe [::subs/modal-open? events/edges-picker-modal-id])
-        add-to-select (fn []
-                        (dispatch [::events/get-selected-edge-ids creating?]))
-        update-filter (fn []
-                        (dispatch [::events/update-fleet-filter creating?])
-                        (dispatch [::events/set-opened-modal nil]))
-        fleet-filter  (subscribe [::subs/fleet-filter])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        open?          (subscribe [::subs/modal-open? events/edges-picker-modal-id])
+        deployment-set (subscribe [::subs/deployment-set])
+        add-to-select  (fn []
+                         (dispatch [::events/get-selected-edge-ids @deployment-set creating?]))
+        update-filter  (fn []
+                         (dispatch [::events/update-fleet-filter creating?])
+                         (dispatch [::events/set-opened-modal nil]))
+        fleet-filter   (subscribe [::subs/fleet-filter])]
     (fn []
       [ui/Modal {:open       @open?
                  :close-icon true

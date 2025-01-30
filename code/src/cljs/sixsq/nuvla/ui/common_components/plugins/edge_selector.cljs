@@ -4,8 +4,8 @@
             [sixsq.nuvla.ui.common-components.plugins.pagination-refactor :as pagination]
             [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table-refactor]
             [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
+            [sixsq.nuvla.ui.pages.edges.spec :as edges-spec]
             [sixsq.nuvla.ui.pages.edges.utils :as utils]
-            [sixsq.nuvla.ui.pages.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -103,15 +103,15 @@
   [coe-list _row _column]
   [:div
    (for [{:keys [coe-type]} coe-list]
-     (case coe-type
-       edges-utils/coe-type-docker
+     (condp = coe-type
+       edges-spec/coe-type-docker
        ^{:key coe-type} [ui/ListIcon {:name icons/i-docker}]
-       edges-utils/coe-type-swarm
+       edges-spec/coe-type-swarm
        ^{:key coe-type} [ui/Image {:src   "/ui/images/docker-swarm-grey.png"
                                    :style {:width   "1.50em"
                                            :margin  "0 .25rem 0 0"
                                            :display :inline-block}}]
-       edges-utils/coe-type-kubernetes
+       edges-spec/coe-type-kubernetes
        ^{:key coe-type} [apps-utils/IconK8s false]))])
 
 (defn CellTags

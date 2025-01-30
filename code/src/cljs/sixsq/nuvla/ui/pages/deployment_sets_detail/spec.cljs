@@ -4,6 +4,10 @@
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.common-components.plugins.step-group :as step-group-plugin]))
 
+(def ^:const subtype-docker-compose "docker-compose")
+(def ^:const subtype-docker-swarm "docker-swarm")
+(def ^:const subtype-kubernetes "kubernetes")
+
 (s/def ::deployment-set (s/nilable any?))
 (s/def ::deployment-set-edited (s/nilable any?))
 

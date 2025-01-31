@@ -44,6 +44,7 @@
                          utils/subtype-application-k8s
                          utils/subtype-application-helm} subtype) apps-application-views/ViewEdit
                       (utils/component? subtype) apps-component-views/view-edit
+                      (= utils/subtype-applications-sets subtype) apps-applications-sets-views/ViewEdit
                       :else apps-project-views/ViewEdit)]
         ^{:key (or @module-content-id subtype)}
         [comp-fn]))))

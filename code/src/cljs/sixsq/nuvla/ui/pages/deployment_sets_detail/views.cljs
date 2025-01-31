@@ -643,6 +643,7 @@
         fleet-filter   (subscribe [::subs/fleet-filter])
         on-change-fn   (fn [subtype]
                          (dispatch [::events/edit :subtype subtype])
+                         (dispatch [::events/clear-apps])
                          (if @fleet-filter
                            (when creating?
                              (dispatch [::events/update-fleet-filter-edge-ids

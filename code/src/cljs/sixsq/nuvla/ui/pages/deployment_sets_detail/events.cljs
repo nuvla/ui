@@ -782,7 +782,7 @@
 
 (def edges-state-filter-key :edges-state)
 
-(defn dg-subtype-filter
+(defn edge-dg-subtype-filter
   [{:keys [subtype] :as _deployment-set}]
   (condp = subtype
     spec/subtype-docker-compose
@@ -877,9 +877,23 @@
      :fx [[:dispatch [::get-edges]]
           [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/edges-select]]]]}))
 
+(defn module-dg-subtype-filter
+  [{:keys [subtype] :as _deployment-set}]
+  (condp = subtype
+    spec/subtype-docker-compose
+    (general-utils/join-and
+      (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-application])
+      (general-utils/filter-eq-vals "compatibility" [apps-utils/compatibility-docker-compose]))
+    spec/subtype-docker-swarm
+    (general-utils/join-and
+      (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-application])
+      (general-utils/filter-eq-vals "compatibility" [apps-utils/compatibility-docker-compose apps-utils/compatibility-swarm]))
+    spec/subtype-kubernetes
+    (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-application-k8s apps-utils/subtype-application-helm])))
+
 (reg-event-fx
   ::fetch-app-picker-apps
-  (fn [{{:keys [current-route] :as db} :db} [_ pagination-db-path]]
+  (fn [{{:keys [current-route ::spec/deployment-set-edited] :as db} :db} [_ pagination-db-path]]
     (let [current-selection          (get-in db (subs/create-apps-creation-db-path current-route))
           is-controlled-by-apps-set? (utils/is-controlled-by-apps-set (::spec/module-applications-sets db))]
       {:fx [[:dispatch [::apps-store-events/get-modules
@@ -889,10 +903,21 @@
                            (general-utils/filter-neq-ids
                              (mapv :id current-selection))
                            (when (or (false? is-controlled-by-apps-set?) (seq current-selection))
-                             (str "subtype!='" apps-utils/subtype-applications-sets "'")))
+                             (str "subtype!='" apps-utils/subtype-applications-sets "'"))
+                           (module-dg-subtype-filter deployment-set-edited))
                          :order-by           "name:asc"
                          :pagination-db-path [pagination-db-path]
                          :additional-cb-fn   #(dispatch [::get-apps-for-sets %])}]]]})))
+
+(reg-event-fx
+  ::clear-apps
+  (fn [{{:keys [current-route] :as db} :db} [_]]
+    (let [db-path (subs/create-apps-creation-db-path current-route)]
+      {:db (assoc-in db db-path [])
+       :fx [[:dispatch [::fetch-app-picker-apps
+                        ::spec/pagination-apps-picker]]
+            [:dispatch [::set-apps-edited true]]
+            [:dispatch [::set-changes-protection true]]]})))
 
 (reg-event-fx
   ::do-add-app
@@ -1046,7 +1071,7 @@
     edge-picker-additional-filter
     (full-text-search-plugin/filter-text
       db [::spec/edge-picker-full-text-search])
-    (dg-subtype-filter deployment-set)))
+    (edge-dg-subtype-filter deployment-set)))
 
 (reg-event-fx
   ::get-edges-for-edge-picker-modal
@@ -1072,7 +1097,7 @@
                          (get-full-filter-string db deployment-set-edited)
                          ;; when edges are NOT based on a filter, exclude the already selected edges
                          (when-not fleet-filter (general-utils/filter-neq-ids (:resources edges)))
-                         (dg-subtype-filter deployment-set-edited))}
+                         (edge-dg-subtype-filter deployment-set-edited))}
              (pagination-plugin/first-last-params
                db [::spec/edge-picker-pagination]))
         #(dispatch [::set-edge-picker-edges %])]})))

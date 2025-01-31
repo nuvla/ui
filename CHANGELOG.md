@@ -2,6 +2,18 @@
 
 ## Released
 
+## [2.44.0](https://github.com/nuvla/ui/compare/2.43.0...2.44.0) (2025-01-31)
+
+
+### Features
+
+* **Deployment set:** Make edge selection consistent with DG subtype ([#1725](https://github.com/nuvla/ui/issues/1725)) ([639dc76](https://github.com/nuvla/ui/commit/639dc761b5006fb9f88fa94adbe0f1d50c6b795f))
+
+
+### Bug Fixes
+
+* **App bouquets:** fix validation error on creation ([#1727](https://github.com/nuvla/ui/issues/1727)) ([e167401](https://github.com/nuvla/ui/commit/e167401407a637c8ed36a8869e54a5a0a12bb90d))
+
 ## [2.43.0](https://github.com/nuvla/ui/compare/2.42.1...2.43.0) (2025-01-27)
 
 

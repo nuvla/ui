@@ -13,6 +13,7 @@
             [sixsq.nuvla.ui.common-components.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.pages.apps.apps-applications-sets.spec :as apps-sets-spec]
             [sixsq.nuvla.ui.pages.apps.apps-store.events :as apps-store-events]
             [sixsq.nuvla.ui.pages.apps.apps-store.spec :as apps-store-spec]
             [sixsq.nuvla.ui.pages.apps.effects :as apps-fx]
@@ -601,7 +602,7 @@
         fleet-filter (get-in db (subs/current-route->fleet-filter-edited-db-path current-route))]
     (merge {:applications-sets [{:id         (:id module-applications-sets)
                                  :version    (:version module-applications-sets)
-                                 :overwrites [(cond-> {:fleet        (:resources (get-in db edges-path))
+                                 :overwrites [(cond-> {:fleet        (or (:resources (get-in db edges-path)) [])
                                                        :applications (map
                                                                        (fn [app] (application-overwrites db 0 app nil))
                                                                        (get-in module-applications-sets
@@ -881,15 +882,27 @@
   [{:keys [subtype] :as _deployment-set}]
   (condp = subtype
     spec/subtype-docker-compose
-    (general-utils/join-and
-      (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-application])
-      (general-utils/filter-eq-vals "compatibility" [apps-utils/compatibility-docker-compose]))
+    (general-utils/join-or
+      (general-utils/join-and
+        (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-application])
+        (general-utils/filter-eq-vals "compatibility" [apps-utils/compatibility-docker-compose]))
+      (general-utils/join-and
+        (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-applications-sets])
+        #_(general-utils/filter-eq-vals "content/applications-sets/subtype" [apps-sets-spec/app-set-docker-subtype])))
     spec/subtype-docker-swarm
-    (general-utils/join-and
-      (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-application])
-      (general-utils/filter-eq-vals "compatibility" [apps-utils/compatibility-docker-compose apps-utils/compatibility-swarm]))
+    (general-utils/join-or
+      (general-utils/join-and
+        (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-application])
+        (general-utils/filter-eq-vals "compatibility" [apps-utils/compatibility-docker-compose apps-utils/compatibility-swarm]))
+      (general-utils/join-and
+        (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-applications-sets])
+        #_(general-utils/filter-eq-vals "content/applications-sets/subtype" [apps-sets-spec/app-set-docker-subtype])))
     spec/subtype-kubernetes
-    (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-application-k8s apps-utils/subtype-application-helm])))
+    (general-utils/join-or
+      (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-application-k8s apps-utils/subtype-application-helm])
+      (general-utils/join-and
+        (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-applications-sets])
+        #_(general-utils/filter-eq-vals "content/applications-sets/subtype" [apps-sets-spec/app-set-k8s-subtype])))))
 
 (reg-event-fx
   ::fetch-app-picker-apps
@@ -913,7 +926,9 @@
   ::clear-apps
   (fn [{{:keys [current-route] :as db} :db} [_]]
     (let [db-path (subs/create-apps-creation-db-path current-route)]
-      {:db (assoc-in db db-path [])
+      {:db (-> db
+               (assoc-in db-path [])
+               (assoc ::spec/module-applications-sets nil))
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]
             [:dispatch [::set-apps-edited true]]
@@ -952,18 +967,27 @@
                                            ::spec/pagination-apps-picker]]]}))))
 
 (reg-event-fx
+  ::set-dg-subtype-and-add-app
+  (fn [_ [_ app]]
+    (let [dg-subtype (utils/module->dg-subtype app)]
+      {:fx [[:dispatch [::edit :subtype dg-subtype]]
+            [:dispatch [::add-app-from-picker app]]]})))
+
+(reg-event-fx
   ::fetch-apps-set-add-apps
-  (fn [_ [_ apps-set-module-id]]
-    {::cimi-api-fx/get [apps-set-module-id #(dispatch [::add-apps-set-apps-and-set-apps-set %])]}))
+  (fn [_ [_ apps-set-module-id set-dg-subtype?]]
+    {::cimi-api-fx/get [apps-set-module-id #(dispatch [::add-apps-set-apps-and-set-apps-set % set-dg-subtype?])]}))
 
 (reg-event-fx
   ::add-apps-set-apps-and-set-apps-set
-  (fn [_ [_ apps-set]]
-    (let [app-ids (apps-set->app-ids apps-set)]
-      {::cimi-api-fx/search
-       [:module
-        {:filter (general-utils/filter-eq-ids app-ids)}
-        #(dispatch [::add-apps-and-apps-set-to-selection apps-set (:resources %)])]})))
+  (fn [_ [_ apps-set set-dg-subtype?]]
+    (let [app-ids    (apps-set->app-ids apps-set)
+          dg-subtype (utils/module->dg-subtype apps-set)]
+      (cond-> {::cimi-api-fx/search
+               [:module
+                {:filter (general-utils/filter-eq-ids app-ids)}
+                #(dispatch [::add-apps-and-apps-set-to-selection apps-set (:resources %)])]}
+              set-dg-subtype? (assoc :fx [[:dispatch-later {:ms 200 :dispatch [::edit :subtype dg-subtype]}]])))))
 
 (reg-event-fx
   ::add-apps-and-apps-set-to-selection

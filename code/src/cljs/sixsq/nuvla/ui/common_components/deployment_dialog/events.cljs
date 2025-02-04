@@ -40,13 +40,14 @@
   ::create-deployment-group-from-modal
   (fn [_ [_ deployment]]
     (let [id (random-uuid)]
-      {
-       :fx [[:dispatch [::close-deployment-modal deployment]]
+      {:fx [[:dispatch [::close-deployment-modal deployment]]
             [:dispatch [::routing-events/navigate
                         routes/deployment-groups-details
                         {:uuid :create}
                         {depl-group-subs/creation-temp-id-key id}]]
-            [:dispatch-later {:ms 200 :dispatch [::depl-group-events/add-app-from-picker (:module deployment)]}]]})))
+            [:dispatch-later {:ms 200 :dispatch [::depl-group-events/set-dg-subtype-and-add-app
+                                                 (:module deployment)]}]]})))
+
 (reg-event-fx
   ::set-credentials
   (fn [{{:keys [::spec/selected-credential-id

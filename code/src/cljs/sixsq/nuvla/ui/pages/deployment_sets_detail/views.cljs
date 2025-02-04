@@ -654,10 +654,10 @@
                         [spec/subtype-kubernetes "Kubernetes"]]]
     [ui/TableCell
      (if creating?
-       [ui/Dropdown {:default-value (get @deployment-set :subtype)
-                     :options       (map (fn [[k t]] {:key k, :value k, :text t}) opts)
-                     :selection     true
-                     :on-change     (ui-callback/value on-change-fn)}]
+       [ui/Dropdown {:value     (get @deployment-set :subtype)
+                     :options   (map (fn [[k t]] {:key k, :value k, :text t}) opts)
+                     :selection true
+                     :on-change (ui-callback/value on-change-fn)}]
        (->> (get @deployment-set :subtype)
             (get (into {} opts))))]))
 

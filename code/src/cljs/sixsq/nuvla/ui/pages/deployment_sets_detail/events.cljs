@@ -1134,7 +1134,8 @@
 
 (reg-event-fx
   ::get-edge-picker-edges-summary
-  (fn [{{:keys [::spec/edge-picker-additional-filter
+  (fn [{{:keys [::spec/deployment-set-edited
+                ::spec/edge-picker-additional-filter
                 ::spec/edges] :as db} :db}]
     {::cimi-api-fx/search
      [:nuvlabox
@@ -1144,7 +1145,8 @@
         edges-spec/state-summary-agg-term
         (general-utils/join-and edge-picker-additional-filter
                                 (general-utils/filter-neq-ids
-                                  (:resources edges))))
+                                  (:resources edges))
+                                (edge-dg-subtype-filter deployment-set-edited)))
       #(dispatch [::set-edge-picker-edges-summary %])]}))
 
 (reg-event-db

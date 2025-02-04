@@ -11,7 +11,7 @@
 
  :builds            {:nuvla-ui  {:target            :browser
                                  ; x-release-please-start-version
-                                :release-version   "2.43.1-SNAPSHOT"
+                                :release-version   "2.44.1-SNAPSHOT"
                                  ; x-release-please-end
                                  :output-dir        "resources/public/ui/js"
                                  :asset-path        "/ui/js"

@@ -59,7 +59,7 @@
 
   :profiles
   {:dev       {:dependencies [[org.clojure/clojure "1.11.1"]
-                              [org.clojure/clojurescript "1.11.60"
+                              [org.clojure/clojurescript "1.11.4"
                                :exclusions
                                [com.google.javascript/closure-compiler-unshaded
                                 org.clojure/google-closure-library
@@ -69,13 +69,13 @@
                               [com.github.ljpengelen/shadow-cljs-hash-assets-hook "1.1.0"]]}
 
    :scljs     {:dependencies [
-                              ;; Don't go beyond shadow-cljs v2.19.9 because it will stop working on Cloudflare
+                              ;; Don't go beyond shadow-cljs v2.17.8 because it will stop working on Cloudflare
                               ;; which removed support of java from their v2 works.
                               ;; Maybe building in Github and push to cloudflare pages. Something to check.
-                              [thheller/shadow-cljs "2.19.9"] ;; WARNING: also in package.json
+                              [thheller/shadow-cljs "2.17.8"] ;; WARNING: also in package.json
                               [org.clojure/google-closure-library "0.0-20211011-0726fdeb"]
                               [org.clojure/google-closure-library-third-party "0.0-20211011-0726fdeb"]
-                              [com.google.javascript/closure-compiler-unshaded "v20220803"]
+                              [com.google.javascript/closure-compiler-unshaded "v20220202"]
                               [djblue/portal "0.58.5"]]}
 
    :portfolio {:dependencies [[no.cjohansen/portfolio "2025.01.28"]]

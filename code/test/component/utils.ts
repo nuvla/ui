@@ -22,6 +22,7 @@ export async function locatorOne(element, selector) {
 
 export async function dragAndDrop(page, from, to) {
   // regular Playwright dragTo function does not seem to work with "activationConstraint" #js {"distance" 5}
+  await page.pause();
   const toCoords = await to.boundingBox();
   await from.hover();
   await page.mouse.down();

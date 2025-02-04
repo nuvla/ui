@@ -25,7 +25,11 @@
 (defn ^:export init-portfolio []
   (portfolio/start!
     {:config
-     {:background/default-option-id :light-mode}}))
+     {:background/default-option-id :light-mode
+      :viewport/defaults
+      {:viewport/padding [0 0 0 0]
+       :viewport/width   "100%"
+       :viewport/height  "100%"}}}))
 
 (defn mount-root [scene-id]
   (rdom/render

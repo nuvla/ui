@@ -697,3 +697,7 @@
   (fn [[requirements unmet-requirements-accepted]]
     (or (zero? (-> requirements :unmet-requirements :n-edges))
         unmet-requirements-accepted)))
+
+(reg-sub
+  ::dg-type-change-modal-danger-open?
+  :-> ::spec/dg-type-change-modal-danger-open)

@@ -67,37 +67,40 @@
 
 (s/def ::server-side-changes (s/nilable any?))
 
+(s/def ::dg-type-change-modal-danger-open (s/nilable boolean?))
+
 (def defaults
-  {::module-applications-sets    nil
-   ::apps-sets                   nil
-   ::deployment-set              nil
-   ::deployment-set-edited       nil
-   ::edges                       nil
-   ::edges-documents             nil
-   ::validate-form?              false
-   ::deployments-summary-all     nil
-   ::deployment-set-not-found?   false
-   ::steps                       (step-group-plugin/build-spec
-                                   :active-step :name)
-   ::targets-selected            #{}
-   ::bulk-jobs                   (bulk-progress-plugin/build-spec)
-   ::create-name                 ""
-   ::create-description          ""
-   ::licenses-accepted?          false
-   ::prices-accepted?            false
-   ::ordering                    default-ordering
-   ::pagination-deployments      pagination-default
-   ::edges-pagination            pagination-default
-   ::pagination-apps-picker      (pagination-plugin/build-spec
-                                   :default-items-per-page 16)
-   ::edge-picker-pagination      pagination-default
-   ::opened-modal                nil
-   ::edges-select                nil
-   ::apps-creation               nil
-   ::apps-edited?                false
-   ::fleet-filter                nil
-   ::fleet-filter-edited         nil
-   ::persist-in-progress?        false
-   ::requirements                nil
-   ::unmet-requirements-accepted false
-   ::server-side-changes         nil})
+  {::module-applications-sets         nil
+   ::apps-sets                        nil
+   ::deployment-set                   nil
+   ::deployment-set-edited            nil
+   ::edges                            nil
+   ::edges-documents                  nil
+   ::validate-form?                   false
+   ::deployments-summary-all          nil
+   ::deployment-set-not-found?        false
+   ::steps                            (step-group-plugin/build-spec
+                                        :active-step :name)
+   ::targets-selected                 #{}
+   ::bulk-jobs                        (bulk-progress-plugin/build-spec)
+   ::create-name                      ""
+   ::create-description               ""
+   ::licenses-accepted?               false
+   ::prices-accepted?                 false
+   ::ordering                         default-ordering
+   ::pagination-deployments           pagination-default
+   ::edges-pagination                 pagination-default
+   ::pagination-apps-picker           (pagination-plugin/build-spec
+                                        :default-items-per-page 16)
+   ::edge-picker-pagination           pagination-default
+   ::opened-modal                     nil
+   ::edges-select                     nil
+   ::apps-creation                    nil
+   ::apps-edited?                     false
+   ::fleet-filter                     nil
+   ::fleet-filter-edited              nil
+   ::persist-in-progress?             false
+   ::requirements                     nil
+   ::unmet-requirements-accepted      false
+   ::server-side-changes              nil
+   ::dg-type-change-modal-danger-open false})

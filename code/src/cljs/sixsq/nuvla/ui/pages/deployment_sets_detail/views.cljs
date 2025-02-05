@@ -637,27 +637,51 @@
          :style         {:width "100%"}}]
        (get @deployment-set attribute))]))
 
+(defn DGTypeChangeModalDanger
+  [{:keys [on-confirm]}]
+  (r/with-let [tr    (subscribe [::i18n-subs/tr])
+               open? (subscribe [::subs/dg-type-change-modal-danger-open?])]
+    [uix/ModalDanger
+     {:header      (@tr [:dg-type-change-modal-danger-header])
+      :content     (@tr [:dg-type-change-modal-danger-content])
+      :open        @open?
+      :on-close    #(dispatch [::events/close-dg-type-change-modal-danger])
+      :button-text (@tr [:dg-type-change-modal-danger-confirm])
+      :on-confirm  (fn []
+                     (dispatch [::events/close-dg-type-change-modal-danger])
+                     (on-confirm))}]))
+
 (defn DGTypeCell
   [creating?]
-  (let [deployment-set (subscribe [::subs/deployment-set])
-        fleet-filter   (subscribe [::subs/fleet-filter])
-        on-change-fn   (fn [subtype]
-                         (dispatch [::events/edit :subtype subtype])
-                         (dispatch [::events/clear-apps])
-                         (if @fleet-filter
-                           (when creating?
-                             (dispatch [::events/update-fleet-filter-edge-ids
-                                        (assoc @deployment-set :subtype subtype) creating?]))
-                           (dispatch [::events/clear-edges])))
-        opts           [[spec/subtype-docker-compose "Docker Compose"]
-                        [spec/subtype-docker-swarm "Docker Swarm"]
-                        [spec/subtype-kubernetes "Kubernetes"]]]
+  (let [deployment-set      (subscribe [::subs/deployment-set])
+        apps                (subscribe [::subs/apps-creation])
+        edges               (subscribe [::subs/edges-documents])
+        fleet-filter        (subscribe [::subs/fleet-filter])
+        new-subtype         (r/atom nil)
+        on-chg-confirmed-fn (fn []
+                              (dispatch [::events/edit :subtype @new-subtype])
+                              (dispatch [::events/clear-apps])
+                              (if @fleet-filter
+                                (when creating?
+                                  (dispatch [::events/update-fleet-filter-edge-ids
+                                             (assoc @deployment-set :subtype @new-subtype) creating?]))
+                                (dispatch [::events/clear-edges])))
+        on-change-fn        (fn [subtype]
+                              (reset! new-subtype subtype)
+                              (if (and (empty? @apps) (or @fleet-filter (empty? @edges)))
+                                (on-chg-confirmed-fn)
+                                (dispatch [::events/open-dg-type-change-modal-danger])))
+        opts                [[spec/subtype-docker-compose "Docker"]
+                             [spec/subtype-docker-swarm "Docker Clustered"]
+                             [spec/subtype-kubernetes "Kubernetes"]]]
     [ui/TableCell
      (if creating?
-       [ui/Dropdown {:value     (get @deployment-set :subtype)
-                     :options   (map (fn [[k t]] {:key k, :value k, :text t}) opts)
-                     :selection true
-                     :on-change (ui-callback/value on-change-fn)}]
+       [:<>
+        [ui/Dropdown {:value     (get @deployment-set :subtype)
+                      :options   (map (fn [[k t]] {:key k, :value k, :text t}) opts)
+                      :selection true
+                      :on-change (ui-callback/value on-change-fn)}]
+        [DGTypeChangeModalDanger {:on-confirm on-chg-confirmed-fn}]]
        (->> (get @deployment-set :subtype)
             (get (into {} opts))))]))
 

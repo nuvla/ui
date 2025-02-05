@@ -888,7 +888,7 @@
         (general-utils/filter-eq-vals "compatibility" [apps-utils/compatibility-docker-compose]))
       (general-utils/join-and
         (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-applications-sets])
-        #_(general-utils/filter-eq-vals "content/applications-sets/subtype" [apps-sets-spec/app-set-docker-subtype])))
+        (general-utils/filter-eq-vals "apps-set-subtype" [apps-sets-spec/app-set-docker-subtype])))
     spec/subtype-docker-swarm
     (general-utils/join-or
       (general-utils/join-and
@@ -896,13 +896,13 @@
         (general-utils/filter-eq-vals "compatibility" [apps-utils/compatibility-docker-compose apps-utils/compatibility-swarm]))
       (general-utils/join-and
         (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-applications-sets])
-        #_(general-utils/filter-eq-vals "content/applications-sets/subtype" [apps-sets-spec/app-set-docker-subtype])))
+        (general-utils/filter-eq-vals "apps-set-subtype" [apps-sets-spec/app-set-docker-subtype])))
     spec/subtype-kubernetes
     (general-utils/join-or
       (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-application-k8s apps-utils/subtype-application-helm])
       (general-utils/join-and
         (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-applications-sets])
-        #_(general-utils/filter-eq-vals "content/applications-sets/subtype" [apps-sets-spec/app-set-k8s-subtype])))))
+        (general-utils/filter-eq-vals "apps-set-subtype" [apps-sets-spec/app-set-k8s-subtype])))))
 
 (reg-event-fx
   ::fetch-app-picker-apps
@@ -1374,4 +1374,13 @@
                         (utils/unsaved-changes?
                           deployment-set updated-deployment-set)]]]})))
 
+(reg-event-fx
+  ::open-dg-type-change-modal-danger
+  (fn [{db :db} [_]]
+    {:db (assoc db ::spec/dg-type-change-modal-danger-open true)}))
+
+(reg-event-fx
+  ::close-dg-type-change-modal-danger
+  (fn [{db :db} [_]]
+    {:db (assoc db ::spec/dg-type-change-modal-danger-open false)}))
 

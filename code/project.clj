@@ -58,7 +58,7 @@
   :test-paths ["test/cljs"]
 
   :profiles
-  {:dev       {:dependencies [[org.clojure/clojure "1.11.1"]
+  {:dev       {:dependencies [[org.clojure/clojure "1.11.3"]
                               [org.clojure/clojurescript "1.11.4"
                                :exclusions
                                [com.google.javascript/closure-compiler-unshaded

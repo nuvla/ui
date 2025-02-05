@@ -24,7 +24,8 @@
 
 (defn ^:export init-portfolio []
   (portfolio/start!
-    {:config {:background/default-option-id :light-mode}}))
+    {:config
+     {:background/default-option-id :light-mode}}))
 
 (defn mount-root [scene-id]
   (rdom/render

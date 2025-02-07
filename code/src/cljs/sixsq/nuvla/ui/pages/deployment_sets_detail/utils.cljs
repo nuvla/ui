@@ -2,7 +2,10 @@
   (:require [clojure.data :as data]
             [cljs.pprint :as pprint]
             [sixsq.nuvla.ui.common-components.plugins.module :refer [get-version-id]]
-            [sixsq.nuvla.ui.pages.apps.apps-store.spec :as spec]))
+            [sixsq.nuvla.ui.pages.apps.apps-applications-sets.spec :as apps-set-spec]
+            [sixsq.nuvla.ui.pages.apps.apps-store.spec :as apps-store-spec]
+            [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
+            [sixsq.nuvla.ui.pages.deployment-sets-detail.spec :as spec]))
 
 (def state-new "NEW")
 (def state-starting "STARTING")
@@ -61,4 +64,28 @@
 (defn is-controlled-by-apps-set
   [apps-set]
   (and apps-set
-       (not= spec/virtual-apps-set-parent-path (:parent-path apps-set))))
+       (not= apps-store-spec/virtual-apps-set-parent-path (:parent-path apps-set))))
+
+(defn module->dg-subtype
+  [{:keys [subtype compatibility content]}]
+  (cond
+    (and (= apps-utils/subtype-application subtype)
+         (= apps-utils/compatibility-docker-compose compatibility))
+    spec/subtype-docker-compose
+
+    (and (= apps-utils/subtype-application subtype)
+         (= apps-utils/compatibility-swarm compatibility))
+    spec/subtype-docker-swarm
+
+    (#{apps-utils/subtype-application-k8s apps-utils/subtype-application-helm} subtype)
+    spec/subtype-kubernetes
+
+    (= apps-utils/subtype-applications-sets subtype)
+    (let [apps-set-subtype (-> content :applications-sets first :subtype)]
+      (condp = apps-set-subtype
+        apps-set-spec/app-set-docker-subtype
+        spec/subtype-docker-swarm
+
+        apps-set-spec/app-set-k8s-subtype
+        spec/subtype-kubernetes))))
+

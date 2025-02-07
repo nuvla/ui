@@ -13,6 +13,7 @@
             [sixsq.nuvla.ui.common-components.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.pages.apps.apps-applications-sets.spec :as apps-sets-spec]
             [sixsq.nuvla.ui.pages.apps.apps-store.events :as apps-store-events]
             [sixsq.nuvla.ui.pages.apps.apps-store.spec :as apps-store-spec]
             [sixsq.nuvla.ui.pages.apps.effects :as apps-fx]
@@ -601,7 +602,7 @@
         fleet-filter (get-in db (subs/current-route->fleet-filter-edited-db-path current-route))]
     (merge {:applications-sets [{:id         (:id module-applications-sets)
                                  :version    (:version module-applications-sets)
-                                 :overwrites [(cond-> {:fleet        (:resources (get-in db edges-path))
+                                 :overwrites [(cond-> {:fleet        (or (:resources (get-in db edges-path)) [])
                                                        :applications (map
                                                                        (fn [app] (application-overwrites db 0 app nil))
                                                                        (get-in module-applications-sets
@@ -782,7 +783,7 @@
 
 (def edges-state-filter-key :edges-state)
 
-(defn dg-subtype-filter
+(defn edge-dg-subtype-filter
   [{:keys [subtype] :as _deployment-set}]
   (condp = subtype
     spec/subtype-docker-compose
@@ -877,9 +878,35 @@
      :fx [[:dispatch [::get-edges]]
           [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/edges-select]]]]}))
 
+(defn module-dg-subtype-filter
+  [{:keys [subtype] :as _deployment-set}]
+  (condp = subtype
+    spec/subtype-docker-compose
+    (general-utils/join-or
+      (general-utils/join-and
+        (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-application])
+        (general-utils/filter-eq-vals "compatibility" [apps-utils/compatibility-docker-compose]))
+      (general-utils/join-and
+        (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-applications-sets])
+        (general-utils/filter-eq-vals "apps-set-subtype" [apps-sets-spec/app-set-docker-subtype])))
+    spec/subtype-docker-swarm
+    (general-utils/join-or
+      (general-utils/join-and
+        (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-application])
+        (general-utils/filter-eq-vals "compatibility" [apps-utils/compatibility-docker-compose apps-utils/compatibility-swarm]))
+      (general-utils/join-and
+        (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-applications-sets])
+        (general-utils/filter-eq-vals "apps-set-subtype" [apps-sets-spec/app-set-docker-subtype])))
+    spec/subtype-kubernetes
+    (general-utils/join-or
+      (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-application-k8s apps-utils/subtype-application-helm])
+      (general-utils/join-and
+        (general-utils/filter-eq-vals "subtype" [apps-utils/subtype-applications-sets])
+        (general-utils/filter-eq-vals "apps-set-subtype" [apps-sets-spec/app-set-k8s-subtype])))))
+
 (reg-event-fx
   ::fetch-app-picker-apps
-  (fn [{{:keys [current-route] :as db} :db} [_ pagination-db-path]]
+  (fn [{{:keys [current-route ::spec/deployment-set-edited] :as db} :db} [_ pagination-db-path]]
     (let [current-selection          (get-in db (subs/create-apps-creation-db-path current-route))
           is-controlled-by-apps-set? (utils/is-controlled-by-apps-set (::spec/module-applications-sets db))]
       {:fx [[:dispatch [::apps-store-events/get-modules
@@ -889,10 +916,23 @@
                            (general-utils/filter-neq-ids
                              (mapv :id current-selection))
                            (when (or (false? is-controlled-by-apps-set?) (seq current-selection))
-                             (str "subtype!='" apps-utils/subtype-applications-sets "'")))
+                             (str "subtype!='" apps-utils/subtype-applications-sets "'"))
+                           (module-dg-subtype-filter deployment-set-edited))
                          :order-by           "name:asc"
                          :pagination-db-path [pagination-db-path]
                          :additional-cb-fn   #(dispatch [::get-apps-for-sets %])}]]]})))
+
+(reg-event-fx
+  ::clear-apps
+  (fn [{{:keys [current-route] :as db} :db} [_]]
+    (let [db-path (subs/create-apps-creation-db-path current-route)]
+      {:db (-> db
+               (assoc-in db-path [])
+               (assoc ::spec/module-applications-sets nil))
+       :fx [[:dispatch [::fetch-app-picker-apps
+                        ::spec/pagination-apps-picker]]
+            [:dispatch [::set-apps-edited true]]
+            [:dispatch [::set-changes-protection true]]]})))
 
 (reg-event-fx
   ::do-add-app
@@ -927,18 +967,27 @@
                                            ::spec/pagination-apps-picker]]]}))))
 
 (reg-event-fx
+  ::set-dg-subtype-and-add-app
+  (fn [_ [_ app]]
+    (let [dg-subtype (utils/module->dg-subtype app)]
+      {:fx [[:dispatch [::edit :subtype dg-subtype]]
+            [:dispatch [::add-app-from-picker app]]]})))
+
+(reg-event-fx
   ::fetch-apps-set-add-apps
-  (fn [_ [_ apps-set-module-id]]
-    {::cimi-api-fx/get [apps-set-module-id #(dispatch [::add-apps-set-apps-and-set-apps-set %])]}))
+  (fn [_ [_ apps-set-module-id set-dg-subtype?]]
+    {::cimi-api-fx/get [apps-set-module-id #(dispatch [::add-apps-set-apps-and-set-apps-set % set-dg-subtype?])]}))
 
 (reg-event-fx
   ::add-apps-set-apps-and-set-apps-set
-  (fn [_ [_ apps-set]]
-    (let [app-ids (apps-set->app-ids apps-set)]
-      {::cimi-api-fx/search
-       [:module
-        {:filter (general-utils/filter-eq-ids app-ids)}
-        #(dispatch [::add-apps-and-apps-set-to-selection apps-set (:resources %)])]})))
+  (fn [_ [_ apps-set set-dg-subtype?]]
+    (let [app-ids    (apps-set->app-ids apps-set)
+          dg-subtype (utils/module->dg-subtype apps-set)]
+      (cond-> {::cimi-api-fx/search
+               [:module
+                {:filter (general-utils/filter-eq-ids app-ids)}
+                #(dispatch [::add-apps-and-apps-set-to-selection apps-set (:resources %)])]}
+              set-dg-subtype? (assoc :fx [[:dispatch-later {:ms 200 :dispatch [::edit :subtype dg-subtype]}]])))))
 
 (reg-event-fx
   ::add-apps-and-apps-set-to-selection
@@ -1046,7 +1095,7 @@
     edge-picker-additional-filter
     (full-text-search-plugin/filter-text
       db [::spec/edge-picker-full-text-search])
-    (dg-subtype-filter deployment-set)))
+    (edge-dg-subtype-filter deployment-set)))
 
 (reg-event-fx
   ::get-edges-for-edge-picker-modal
@@ -1072,7 +1121,7 @@
                          (get-full-filter-string db deployment-set-edited)
                          ;; when edges are NOT based on a filter, exclude the already selected edges
                          (when-not fleet-filter (general-utils/filter-neq-ids (:resources edges)))
-                         (dg-subtype-filter deployment-set-edited))}
+                         (edge-dg-subtype-filter deployment-set-edited))}
              (pagination-plugin/first-last-params
                db [::spec/edge-picker-pagination]))
         #(dispatch [::set-edge-picker-edges %])]})))
@@ -1085,7 +1134,8 @@
 
 (reg-event-fx
   ::get-edge-picker-edges-summary
-  (fn [{{:keys [::spec/edge-picker-additional-filter
+  (fn [{{:keys [::spec/deployment-set-edited
+                ::spec/edge-picker-additional-filter
                 ::spec/edges] :as db} :db}]
     {::cimi-api-fx/search
      [:nuvlabox
@@ -1095,7 +1145,8 @@
         edges-spec/state-summary-agg-term
         (general-utils/join-and edge-picker-additional-filter
                                 (general-utils/filter-neq-ids
-                                  (:resources edges))))
+                                  (:resources edges))
+                                (edge-dg-subtype-filter deployment-set-edited)))
       #(dispatch [::set-edge-picker-edges-summary %])]}))
 
 (reg-event-db
@@ -1323,4 +1374,13 @@
                         (utils/unsaved-changes?
                           deployment-set updated-deployment-set)]]]})))
 
+(reg-event-fx
+  ::open-dg-type-change-modal-danger
+  (fn [{db :db} [_]]
+    {:db (assoc db ::spec/dg-type-change-modal-danger-open true)}))
+
+(reg-event-fx
+  ::close-dg-type-change-modal-danger
+  (fn [{db :db} [_]]
+    {:db (assoc db ::spec/dg-type-change-modal-danger-open false)}))
 

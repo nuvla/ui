@@ -8,6 +8,7 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.pages.deployment-sets-detail.events :as depl-group-events]
             [sixsq.nuvla.ui.pages.deployment-sets-detail.subs :as depl-group-subs]
+            [sixsq.nuvla.ui.pages.deployment-sets-detail.utils :as depl-group-utils]
             [sixsq.nuvla.ui.pages.deployment-sets.spec :as spec]
             [sixsq.nuvla.ui.pages.deployment-sets.subs :as subs]
             [sixsq.nuvla.ui.routing.events :as routing-events]
@@ -110,7 +111,7 @@
   ::create-deployment-set-from-apps-set
   (fn [_ [_ module-id]]
     (let [id (random-uuid)]
-      {:fx [[:dispatch [::depl-group-events/fetch-apps-set-add-apps module-id]]
+      {:fx [[:dispatch [::depl-group-events/fetch-apps-set-add-apps module-id true]]
             [:dispatch [::routing-events/navigate
                         routes/deployment-groups-details
                         {:uuid :create}

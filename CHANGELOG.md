@@ -2,6 +2,19 @@
 
 ## Released
 
+## [2.45.0](https://github.com/nuvla/ui/compare/2.44.0...2.45.0) (2025-02-07)
+
+
+### Features
+
+* **Deployment group page:** In the DG details page the apps selection must be consistent with the DG subtype ([#1730](https://github.com/nuvla/ui/issues/1730)) ([a61ebb7](https://github.com/nuvla/ui/commit/a61ebb73546d119e6458a9351c67cb06dd063e97))
+
+
+### Bug Fixes
+
+* **CI:** Build dependencies upgrade ([#1728](https://github.com/nuvla/ui/issues/1728)) ([b59cbbd](https://github.com/nuvla/ui/commit/b59cbbd6e415074acff8e33f2c90f24ab049676e))
+* **Deployment group details:** Summary stats ([a61ebb7](https://github.com/nuvla/ui/commit/a61ebb73546d119e6458a9351c67cb06dd063e97))
+
 ## [2.44.0](https://github.com/nuvla/ui/compare/2.43.0...2.44.0) (2025-01-31)
 
 

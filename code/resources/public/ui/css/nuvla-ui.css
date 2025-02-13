@@ -1253,3 +1253,19 @@ table.ui i.icon.sort.ascending,
 table.ui i.icon.sort.descending {
   opacity: 0.8;
 }
+
+.ui.card.bg-grey, a.ui.card:hover.bg-grey {
+  background-color: grey;
+}
+
+.ui.card.bg-lightgrey, a.ui.card:hover.bg-lightgrey {
+  background-color: rgb(243 244 245);
+}
+
+.ui.card.disabled {
+  opacity: .45 !important;
+}
+
+.ui.card:hover.disabled {
+  opacity: .85 !important;
+}

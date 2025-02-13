@@ -701,3 +701,7 @@
 (reg-sub
   ::dg-type-change-modal-danger-open?
   :-> ::spec/dg-type-change-modal-danger-open)
+
+(reg-sub
+  ::edge-mode-change-modal-danger-open?
+  :-> ::spec/edge-mode-change-modal-danger-open)

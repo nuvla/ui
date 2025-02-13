@@ -472,6 +472,8 @@
       [:a {:href     "#"
            :style    {:align-self :center}
            :on-click (fn [] (dispatch [::events/set-opened-modal recompute-fleet-modal-id]))}
+       [:span {:style {:margin-left "0.5rem"}}
+        [icons/GearIcon]]
        (@tr [:recompute-fleet])])))
 
 (defn DeleteButton
@@ -905,7 +907,7 @@
    tooltip])
 
 (defn EditEdgeFilterButton
-  [id creating?]
+  [id {:keys [creating? disabled]}]
   (let [tr                         (subscribe [::i18n-subs/tr])
         can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
         edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
@@ -913,11 +915,11 @@
         fleet-filter               (subscribe [::subs/fleet-filter])]
     [tt/WithTooltip
      [:span [uix/Button
-             {:disabled (and (not creating?) (not @edit-op-allowed?))
+             {:disabled (or disabled (and (not creating?) (not @edit-op-allowed?)))
               :on-click (fn []
                           (dispatch [::events/init-edge-picker-with-dynamic-filter @fleet-filter])
                           (dispatch [::events/set-opened-modal id]))
-              :icon     icons/i-pencil
+              :icon     icons/i-filter
               :style    {:align-self "center"}}]]
      (edit-not-allowed-msg {:TR                         @tr
                             :can-edit-data?             @can-edit-data?
@@ -1230,33 +1232,35 @@
 
 (defn polish-fleet-filter
   [tr fleet-filter]
-  (let [polished (-> fleet-filter
-                     (str/replace "(id!=null) and " "")
-                     (str/replace "(id!=null)" ""))]
+  (let [polished (some-> fleet-filter
+                         (str/replace (str utils/fleet-filter-catch-all " and ") "")
+                         (str/replace utils/fleet-filter-catch-all ""))]
     (if (empty? polished)
       (tr [:deploy-with-catch-all-edges-filter])
       polished)))
 
-(defn FleetFilterPanel [{:keys [show-edit-filter-button? creating?]}]
+(defn FleetFilterPanel [{:keys [show-edit-filter-button? creating? disabled]}]
   (let [tr                   (subscribe [::i18n-subs/tr])
         can-edit-data?       (subscribe [::subs/can-edit-data? creating?])
         fleet-filter         (subscribe [::subs/fleet-filter])
         fleet-filter-edited? (subscribe [::subs/fleet-filter-edited?])
         deployment-set       (subscribe [::subs/deployment-set])]
-    (when @fleet-filter
-      [ui/Grid {:columns 1}
-       [ui/GridColumn {:stretched true}
-        [:div {:style {:align-self :center}}
-         [ui/Popup {:trigger (r/as-element
-                               [:span (@tr [:recompute-fleet-info])])
-                    :content (str (str/capitalize (@tr [:filter])) ": " (polish-fleet-filter @tr @fleet-filter))}]
-         " "
-         (when (and @can-edit-data? show-edit-filter-button?)
-           [EditEdgeFilterButton events/edges-picker-modal-id creating?])]
-        [RecomputeFleetLink @deployment-set]
-        (when @fleet-filter-edited?
-          [:p {:style {:align-self :center}}
-           (@tr [:fleet-filter-edited])])]])))
+    [ui/Grid {:columns 1}
+     [ui/GridColumn {:stretched true}
+      [:div {:style {:align-self :center}}
+       (when (and @can-edit-data? show-edit-filter-button?)
+         [EditEdgeFilterButton events/edges-picker-modal-id {:creating? creating?
+                                                             :disabled  disabled}])]
+      [ui/Popup {:trigger  (r/as-element
+                             [:div {:style {:margin-top "1rem"}}
+                              (@tr [:recompute-fleet-info])])
+                 :disabled disabled
+                 :content  (str (str/capitalize (@tr [:filter])) ": " (polish-fleet-filter @tr @fleet-filter))}]
+      [:div {:style {:margin-top "0.5rem"}}
+       [RecomputeFleetLink @deployment-set]
+       (when (and (not creating?) @fleet-filter-edited?)
+         [:p {:style {:align-self :center}}
+          (@tr [:fleet-filter-edited])])]]]))
 
 
 (defn- ResolvedUser
@@ -1374,48 +1378,96 @@
           (when (and removed added) ", ")
           (when added (str (count added) (str " " (@tr [:added])))))]))
 
+(defn EdgeModeChangeModalDanger
+  [{:keys [on-confirm]}]
+  (r/with-let [tr    (subscribe [::i18n-subs/tr])
+               open? (subscribe [::subs/edge-mode-change-modal-danger-open?])]
+    [uix/ModalDanger
+     {:header      (@tr [:edge-mode-change-modal-danger-header])
+      :content     (@tr [:edge-mode-change-modal-danger-content])
+      :open        @open?
+      :on-close    #(dispatch [::events/close-edge-mode-change-modal-danger])
+      :button-text (@tr [:edge-mode-change-modal-danger-confirm])
+      :on-confirm  (fn []
+                     (dispatch [::events/close-edge-mode-change-modal-danger])
+                     (on-confirm))}]))
+
 (defn EdgeOverviewContent
-  [edges-stats creating?]
+  [_edges-stats creating?]
   (let [tr                         (subscribe [::i18n-subs/tr])
         deployment-set             (subscribe [::subs/deployment-set])
+        edges                      (subscribe [::subs/edges-documents])
         missing-edges              (subscribe [::subs/missing-edges])
         can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
         edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         fleet-filter               (subscribe [::subs/fleet-filter])
-        fleet-changes              (subscribe [::subs/fleet-changes])]
-    [:<>
-     [StatisticStatesEdgeView edges-stats]
-     (when @fleet-changes
-       [:div {:style {:margin "1.4rem auto"}}
-        [UnstoredEdgeChanges @fleet-changes]])
-     [uix/Button {:class    "center"
-                  :icon     icons/i-box
-                  :content  (@tr [:show-me])
-                  :disabled (or (nil? (:total edges-stats))
-                                (= 0 (:total edges-stats)))
-                  :on-click (create-nav-fn "edges" {:edges-state nil})}]
-     [:div
-      {:style {:display :flex :justify-content :center :align-items :center :flex-direction :column}}
-      (when (and @can-edit-data? (not @fleet-filter))
-        ;; TODO when implementing creation flow from apps page: Always show button and use temp-id for storing
-        ;; and retrieving deployment-set and deployment-set-edited
-        [:<>
-         [AddButton {:modal-id    events/edges-picker-modal-id
-                     :data-testid "add-edges-button"
-                     :enabled     @edit-op-allowed?
-                     :tooltip     (edit-not-allowed-msg
-                                    {:TR                         @tr
-                                     :can-edit-data?             @can-edit-data?
-                                     :edit-op-allowed?           @edit-op-allowed?
-                                     :edit-not-allowed-in-state? @edit-not-allowed-in-state?})}]
-         [:div {:style {:margin-top "1rem"}}
-          (if (pos? (:total edges-stats))
-            (@tr [:add-edges])
-            (@tr [:add-your-first-edges]))]])
-      [EdgesPickerModal creating?]
-      [FleetFilterPanel {:show-edit-filter-button? true :creating? creating?}]
-      [MissingEdgesPanel @deployment-set @missing-edges]]]))
+        fleet-changes              (subscribe [::subs/fleet-changes])
+        requested-edge-mode        (r/atom nil)
+        on-chg-confirmed-fn        (fn []
+                                     (if (= :static @requested-edge-mode)
+                                       (do
+                                         (dispatch [::events/set-fleet-filter nil (:id deployment-set)])
+                                         (dispatch [::events/clear-edges]))
+                                       (do
+                                         (dispatch [::events/set-fleet-filter utils/fleet-filter-catch-all (:id deployment-set)])
+                                         (dispatch [::events/update-fleet-filter creating?]))))
+        no-selection?-fn           (fn []
+                                     (or (and (= :dynamic @requested-edge-mode)
+                                              (empty? @edges))
+                                         (and (= :static @requested-edge-mode)
+                                              (or (nil? @fleet-filter)
+                                                  (= utils/fleet-filter-catch-all @fleet-filter)))))
+        on-edge-mode-change-fn     (fn [edge-mode]
+                                     (fn [_]
+                                       (when (or (and (= :static edge-mode) (some? @fleet-filter))
+                                                 (and (= :dynamic edge-mode) (not @fleet-filter)))
+                                         (reset! requested-edge-mode edge-mode)
+                                         (if (no-selection?-fn)
+                                           (on-chg-confirmed-fn)
+                                           (dispatch [::events/open-edge-mode-change-modal-danger])))))]
+    (fn [edges-stats creating?]
+      [:<>
+       [StatisticStatesEdgeView edges-stats]
+       (when @fleet-changes
+         [:div {:style {:margin "1.4rem auto"}}
+          [UnstoredEdgeChanges @fleet-changes]])
+       [uix/Button {:class    "center"
+                    :icon     icons/i-box
+                    :content  (@tr [:show-me])
+                    :disabled (or (nil? (:total edges-stats))
+                                  (= 0 (:total edges-stats)))
+                    :on-click (create-nav-fn "edges" {:edges-state nil})}]
+       [:div
+        {:style {:display :flex :justify-content :center :align-items :center :flex-direction :row}}
+        [ui/CardGroup {:items-per-row (if creating? 2 1)
+                       :text-align    :center}
+         (when (and @can-edit-data? (or creating? (not @fleet-filter)))
+           ;; TODO when implementing creation flow from apps page: Always show button and use temp-id for storing
+           ;; and retrieving deployment-set and deployment-set-edited
+           [ui/Card {:on-click (on-edge-mode-change-fn :static)
+                     :class    [:bg-lightgrey (when @fleet-filter :disabled)]}
+            [ui/CardContent {:text-align :center}
+             [AddButton {:modal-id    events/edges-picker-modal-id
+                         :data-testid "add-edges-button"
+                         :enabled     (and @edit-op-allowed? (not @fleet-filter))
+                         :tooltip     (edit-not-allowed-msg
+                                        {:TR                         @tr
+                                         :can-edit-data?             @can-edit-data?
+                                         :edit-op-allowed?           @edit-op-allowed?
+                                         :edit-not-allowed-in-state? @edit-not-allowed-in-state?})}]
+             [:div {:style {:margin-top "1rem"}}
+              (@tr [:add-edges])]]])
+         (when (or creating? @fleet-filter)
+           [ui/Card {:on-click (on-edge-mode-change-fn :dynamic)
+                     :class    [:bg-lightgrey (when-not @fleet-filter :disabled)]}
+            [ui/CardContent {:text-align :center}
+             [FleetFilterPanel {:show-edit-filter-button? true
+                                :creating?                creating?
+                                :disabled                 (not @fleet-filter)}]]])]
+        [EdgesPickerModal creating?]
+        [MissingEdgesPanel @deployment-set @missing-edges]
+        [EdgeModeChangeModalDanger {:on-confirm on-chg-confirmed-fn}]]])))
 
 (defn TabOverview
   [uuid creating?]

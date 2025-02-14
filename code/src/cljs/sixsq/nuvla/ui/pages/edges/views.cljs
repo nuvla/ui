@@ -9,7 +9,6 @@
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.common-components.plugins.table :as table-plugin :refer [TableColsEditable]]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.pages.deployment-sets-detail.subs :as depl-group-subs]
             [sixsq.nuvla.ui.pages.edges-detail.views :as edges-detail]
             [sixsq.nuvla.ui.pages.edges.add-modal :as add-modal]
             [sixsq.nuvla.ui.pages.edges.bulk-update-modal :as bulk-update-modal]
@@ -249,24 +248,6 @@
     :select-config         select-config}
    ::table-cols-config])
 
-(defn bulk-deploy-dynamic
-  []
-  (let [id (random-uuid)]
-    (dispatch [::events/bulk-deploy-dynamic id])
-    (dispatch [::routing-events/navigate
-               routes/deployment-groups-details
-               {:uuid :create}
-               {depl-group-subs/creation-temp-id-key id}])))
-
-(defn bulk-deploy-static
-  []
-  (let [id (random-uuid)]
-    (dispatch [::events/bulk-deploy-static])
-    (dispatch [::routing-events/navigate
-               routes/deployment-groups-details
-               {:uuid :create}
-               {depl-group-subs/creation-temp-id-key id}])))
-
 (defn state-filter-selected?
   [additional-filter state-selector]
   (or state-selector
@@ -322,54 +303,14 @@
           bulk-update-menuitem     {:icon  icons/DownloadIcon
                                     :key   :bulk-update
                                     :name  "Bulk update" #_(@tr [:edit-tags])
-                                    :event (partial bulk-update-modal/open-modal bulk-update-state)}
-          bulk-deploy-menuitem     {:menuitem (let [message         (@tr [:deploy-with-static-edges])
-                                                    deploy-menuitem [uix/HighlightableMenuItem
-                                                                     {:on-click          bulk-deploy-static
-                                                                      :disabled          (not (seq @selection))
-                                                                      :query-param-value :bulk-deploy}
-                                                                     [icons/RocketIcon]
-                                                                     (@tr [:edges-bulk-deploy-app])]]
-                                                ^{:key "bulk-deploy-menuitem"}
-                                                [ui/Popup {:basic   true
-                                                           :content message
-                                                           :trigger (r/as-element [:div deploy-menuitem])}])}
-          dyn-bulk-deploy-menuitem {:menuitem (let [dynamic-bulk-deploy-enabled? (and (not (seq @selection))
-                                                                                      (not @search-filter)
-                                                                                      (not state-filter?))
-                                                    message                      (str (@tr [:deploy-with-edges-filter])
-                                                                                      "\n"
-                                                                                      (if (or @search-filter @additional-filter)
-                                                                                        (utils/get-deploy-filter-string @search-filter @additional-filter)
-                                                                                        (@tr [:deploy-with-catch-all-edges-filter])))
-                                                    wrong-filter-message         (cond
-                                                                                   (or (seq @selection) @all-selected?)
-                                                                                   (@tr [:deploy-with-edges-clear-selection])
-                                                                                   @search-filter
-                                                                                   (@tr [:deploy-with-edges-fulltext-filter-not-allowed])
-                                                                                   state-filter?
-                                                                                   (@tr [:deploy-with-edges-state-filter-not-allowed]))
-                                                    deploy-menuitem              [uix/HighlightableMenuItem
-                                                                                  {:disabled          (not dynamic-bulk-deploy-enabled?)
-                                                                                   :on-click          bulk-deploy-dynamic
-                                                                                   :query-param-value :dynamic-bulk-deploy}
-                                                                                  [icons/RocketIcon]
-                                                                                  (@tr [:dynamic-bulk-deploy])]]
-                                                ^{:key "dyn-bulk-deploy-menuitem"}
-                                                [ui/Popup {:basic   true
-                                                           :content (if dynamic-bulk-deploy-enabled?
-                                                                      message
-                                                                      wrong-filter-message)
-                                                           :trigger (r/as-element [:div deploy-menuitem])}])}]
+                                    :event (partial bulk-update-modal/open-modal bulk-update-state)}]
       [:<>
        (when bulk-edit-modal [bulk-edit-modal])
        (when @(bulk-update-modal/open? bulk-update-state)
          [bulk-update-modal/Modal bulk-update-state])
 
        [NuvlaEdgeTableView {:select-config {:bulk-actions        [bulk-edit-tags-menuitem
-                                                                  bulk-update-menuitem
-                                                                  bulk-deploy-menuitem
-                                                                  dyn-bulk-deploy-menuitem]
+                                                                  bulk-update-menuitem]
                                             :total-count-sub-key [::subs/nuvlaboxes-count]
                                             :resources-sub-key   [::subs/nuvlaboxes-resources]
                                             :select-db-path      [::spec/select]

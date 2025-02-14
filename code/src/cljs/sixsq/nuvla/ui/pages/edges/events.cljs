@@ -11,9 +11,8 @@
             [sixsq.nuvla.ui.common-components.plugins.table :refer [ordering->order-string] :as table-plugin]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
-            [sixsq.nuvla.ui.pages.deployment-sets-detail.events :as depl-group-events]
             [sixsq.nuvla.ui.pages.edges.spec :as spec]
-            [sixsq.nuvla.ui.pages.edges.utils :as utils :refer [get-dynamic-fleet-filter-string get-full-filter-string]]
+            [sixsq.nuvla.ui.pages.edges.utils :as utils :refer [get-full-filter-string]]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param
                                                   get-stored-db-value-from-query-param]]
@@ -130,33 +129,6 @@
                     :content message
                     :type    :error})])
       {:db (assoc db ::spec/edges-without-edit-rights nuvlaboxes)})))
-
-(reg-event-fx
-  ::bulk-deploy-dynamic
-  (fn [{db :db} [_ id]]
-    (let [filter-string (get-dynamic-fleet-filter-string db)]
-      {:fx [[:dispatch [::depl-group-events/set-fleet-filter
-                        filter-string id]]
-            [:dispatch [::get-selected-edge-ids [::depl-group-events/set-edges] filter-string]]]})))
-
-(reg-event-fx
-  ::bulk-deploy-static
-  (fn [{{:keys [::spec/select] :as db} :db} _]
-    (let [filter-string (table-plugin/build-bulk-filter
-                          select
-                          (get-full-filter-string db))]
-      {:fx [[:dispatch [::get-selected-edge-ids [::depl-group-events/set-edges] filter-string]]]})))
-
-(reg-event-fx
-  ::get-selected-edge-ids
-  (fn [_ [_ event filter-string]]
-    {::cimi-api-fx/search
-     [:nuvlabox
-      {:filter      filter-string
-       :select      "id"
-       :aggregation spec/state-summary-agg-term}
-      #(dispatch (conj event %))]}))
-
 
 (reg-event-fx
   ::set-additional-filter

@@ -7,6 +7,8 @@
             [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.pages.deployment-sets-detail.spec :as spec]))
 
+(def fleet-filter-catch-all "(id!=null)")
+
 (def state-new "NEW")
 (def state-starting "STARTING")
 (def state-started "STARTED")

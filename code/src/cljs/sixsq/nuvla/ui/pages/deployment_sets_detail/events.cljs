@@ -467,7 +467,7 @@
 
 (reg-event-fx
   ::recompute-fleet-on-create
-  (fn [{{:keys [::spec/deployment-set-edited] :as db} :db} [_ on-complete]]
+  (fn [{{:keys [::spec/deployment-set-edited]} :db} [_ on-complete]]
     (let [id         (:id deployment-set-edited)
           on-success (fn []
                        (when on-complete (on-complete))
@@ -1167,7 +1167,7 @@
   ::set-edge-picker-additional-filter
   (fn [{db :db} [_ filter]]
     {:db (-> db
-             (assoc ::spec/edge-picker-additional-filter (when-not (= "(id!=null)" filter)
+             (assoc ::spec/edge-picker-additional-filter (when-not (= utils/fleet-filter-catch-all filter)
                                                            filter))
              (assoc-in [::spec/edge-picker-pagination :active-page] 1))
      :fx [[:dispatch [::get-edges-for-edge-picker-modal]]
@@ -1297,7 +1297,7 @@
                           deployment-set updated-deployment-set)]]
             (if creating?
               ;; implicitly recompute the fleet during DG creation
-              [:dispatch [::update-fleet-filter-edge-ids creating?]]
+              [:dispatch [::update-fleet-filter-edge-ids updated-deployment-set creating?]]
               [:dispatch [::get-edges]])]})))
 
 (reg-event-fx
@@ -1383,4 +1383,14 @@
   ::close-dg-type-change-modal-danger
   (fn [{db :db} [_]]
     {:db (assoc db ::spec/dg-type-change-modal-danger-open false)}))
+
+(reg-event-fx
+  ::open-edge-mode-change-modal-danger
+  (fn [{db :db} [_]]
+    {:db (assoc db ::spec/edge-mode-change-modal-danger-open true)}))
+
+(reg-event-fx
+  ::close-edge-mode-change-modal-danger
+  (fn [{db :db} [_]]
+    {:db (assoc db ::spec/edge-mode-change-modal-danger-open false)}))
 

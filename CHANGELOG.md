@@ -2,6 +2,14 @@
 
 ## Released
 
+## [2.46.0](https://github.com/nuvla/ui/compare/2.45.0...2.46.0) (2025-02-19)
+
+
+### Features
+
+* **Deployment group details page:** Make dynamic edge filter selectable from create page ([#1733](https://github.com/nuvla/ui/issues/1733)) ([a869dc0](https://github.com/nuvla/ui/commit/a869dc0e9de76d34516370430fe01eeeb83e78a7))
+* **Edges:** Remove Bulk Deploy buttons from Edges page ([#1734](https://github.com/nuvla/ui/issues/1734)) ([d5eb484](https://github.com/nuvla/ui/commit/d5eb484339e0366f17f1abfec79f31d2fe9bc6c4))
+
 ## [2.45.0](https://github.com/nuvla/ui/compare/2.44.0...2.45.0) (2025-02-07)
 
 

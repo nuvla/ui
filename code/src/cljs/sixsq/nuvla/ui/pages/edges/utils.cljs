@@ -236,14 +236,6 @@
     (full-text-search-plugin/filter-text
       db [::spec/edges-search])))
 
-(defn get-dynamic-fleet-filter-string
-  [{:keys [::spec/additional-filter] :as _db}]
-  (if (seq additional-filter)
-    (general-utils/join-and
-      additional-filter)
-    (general-utils/join-and
-      "id!=null")))
-
 (defn build-bulk-filter
   [db-path db]
   (table-plugin/build-bulk-filter (get-in db db-path) (get-full-filter-string db)))
@@ -256,12 +248,6 @@
     (table-plugin/build-bulk-filter
       select
       (get-full-filter-string db))))
-
-(defn get-deploy-filter-string
-  [text-search additional-filter]
-  (general-utils/join-and
-    (some-> text-search general-utils/fulltext-query-string)
-    additional-filter))
 
 (defn version-difference [a b]
   (let [{m-1 :major m-2 :minor m-3 :patch :as m} (semver/parse a)

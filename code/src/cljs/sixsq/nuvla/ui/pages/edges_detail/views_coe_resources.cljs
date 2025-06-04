@@ -167,7 +167,8 @@
                                                                                       (str "/")))]
                                                 (swap! !image-spec assoc
                                                        :private-registry-id id
-                                                       :private-registry-endpoint registry-endpoint)))
+                                                       :private-registry-endpoint registry-endpoint
+                                                       :private-registry-cred-id nil)))
                set-private-registry-cred-id #(swap! !image-spec assoc :private-registry-cred-id %)
                set-image-name               #(swap! !image-spec assoc :image %)]
     (let [{:keys [image use-private-registry? private-registry-id private-registry-endpoint private-registry-cred-id]} @!image-spec

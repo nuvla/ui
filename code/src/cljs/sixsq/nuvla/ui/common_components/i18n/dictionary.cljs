@@ -1863,7 +1863,7 @@
         :pricing                                       "tarification"
         :principals-icon                               "Icône représentant les responsables"
         :private-key                                   "clé privée"
-        :private-registry                              "Container registry privés"
+        :private-registry                              "Container registry privé"
         :private-registries                            "Container registries privés"
         :private-registries-help                       "Quand votre application utilise des images provenant de container registries privés, vous devez les définir dans cette section."
         :private-registries-not-used                   "Aucun container registry privé utilisé"

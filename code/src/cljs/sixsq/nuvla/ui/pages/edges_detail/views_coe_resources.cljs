@@ -167,11 +167,10 @@
                                                                                       (str "/")))]
                                                 (swap! !image-spec assoc
                                                        :private-registry-id id
-                                                       :private-registry-endpoint registry-endpoint
                                                        :private-registry-cred-id nil)))
                set-private-registry-cred-id #(swap! !image-spec assoc :private-registry-cred-id %)
                set-image-name               #(swap! !image-spec assoc :image %)]
-    (let [{:keys [image use-private-registry? private-registry-id private-registry-endpoint private-registry-cred-id]} @!image-spec
+    (let [{:keys [image use-private-registry? private-registry-id private-registry-cred-id]} @!image-spec
           registries-options      (subscribe [::subs/registries-options])
           registries-cred-options (subscribe [::subs/registries-credentials-options private-registry-id])]
       [ui/Form
@@ -207,13 +206,9 @@
                   :on-change (ui-callback/value set-private-registry-cred-id)}]]]]])])
        [:div.field.required
         [:label "Image"]
-        [ui/Input (cond-> {:value     image
-                           :on-change (ui-callback/input-callback set-image-name)}
-                          (not use-private-registry?)
-                          (merge {:placeholder "e.g. registry:port/image:tag"})
-                          use-private-registry?
-                          (merge {:label       private-registry-endpoint
-                                  :placeholder "e.g. image:tag"}))]]])))
+        [ui/Input {:value       image
+                   :placeholder "e.g. registry:port/image:tag"
+                   :on-change   (ui-callback/input-callback set-image-name)}]]])))
 
 (defn PullImageModal
   [_control]
@@ -275,11 +270,11 @@
                !pagination           (r/atom default-pagination)
                close-pull-modal      #(reset! !pull-modal-open? false)
                delete-modal-close-fn #(reset! !delete-modal-open? false)
-               pull-action-fn        (fn [{:keys [use-private-registry? private-registry-endpoint private-registry-cred-id image]}]
+               pull-action-fn        (fn [{:keys [use-private-registry? private-registry-cred-id image]}]
                                        (dispatch [::coe-resource-actions
                                                   {:docker [(cond-> {:resource "image"
                                                                      :action   "pull"
-                                                                     :id       (cond->> image use-private-registry? (str private-registry-endpoint))}
+                                                                     :id       image}
                                                                     (and use-private-registry? private-registry-cred-id)
                                                                     (assoc :credential private-registry-cred-id))]}
                                                   close-pull-modal]))

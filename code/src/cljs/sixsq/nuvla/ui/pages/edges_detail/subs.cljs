@@ -351,7 +351,11 @@
   ::registries-options
   :<- [::registries]
   (fn [registries [_]]
-    (map (fn [{:keys [id name]}] {:key id, :value id, :text (or name id)}) registries)))
+    (map (fn [{:keys [id name endpoint]}]
+           {:key   id
+            :value id
+            :text  (cond-> (or name id) endpoint (str " (" endpoint ")"))})
+         registries)))
 
 (reg-sub
   ::registries-credentials

@@ -571,3 +571,34 @@ cluster-nodes, cluster-managers, cluster-join-address, status-notes, orchestrato
   ::set-stats-table-current-cols
   (fn [_ [_ columns]]
     {:fx [[:dispatch [::set-stats-table-current-cols-main ::spec/stats-columns-ordering columns]]]}))
+
+(reg-event-db
+  ::set-registry
+  (fn [db [_ data]]
+    (let [registries (:resources data)]
+      (-> db
+          (assoc ::spec/registries registries)
+          (assoc ::main-spec/loading? false)))))
+
+(reg-event-fx
+  ::get-registries
+  (fn [_ [_]]
+    {::cimi-api-fx/search [:infrastructure-service
+                           {:last   10000
+                            :filter (general-utils/filter-eq-subtypes ["registry"])}
+                           #(dispatch [::set-registry %])]}))
+
+(reg-event-db
+  ::set-registries-credentials
+  (fn [db [_ {resources :resources}]]
+    (assoc db ::spec/registries-credentials resources)))
+
+(reg-event-fx
+  ::get-registries-credentials
+  (fn [_ _]
+    {::cimi-api-fx/search
+     [:credential
+      {:filter  "subtype='infrastructure-service-registry'"
+       :select  "id, name, parent"
+       :orderby "name:asc, id:asc"
+       :last    10000} #(dispatch [::set-registries-credentials %])]}))

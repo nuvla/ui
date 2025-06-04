@@ -341,3 +341,29 @@
   ::stats-table-current-cols
   :<- [::main-subs/current-cols spec/stats-table-col-configs-local-storage-key ::spec/stats-columns-ordering]
   identity)
+
+(reg-sub
+  ::registries
+  (fn [db]
+    (get-in db [::spec/registries])))
+
+(reg-sub
+  ::registries-options
+  :<- [::registries]
+  (fn [registries [_]]
+    (map (fn [{:keys [id name]}] {:key id, :value id, :text (or name id)}) registries)))
+
+(reg-sub
+  ::registries-credentials
+  (fn [db]
+    (group-by :parent (::spec/registries-credentials db))))
+
+(reg-sub
+  ::registries-credentials-options
+  :<- [::registries-credentials]
+  (fn [registries-credentials [_ registry-id]]
+    (let [creds (get registries-credentials registry-id [])]
+      (cons {:key "", :value nil, :text ""}
+            (map (fn [{:keys [id name]}] {:key id, :value id, :text (or name id)}) creds)))))
+
+

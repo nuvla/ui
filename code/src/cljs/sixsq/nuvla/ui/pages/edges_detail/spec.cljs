@@ -3,6 +3,7 @@
             [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.utils.spec :as spec-utils]
             [sixsq.nuvla.ui.utils.time :as time]))
 
 (def stats-table-col-configs-local-storage-key "nuvla.ui.table.edges.stats.column-configs")
@@ -35,6 +36,13 @@
 (s/def ::timespan (s/nilable any?))
 (s/def ::availability-15-min nil)
 
+(s/def ::registry-id spec-utils/nonblank-string)
+(s/def ::registry-cred-id string?)
+(s/def ::single-registry (s/keys :req [::registry-cred-id
+                                       ::registry-id]))
+
+(s/def ::registries (s/map-of any? (s/merge ::single-registry)))
+
 (def defaults {::coe-resource-docker-available? false
                ::coe-resource-k8s-available?    false
                ::nuvlabox                       nil
@@ -63,7 +71,11 @@
                ::timespan                       {:timespan-option "last 15 minutes"
                                                  :from            (time/subtract-minutes (time/now) 15)
                                                  :to              (time/now)}
-               ::availability-15-min            nil})
+               ::availability-15-min            nil
+
+               ::registry-id                    nil
+               ::registry-cred-id               nil
+               ::registries                     nil})
 
 (s/def ::deployment-pagination any?)
 

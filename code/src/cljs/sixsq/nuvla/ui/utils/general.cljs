@@ -115,7 +115,7 @@
     (js->clj (.parse js/JSON json) :keywordize-keys keywordize-keys)
     (catch js/Error e
       (js/console.error "Parsing json failed: " e json)
-      false)))
+      (throw e))))
 
 
 (defn yaml->obj

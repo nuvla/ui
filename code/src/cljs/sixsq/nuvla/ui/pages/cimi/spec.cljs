@@ -44,23 +44,23 @@
 
 (s/def ::resource-metadata any?)
 
-(def default-params {::query-params     {:first       0
-                                         :last        20
-                                         :filter      nil
-                                         :orderby     nil
-                                         :select      nil
-                                         :aggregation nil}
-                     ::aggregations     nil
-                     ::selected-fields  ["id", "name"]
-                     ::available-fields ["id", "name"]
-                     ::selected-rows    #{}})
+(def default-params {::query-params                {:first       0
+                                                    :last        20
+                                                    :filter      nil
+                                                    :orderby     nil
+                                                    :select      nil
+                                                    :aggregation nil}
+                     ::collection                  nil
+                     ::collections-templates-cache {}
+                     ::resource-metadata           {}
+                     ::aggregations                nil
+                     ::selected-fields             ["id", "name"]
+                     ::available-fields            ["id", "name"]
+                     ::selected-rows               #{}})
 
 (def defaults (merge
-                {::cloud-entry-point           nil
-                 ::cloud-entry-point-error?    false
-                 ::loading?                    false
-                 ::collection                  nil
-                 ::collection-name             nil
-                 ::collections-templates-cache {}
-                 ::resource-metadata           {}}
+                {::cloud-entry-point        nil
+                 ::cloud-entry-point-error? false
+                 ::loading?                 false
+                 ::collection-name          nil}
                 default-params))

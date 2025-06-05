@@ -73,11 +73,12 @@
     (let [resource-type (-> cloud-entry-point
                             :collection-key
                             (get collection-name))]
-      {:db                  (assoc db ::spec/loading? false
-                                      ::spec/aggregations nil)
-       ::cimi-api-fx/search [resource-type
-                             (general-utils/prepare-params query-params)
-                             #(dispatch [::set-results resource-type %])]})))
+      (when resource-type
+        {:db                  (assoc db ::spec/loading? true
+                                        ::spec/aggregations nil)
+         ::cimi-api-fx/search [resource-type
+                               (general-utils/prepare-params query-params)
+                               #(dispatch [::set-results resource-type %])]}))))
 
 (reg-event-fx
   ::create-resource

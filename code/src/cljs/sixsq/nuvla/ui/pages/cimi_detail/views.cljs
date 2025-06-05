@@ -84,7 +84,7 @@
        [forms/resource-editor id text]
        (fn []
          (try
-           (action-fn (general-utils/json->edn @text))
+           (action-fn (general-utils/json->edn @text :throw-exceptions true))
            (catch :default e
              (action-fn e))))
        #(reset! text (general-utils/edn->json data))

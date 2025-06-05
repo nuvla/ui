@@ -395,7 +395,7 @@
               :primary  true
               :on-click (fn []
                           (try
-                            (let [data (cond->> (general-utils/json->edn @text)
+                            (let [data (cond->> (general-utils/json->edn @text :throw-exceptions true)
                                                 @selected-tmpl-id (general-utils/create-template
                                                                     @collection-name))]
                               (dispatch [::events/create-resource data]))

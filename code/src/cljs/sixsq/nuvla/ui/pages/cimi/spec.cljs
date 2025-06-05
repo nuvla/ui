@@ -38,10 +38,6 @@
 
 (s/def ::available-fields (s/coll-of string? :min-count 1))
 
-(s/def ::show-add-modal? boolean?)
-
-(s/def ::descriptions-vector any?)
-
 (s/def ::collections-templates-cache (s/map-of keyword? any?))
 
 (s/def ::selected-rows (s/nilable set?))
@@ -65,7 +61,6 @@
                  ::loading?                    false
                  ::collection                  nil
                  ::collection-name             nil
-                 ::show-add-modal?             false
                  ::collections-templates-cache {}
                  ::resource-metadata           {}}
                 default-params))

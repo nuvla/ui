@@ -26,48 +26,6 @@
   (str/join "/" (rest path)))
 
 
-(defn action-buttons
-  [confirm-label cancel-label on-confirm on-cancel]
-  [:div
-   [uix/Button
-    {:text     cancel-label
-     :on-click on-cancel}]
-   [uix/Button
-    {:text     confirm-label
-     :primary  true
-     :on-click on-confirm}]])
-
-
-(defn action-button-icon
-  [_menu-item-label _button-confirm-label _icon _title-text _body _on-confirm _on-cancel & [_scrolling?]]
-  (let [tr    (subscribe [::i18n-subs/tr])
-        show? (r/atom false)]
-    (fn [menu-item-label button-confirm-label icon title-text body on-confirm on-cancel & [scrolling?]]
-      (let [action-fn (fn []
-                        (reset! show? false)
-                        (on-confirm))
-            cancel-fn (fn []
-                        (reset! show? false)
-                        (on-cancel))]
-
-        [ui/Modal
-         {:open       (boolean @show?)
-          :close-icon true
-          :on-click   #(.stopPropagation %)
-          :on-close   #(reset! show? false)
-          :trigger    (r/as-element
-                        [ui/MenuItem {:aria-label menu-item-label
-                                      :name       menu-item-label
-                                      :on-click   #(reset! show? true)}
-                         (when icon
-                           [icons/Icon {:name icon}])
-                         (str/capitalize menu-item-label)])}
-         [uix/ModalHeader {:header title-text}]
-         [ui/ModalContent {:scrolling (boolean scrolling?)} body]
-         [ui/ModalActions
-          [action-buttons button-confirm-label (@tr [:cancel]) action-fn cancel-fn]]]))))
-
-
 (defn edit-button
   "Creates an edit that will bring up an edit dialog and will save the
    modified resource when saved."
@@ -76,51 +34,45 @@
         text (atom (general-utils/edn->json data))]
     (fn [{:keys [id] :as data} action-fn]
       (reset! text (general-utils/edn->json data))
-      [action-button-icon
-       (@tr [:raw])
-       (@tr [:save])
-       icons/i-pencil
-       (str (@tr [:editing]) " " id)
-       [forms/resource-editor id text]
-       (fn []
-         (try
-           (action-fn (general-utils/json->edn @text :throw-exceptions true))
-           (catch :default e
-             (action-fn e))))
-       #(reset! text (general-utils/edn->json data))
-       true])))
+      [uix/ModalActionButton
+       {:menu-item-label      (@tr [:raw])
+        :button-confirm-label (@tr [:save])
+        :icon                 icons/i-pencil
+        :title-text           (str (@tr [:editing]) " " id)
+        :Content              [forms/resource-editor id text]
+        :on-confirm           #(action-fn %1)
+        :on-cancel            #(reset! text (general-utils/edn->json data))
+        :validate-fn          #(try
+                                 (general-utils/json->edn @text :throw-exceptions true)
+                                 (catch js/Error e e))
+        :scrolling?           true}])))
 
 (defn view-button
-  "Creates an view that will bring up an edit dialog and will save the
+  "Creates a view that will bring up an edit dialog and will save the
    modified resource when saved."
   [{:keys [id] :as data}]
   (let [tr   (subscribe [::i18n-subs/tr])
         text (atom (general-utils/edn->json data))]
-    [action-button-icon
-     (@tr [:raw])
-     (@tr [:close])
-     "eye"
-     nil
-     [forms/resource-editor id text true]
-     #()
-     #()
-     true]))
+    [uix/ModalActionButton
+     {:menu-item-label      (@tr [:raw])
+      :button-confirm-label (@tr [:close])
+      :icon                 icons/i-eye
+      :Content              [forms/resource-editor id text true]
+      :scrolling?           true}]))
 
 
 (defn delete-button
-  "Creates a button that will bring up a delete dialog and will execute the
-   delete when confirmed."
+  "Creates a button that will bring up a delete dialog."
   [_data _action-fn]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [data action-fn]
-      [action-button-icon
-       (@tr [:delete])
-       (@tr [:delete])
-       "trash"
-       (@tr [:delete-resource])
-       [:p (@tr [:delete-resource-msg] [(:id data)])]
-       action-fn
-       (constantly nil)])))
+      [uix/ModalActionButton
+       {:menu-item-label      (@tr [:delete])
+        :button-confirm-label (@tr [:delete])
+        :icon                 icons/i-trash
+        :title-text           (@tr [:delete-resource])
+        :Content              [:p (@tr [:delete-resource-msg] [(:id data)])]
+        :on-confirm           action-fn}])))
 
 
 (defmulti other-button
@@ -135,31 +87,30 @@
         form-data  (atom {})
         op-display (general-utils/name->display-name operation)]
     (fn [{:keys [id] :as _resource} operation]
-      [action-button-icon
-       op-display
-       op-display
-       (case operation
-         "download" "cloud download"
-         "upload" "cloud upload"
-         "describe" "info"
-         "ready" "check"
-         "start" "rocket"
-         "stop" "stop"
-         "reboot" "power"
-         "cog")
-       op-display
-       (if @params
-         [ui/Form
-          (for [param @params]
-            ^{:key (:name param)}
-            [ff/form-field #(swap! form-data assoc %2 %3)
-             :operation-form (assoc param
-                               :editable true
-                               :display-name (general-utils/name->display-name (:name param))
-                               :help (:description param))])]
-         [:p (@tr [:execute-action-msg] [operation])])
-       #(dispatch [::events/operation id operation @form-data])
-       (constantly nil)])))
+      [uix/ModalActionButton
+       {:menu-item-label      op-display
+        :button-confirm-label op-display
+        :icon                 (case operation
+                                "download" icons/i-cloud-download
+                                "upload" icons/i-cloud-upload
+                                "describe" icons/i-info
+                                "ready" icons/i-check
+                                "start" icons/i-rocket
+                                "stop" icons/i-stop
+                                "reboot" icons/i-power
+                                icons/i-cog)
+        :title-text           op-display
+        :Content              (if @params
+                                [ui/Form
+                                 (for [param @params]
+                                   ^{:key (:name param)}
+                                   [ff/form-field #(swap! form-data assoc %2 %3)
+                                    :operation-form (assoc param
+                                                      :editable true
+                                                      :display-name (general-utils/name->display-name (:name param))
+                                                      :help (:description param))])]
+                                [:p (@tr [:execute-action-msg] [operation])])
+        :on-confirm           #(dispatch [::events/operation id operation @form-data])}])))
 
 
 ;; Explicit keys have been added to the operation buttons to avoid react

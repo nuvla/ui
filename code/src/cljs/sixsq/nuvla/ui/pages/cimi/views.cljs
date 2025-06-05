@@ -285,8 +285,7 @@
                      :on-change (ui-callback/checked (fn [checked]
                                                        (if checked
                                                          (swap! selections-atom set/union #{item})
-                                                         (swap! selections-atom set/difference #{item}))))}]
-       #_[:label view]]]]))
+                                                         (swap! selections-atom set/difference #{item}))))}]]]]))
 
 (defn format-field-list [available-fields-atom selections-atom field->view]
   (let [items (sort available-fields-atom)]
@@ -299,39 +298,28 @@
            update-fn trigger title-tr-key
            reset-to-default-fn field->view]}]
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Modal
-     {:closeIcon true
-      :open      @show?
-      :on-close  #(reset! show? false)
-      :trigger   (r/as-element
-                   (or trigger
-                       [uix/MenuItem
-                        {:name     (@tr [:columns])
-                         :icon     icons/i-columns
-                         :disabled (and selected-id-sub (nil? @selected-id-sub))
-                         :on-click (fn []
-                                     (reset! selections-atom (set @selected-fields-sub))
-                                     (reset! show? true))}]))}
-     [uix/ModalHeader {:header (@tr [(or title-tr-key :fields)])}]
-     [ui/ModalContent
-      {:scrolling true}
-      [format-field-list available-fields selections-atom field->view]]
-     [ui/ModalActions
-      (when (fn? reset-to-default-fn)
-        [uix/Button
-         {:text     "Select default columns"
-          :on-click reset-to-default-fn}])
-      [uix/Button
-       {:text     (@tr [:cancel])
-        :on-click #(reset! show? false)}]
-      [uix/Button
-       {:text     (@tr [:update])
-        :primary  true
-        :on-click (fn []
-                    (reset! show? false)
-                    (if (fn? update-fn)
-                      (update-fn @selections-atom)
-                      (dispatch [::events/set-selected-fields @selections-atom])))}]]]))
+    [uix/ModalActionButton
+     {:show?                show?
+      :Trigger              (or trigger
+                                [uix/MenuItem
+                                 {:name     (@tr [:columns])
+                                  :icon     icons/i-columns
+                                  :disabled (and selected-id-sub (nil? @selected-id-sub))
+                                  :on-click (fn []
+                                              (reset! selections-atom (set @selected-fields-sub))
+                                              (reset! show? true))}])
+      :title-text           (@tr [(or title-tr-key :fields)])
+      :Content              [format-field-list available-fields selections-atom field->view]
+      :scrolling?           true
+      :button-confirm-label (@tr [:update])
+      :on-confirm           (fn []
+                              (if (fn? update-fn)
+                                (update-fn @selections-atom)
+                                (dispatch [::events/set-selected-fields @selections-atom])))
+      :ExtraButton          (when (fn? reset-to-default-fn)
+                              [uix/Button
+                               {:text     "Select default columns"
+                                :on-click reset-to-default-fn}])}]))
 
 (defn SelectFields []
   (let [available-fields (subscribe [::subs/available-fields])
@@ -346,68 +334,6 @@
                          :selected-fields-sub selected-fields
                          :available-fields    @available-fields}])))
 
-(defn ResourceAddForm
-  []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        show?            (subscribe [::subs/show-add-modal?])
-        collection-name  (subscribe [::subs/collection-name])
-        default-text     (general-utils/edn->json {})
-        text             (atom default-text)
-        selected-tmpl-id (r/atom nil)]
-    (fn []
-      (let [collection-tmpl-href (some-> @collection-name cimi-utils/collection-template-href)
-            templates-info       (subscribe [::subs/collection-templates collection-tmpl-href])]
-        (when @show?
-          [ui/Modal
-           {:size    "large", :closeIcon true, :open @show?,
-            :onClose #(dispatch [::events/hide-add-modal])}
-
-           [uix/ModalHeader {:header (str (@tr [:add]))} " " @collection-name]
-
-           [ui/ModalContent
-            [:<>
-             (when @templates-info
-               [ui/Dropdown {:style       {:margin-bottom 10}
-                             :selection   true
-                             :placeholder "select a resource template"
-                             :value       @selected-tmpl-id
-                             :options     (forms/descriptions->options (vals @templates-info))
-                             :on-change   (ui-callback/value
-                                            (fn [value]
-                                              (reset! selected-tmpl-id value)
-                                              (reset! text
-                                                      (-> @templates-info
-                                                          (get value)
-                                                          general-utils/remove-common-attrs
-                                                          (assoc :href @selected-tmpl-id)
-                                                          general-utils/edn->json))))}])
-
-             [forms/resource-editor (or @selected-tmpl-id collection-name) text]]]
-
-           [ui/ModalActions
-            [uix/Button
-             {:text     (@tr [:cancel])
-              :on-click (fn []
-                          (reset! text default-text)
-                          (dispatch [::events/hide-add-modal]))}]
-            [uix/Button
-             {:text     (@tr [:create])
-              :primary  true
-              :on-click (fn []
-                          (try
-                            (let [data (cond->> (general-utils/json->edn @text)
-                                                @selected-tmpl-id (general-utils/create-template
-                                                                    @collection-name))]
-                              (dispatch [::events/create-resource data]))
-                            (catch :default e
-                              (dispatch [::messages-events/add
-                                         {:header  "invalid JSON document"
-                                          :message (str "invalid JSON:\n\n" e)
-                                          :type    :error}]))
-                            (finally
-                              (dispatch [::events/hide-add-modal]))))}]]
-           ])))))
-
 (defn SearchButton
   []
   (let [tr          (subscribe [::i18n-subs/tr])
@@ -419,24 +345,63 @@
                               :disabled (nil? @selected-id)
                               :on-click #(dispatch [::events/get-results])}])))
 
-(defn CreateButton
+(defn AddResourceButton
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [uix/MenuItem
-     {:name     (@tr [:add])
-      :icon     icons/i-plus-full
-      :on-click #(dispatch [::events/show-add-modal])}]))
+  (let [tr               (subscribe [::i18n-subs/tr])
+        collection-name  (subscribe [::subs/collection-name])
+        default-text     (general-utils/edn->json {})
+        text             (atom default-text)
+        selected-tmpl-id (r/atom nil)
+        on-close         #(do
+                            (reset! text default-text)
+                            (reset! selected-tmpl-id nil))
+        validate-fn      #(try
+                            (general-utils/json->edn @text :throw-exceptions true)
+                            (catch js/Error e e))
+        on-confirm       #(let [data (cond->> %1
+                                              @selected-tmpl-id (general-utils/create-template @collection-name))]
+                            (dispatch [::events/create-resource data on-close]))]
+    (fn []
+      (let [collection-tmpl-href (some-> @collection-name cimi-utils/collection-template-href)
+            templates-info       (subscribe [::subs/collection-templates collection-tmpl-href])]
+        [uix/ModalActionButton
+         {:menu-item-label      (@tr [:add])
+          :button-confirm-label (@tr [:create])
+          :icon                 icons/i-plus
+          :title-text           (str (@tr [:add]) " " @collection-name)
+          :Content              [:<>
+                                 (when @templates-info
+                                   [ui/Dropdown {:style       {:margin-bottom 10}
+                                                 :selection   true
+                                                 :placeholder "select a resource template"
+                                                 :value       @selected-tmpl-id
+                                                 :options     (forms/descriptions->options (vals @templates-info))
+                                                 :on-change   (ui-callback/value
+                                                                (fn [value]
+                                                                  (reset! selected-tmpl-id value)
+                                                                  (reset! text
+                                                                          (-> @templates-info
+                                                                              (get value)
+                                                                              general-utils/remove-common-attrs
+                                                                              (assoc :href @selected-tmpl-id)
+                                                                              general-utils/edn->json))))}])
+
+                                 [forms/resource-editor (or @selected-tmpl-id collection-name) text]]
+          :on-confirm           on-confirm
+          :on-cancel            on-close
+          :validate-fn          validate-fn}]))))
 
 (defn DeleteResourcesButton
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [cimi-detail-views/action-button-icon
-     (@tr [:delete-resources])
-     (@tr [:yes])
-     "trash"
-     (@tr [:delete-resources])
-     (@tr [:are-you-sure?])
-     #(dispatch [::events/delete-selected-rows]) (constantly nil)]))
+    [uix/ModalActionButton
+     {:menu-item-label      (@tr [:delete-resources])
+      :button-confirm-label (@tr [:yes])
+      :icon                 icons/i-trash
+      :title-text           (@tr [:delete-resources])
+      :Content              (@tr [:are-you-sure?])
+      :on-confirm           #(dispatch [::events/delete-selected-rows])
+      :on-cancel            (constantly nil)}]))
 
 (defn MenuBar []
   (let [tr               (subscribe [::i18n-subs/tr])
@@ -453,13 +418,12 @@
                       :message message
                       :type    :error})]))
       [ui/Segment style/basic
-       [ResourceAddForm]
        [ui/Menu {:attached   "top"
                  :borderless true}
         [SearchButton]
         [SelectFields]
         (when (general-utils/can-add? @resources)
-          [CreateButton])
+          [AddResourceButton])
         (when (and (not-empty @selected-rows)
                    @can-bulk-delete?)
           [DeleteResourcesButton])

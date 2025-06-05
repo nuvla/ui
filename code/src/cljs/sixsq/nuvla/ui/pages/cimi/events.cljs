@@ -19,16 +19,6 @@
   (fn [db [_ params]]
     (update db ::spec/query-params merge params)))
 
-(reg-event-db
-  ::show-add-modal
-  (fn [db _]
-    (assoc db ::spec/show-add-modal? true)))
-
-(reg-event-db
-  ::hide-add-modal
-  (fn [db _]
-    (assoc db ::spec/show-add-modal? false)))
-
 (reg-event-fx
   ::persist-cimi-query-params
   (fn [{{:keys [::spec/query-params]} :db}]
@@ -83,16 +73,17 @@
     (let [resource-type (-> cloud-entry-point
                             :collection-key
                             (get collection-name))]
-      {:db                  (assoc db ::spec/loading? true
-                                      ::spec/aggregations nil)
-       ::cimi-api-fx/search [resource-type
-                             (general-utils/prepare-params query-params)
-                             #(dispatch [::set-results resource-type %])]})))
+      (when resource-type
+        {:db                  (assoc db ::spec/loading? true
+                                        ::spec/aggregations nil)
+         ::cimi-api-fx/search [resource-type
+                               (general-utils/prepare-params query-params)
+                               #(dispatch [::set-results resource-type %])]}))))
 
 (reg-event-fx
   ::create-resource
   (fn [{{:keys [::spec/collection-name
-                ::spec/cloud-entry-point]} :db} [_ data]]
+                ::spec/cloud-entry-point]} :db} [_ data on-close]]
     (let [resource-type (-> cloud-entry-point
                             :collection-key
                             (get collection-name))
@@ -102,7 +93,8 @@
                                       {:header  (cond-> (str "added " resource-id)
                                                         status (str " (" status ")"))
                                        :content message
-                                       :type    :success}]))]
+                                       :type    :success}])
+                           (on-close))]
       {::cimi-api-fx/add [resource-type data on-success]})))
 
 (reg-event-fx

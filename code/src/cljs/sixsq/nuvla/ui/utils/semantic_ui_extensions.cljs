@@ -83,8 +83,8 @@
                        (assoc :aria-label name))]
     [ui/MenuItem final-opts
      (if loading?
-       [icons/Icon {:name "refresh", :loading loading?}]
-       [icons/Icon {:name "search"}])
+       [icons/ArrowRotateIcon {:loading true}]
+       [icons/SearchIcon])
      name]))
 
 
@@ -154,6 +154,59 @@
 (defn MsgNoItemsToShow
   [message]
   [Msg {:content (or message [TR :no-items-to-show])}])
+
+(defn ModalActionButton
+  [{:keys [show?] :as _opts}]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        show?            (or show? (r/atom false))
+        validation-error (r/atom nil)]
+    (fn [{:keys [menu-item-label button-confirm-label icon title-text Content
+                 on-confirm on-cancel scrolling? validate-fn ValidationError Trigger
+                 ExtraButton]
+          :or   {scrolling?      false
+                 on-confirm      #()
+                 on-cancel       #()
+                 validate-fn     identity
+                 ValidationError (fn [error]
+                                   [MsgError {:header  "A validation error happened"
+                                              :content error}])}}]
+      (let [reset-fn  #(do (reset! show? false)
+                           (reset! validation-error nil))
+            action-fn #(let [result (validate-fn)]
+                         (if (instance? js/Error result)
+                           (reset! validation-error (str result))
+                           (do (on-confirm result)
+                               (reset-fn))))
+            cancel-fn (fn []
+                        (reset-fn)
+                        (on-cancel))]
+        [ui/Modal
+         {:open       (boolean @show?)
+          :close-icon true
+          :on-click   #(.stopPropagation %)
+          :on-close   cancel-fn
+          :trigger    (r/as-element
+                        (or Trigger
+                            [ui/MenuItem {:aria-label menu-item-label
+                                          :name       menu-item-label
+                                          :on-click   #(reset! show? true)}
+                             (when icon
+                               [icons/Icon {:name icon}])
+                             (str/capitalize menu-item-label)]))}
+         [ModalHeader {:header title-text}]
+         [ui/ModalContent {:scrolling (boolean scrolling?)}
+          [:<>
+           (when @validation-error [ValidationError @validation-error])
+           Content]]
+         [ui/ModalActions
+          (when ExtraButton ExtraButton)
+          [Button
+           {:text     (@tr [:cancel])
+            :on-click cancel-fn}]
+          [Button
+           {:text     button-confirm-label
+            :primary  true
+            :on-click action-fn}]]]))))
 
 (defn CopyToClipboard
   [{:keys [content value popup-text on-hover?] :as _opts}]

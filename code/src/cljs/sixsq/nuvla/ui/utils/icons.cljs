@@ -496,7 +496,7 @@
   [opts]
   [I opts i-pencil])
 
-(def i-columns "fa-columns")
+(def i-columns "fal fa-columns")
 (defn ColumnIcon
   [opts]
   [I opts i-columns])
@@ -712,3 +712,8 @@
   [I opts i-zoom-in])
 
 (def i-adjust "fas fa-adjust")
+
+(def i-cog "fal fa-cog")
+
+(def i-cloud-download "fal fa-cloud-download")
+(def i-cloud-upload "fal fa-cloud-upload")

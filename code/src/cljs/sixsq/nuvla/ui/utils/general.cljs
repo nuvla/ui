@@ -110,12 +110,14 @@
   (.stringify js/JSON (clj->js edn) nil spaces))
 
 
-(defn json->edn [json & {:keys [keywordize-keys] :or {keywordize-keys true}}]
+(defn json->edn [json & {:keys [keywordize-keys throw-exceptions]
+                         :or   {keywordize-keys  true
+                                throw-exceptions false}}]
   (try
     (js->clj (.parse js/JSON json) :keywordize-keys keywordize-keys)
     (catch js/Error e
       (js/console.error "Parsing json failed: " e json)
-      false)))
+      (when throw-exceptions (throw e)))))
 
 
 (defn yaml->obj
@@ -449,17 +451,17 @@
   ([amount]
    (format-number amount {:locale browser-fav-language}))
   ([amount {:keys [locale style currency]
-            :or {locale   browser-fav-language
-                 style    "decimal"
-                 currency "EUR"}}]
+            :or   {locale   browser-fav-language
+                   style    "decimal"
+                   currency "EUR"}}]
    (.format (js/Intl.NumberFormat. locale
-                                   (clj->js {:style style
+                                   (clj->js {:style    style
                                              :currency currency}))
             amount)))
 
 (defn format-money
   ([amount]
-   (format-number amount {:style  "currency"}))
+   (format-number amount {:style "currency"}))
   ([amount opts]
    (format-number amount (merge opts {:style "currency"}))))
 

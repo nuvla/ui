@@ -92,10 +92,6 @@
   :-> :base-uri)
 
 (reg-sub
-  ::show-add-modal?
-  ::spec/show-add-modal?)
-
-(reg-sub
   ::collections-templates-cache
   :-> ::spec/collections-templates-cache)
 

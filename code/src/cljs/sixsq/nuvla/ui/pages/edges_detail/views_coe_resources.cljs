@@ -15,7 +15,9 @@
             [sixsq.nuvla.ui.common-components.job.views :as job-views]
             [sixsq.nuvla.ui.pages.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.tooltip :as tt]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.pages.edges.utils :as edges-utils]))
 
 (def local-storage-key "nuvla.ui.table.edges.coe-resources.column-configs")
 
@@ -158,16 +160,13 @@
 (defn PullImageForm
   [{:keys [::!image-spec] :as _control}]
   (r/with-let [tr                           (subscribe [::i18n-subs/tr])
+               ne-version                   (subscribe [::subs/ne-version])
                registries                   (subscribe [::subs/registries])
                set-use-private-registry?    #(swap! !image-spec assoc :use-private-registry? %)
                set-private-registry-id      (fn [id]
-                                              (let [{:keys [endpoint] :as _private-registry} (first (filter #(= id (:id %)) @registries))
-                                                    registry-endpoint (some-> endpoint
-                                                                              (cond-> (not (str/ends-with? endpoint "/"))
-                                                                                      (str "/")))]
-                                                (swap! !image-spec assoc
-                                                       :private-registry-id id
-                                                       :private-registry-cred-id nil)))
+                                              (swap! !image-spec assoc
+                                                     :private-registry-id id
+                                                     :private-registry-cred-id nil))
                set-private-registry-cred-id #(swap! !image-spec assoc :private-registry-cred-id %)
                set-image-name               #(swap! !image-spec assoc :image %)]
     (let [{:keys [image use-private-registry? private-registry-id private-registry-cred-id]} @!image-spec
@@ -176,9 +175,12 @@
       [ui/Form
        (when-not (empty? @registries)
          [:<>
-          [ui/FormCheckbox {:label     (@tr [:private-registry])
-                            :checked   use-private-registry?
-                            :on-change (ui-callback/checked set-use-private-registry?)}]
+          [tt/WithTooltip
+           [:div [ui/FormCheckbox {:label     (@tr [:private-registry])
+                                   :checked   use-private-registry?
+                                   :disabled  (edges-utils/before-v2-19-0? @ne-version)
+                                   :on-change (ui-callback/checked set-use-private-registry?)}]]
+           (@tr [:image-pull-with-credentials-unavailable])]
           (when use-private-registry?
             [ui/Table {:style {:margin-top 10}}
              [ui/TableHeader

@@ -311,6 +311,10 @@
         unknown         (- total (+ online offline))]
     {:total total :online online :offline offline :unknown unknown}))
 
+(defn before-v2-19-0?
+  [v]
+  (older-version? v (semver/Version. 2 19 0 nil nil)))
+
 (defn telemetry-outdated?
   [{:keys [next-telemetry] :as _nb-status}]
   (and (some? next-telemetry) (some-> next-telemetry

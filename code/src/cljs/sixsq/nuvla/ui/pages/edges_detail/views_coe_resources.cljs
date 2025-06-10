@@ -15,7 +15,9 @@
             [sixsq.nuvla.ui.common-components.job.views :as job-views]
             [sixsq.nuvla.ui.pages.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.tooltip :as tt]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.pages.edges.utils :as edges-utils]))
 
 (def local-storage-key "nuvla.ui.table.edges.coe-resources.column-configs")
 
@@ -155,30 +157,91 @@
                                #(do (reset! !global-filter %)
                                     (reset! !pagination default-pagination)))}]]))
 
+(defn PullImageForm
+  [{:keys [::!image-spec] :as _control}]
+  (r/with-let [tr                           (subscribe [::i18n-subs/tr])
+               ne-version                   (subscribe [::subs/ne-version])
+               registries                   (subscribe [::subs/registries])
+               set-use-private-registry?    #(swap! !image-spec assoc :use-private-registry? %)
+               set-private-registry-id      (fn [id]
+                                              (swap! !image-spec assoc
+                                                     :private-registry-id id
+                                                     :private-registry-cred-id nil))
+               set-private-registry-cred-id #(swap! !image-spec assoc :private-registry-cred-id %)
+               set-image-name               #(swap! !image-spec assoc :image %)]
+    (let [{:keys [image use-private-registry? private-registry-id private-registry-cred-id]} @!image-spec
+          registries-options      (subscribe [::subs/registries-options])
+          registries-cred-options (subscribe [::subs/registries-credentials-options private-registry-id])]
+      [ui/Form
+       (when-not (empty? @registries)
+         [:<>
+          [tt/WithTooltip
+           [:div [ui/FormCheckbox {:label     (@tr [:private-registry])
+                                   :checked   use-private-registry?
+                                   :disabled  (edges-utils/before-v2-19-0? @ne-version)
+                                   :on-change (ui-callback/checked set-use-private-registry?)}]]
+           (when (edges-utils/before-v2-19-0? @ne-version)
+             (@tr [:image-pull-with-credentials-unavailable]))]
+          (when use-private-registry?
+            [ui/Table {:style {:margin-top 10}}
+             [ui/TableHeader
+              [ui/TableRow
+               [ui/TableHeaderCell {:content (r/as-element
+                                               [:<>
+                                                (@tr [:private-registry])
+                                                [:span {:style {:color "red" :margin-left "4px"}} "*"]])}]
+               [ui/TableHeaderCell {:content (str/capitalize (@tr [:credential]))}]]]
+             [ui/TableBody
+              [ui/TableRow
+               [ui/TableCell {:width 7}
+                [ui/Dropdown
+                 {:selection true
+                  :fluid     true
+                  :value     private-registry-id
+                  :options   @registries-options
+                  :on-change (ui-callback/value set-private-registry-id)}]]
+               [ui/TableCell {:width 7}
+                [ui/Dropdown
+                 {:selection true
+                  :fluid     true
+                  :value     private-registry-cred-id
+                  :options   @registries-cred-options
+                  :on-change (ui-callback/value set-private-registry-cred-id)}]]]]])])
+       [:div.field.required
+        [:label "Image"]
+        [ui/Input {:value       image
+                   :placeholder "e.g. registry:port/image:tag"
+                   :on-change   (ui-callback/input-callback set-image-name)}]]])))
+
 (defn PullImageModal
-  [{:keys [::!selected ::!pull-modal-open? ::pull-modal-close-fn
-           ::pull-modal-open-fn ::pull-action-fn] :as _control}]
-  (r/with-let [image-value           (r/atom "")
-               update-image-value-fn #(reset! image-value %)]
-    [ui/Modal {:open       @!pull-modal-open?
-               :close-icon true
-               :on-close   pull-modal-close-fn
-               :trigger    (r/as-element
-                             [ui/MenuItem {:on-click pull-modal-open-fn}
-                              [icons/DownloadIcon] "Pull"])}
-     [ui/ModalHeader "Pull image"]
-     [ui/ModalContent
-      [:<>
-       [MsgWarnDataDelayed]
-       [ui/Form
-        [ui/FormInput {:label     "Image" :required true :placeholder "e.g. registry:port/image:tag"
-                       :on-change (ui-callback/input-callback update-image-value-fn)}]]]]
-     [ui/ModalActions
-      [uix/Button {:primary  true
-                   :disabled @(r/track #(str/blank? @image-value))
-                   :icon     icons/i-download
-                   :content  "Pull image"
-                   :on-click #(pull-action-fn @image-value)}]]]))
+  [_control]
+  (let [!image-spec (r/atom {:use-private-registry? false
+                             :image                 ""})]
+    (dispatch [::events/get-registries])
+    (dispatch [::events/get-registries-credentials])
+    (fn [{:keys [::!selected ::!pull-modal-open? ::pull-modal-close-fn
+                 ::pull-modal-open-fn ::pull-action-fn] :as control}]
+      (let [{:keys [use-private-registry? private-registry-id image]} @!image-spec
+            valid-form? (and (not (str/blank? image))
+                             (or (not use-private-registry?)
+                                 (some? private-registry-id)))]
+        [ui/Modal {:open       @!pull-modal-open?
+                   :close-icon true
+                   :on-close   pull-modal-close-fn
+                   :trigger    (r/as-element
+                                 [ui/MenuItem {:on-click pull-modal-open-fn}
+                                  [icons/DownloadIcon] "Pull"])}
+         [ui/ModalHeader "Pull image"]
+         [ui/ModalContent
+          [:<>
+           [MsgWarnDataDelayed]
+           [PullImageForm (assoc control ::!image-spec !image-spec)]]]
+         [ui/ModalActions
+          [uix/Button {:primary  true
+                       :disabled (not valid-form?)
+                       :icon     icons/i-download
+                       :content  "Pull image"
+                       :on-click #(pull-action-fn @!image-spec)}]]]))))
 
 (defmulti pull-image-available? identity)
 
@@ -210,6 +273,14 @@
                !pagination           (r/atom default-pagination)
                close-pull-modal      #(reset! !pull-modal-open? false)
                delete-modal-close-fn #(reset! !delete-modal-open? false)
+               pull-action-fn        (fn [{:keys [use-private-registry? private-registry-cred-id image]}]
+                                       (dispatch [::coe-resource-actions
+                                                  {:docker [(cond-> {:resource "image"
+                                                                     :action   "pull"
+                                                                     :id       image}
+                                                                    (and use-private-registry? private-registry-cred-id)
+                                                                    (assoc :credential private-registry-cred-id))]}
+                                                  close-pull-modal]))
                control               (merge {::!can-action?          !can-actions?
                                              ::!delete-modal-open?   !delete-modal-open?
                                              ::delete-modal-open-fn  #(reset! !delete-modal-open? true)
@@ -221,8 +292,7 @@
                                              ::!pull-modal-open?     !pull-modal-open?
                                              ::pull-modal-open-fn    #(reset! !pull-modal-open? true)
                                              ::pull-modal-close-fn   close-pull-modal
-                                             ::pull-action-fn        #(dispatch [::coe-resource-actions {:docker [{:resource "image" :action "pull" :id %}]}
-                                                                                 close-pull-modal])}
+                                             ::pull-action-fn        pull-action-fn}
                                             (into {} (mapv
                                                        (fn [[_title k data]]
                                                          [k data])

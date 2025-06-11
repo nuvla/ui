@@ -94,11 +94,13 @@
      [ui/TableCell url-name]
      [ui/TableCell
       (cond
-        (and @url (deployments-utils/stopped? state)) @url
-        @url [uix/CopyToClipboard
-              {:content   [:a {:href @url, :target "_blank"} @url false]
-               :value     @url
-               :on-hover? true}]
+        (and @url (deployments-utils/started? state))
+        [uix/CopyToClipboard
+         {:content   [:a {:href @url, :target "_blank"} @url false]
+          :value     @url
+          :on-hover? true}]
+
+        @url @url
         :else url-pattern)]]))
 
 (defn url-to-button

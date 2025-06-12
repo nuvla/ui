@@ -2,6 +2,23 @@
 
 ## Released
 
+## [2.47.0](https://github.com/nuvla/ui/compare/2.46.0...2.47.0) (2025-06-12)
+
+
+### Features
+
+* **NuvlaEdge detail page:** Allow selection of registry credential for pull coe resource action ([#1737](https://github.com/nuvla/ui/issues/1737)) ([5e53c06](https://github.com/nuvla/ui/commit/5e53c062b4c866b45e30101d750d18478ca1fcb9))
+
+
+### Bug Fixes
+
+* **cimi page:** Icon light theme for menubar ([fe9ffac](https://github.com/nuvla/ui/commit/fe9ffacae3798cfd9c338f6f9e9ab1c03f76dac3))
+* **cimi page:** On collection change, remove existing entries ([fe9ffac](https://github.com/nuvla/ui/commit/fe9ffacae3798cfd9c338f6f9e9ab1c03f76dac3))
+* **cimi page:** Search icon is loading when reaching the page bugfix ([fe9ffac](https://github.com/nuvla/ui/commit/fe9ffacae3798cfd9c338f6f9e9ab1c03f76dac3))
+* **deployment-urls:** Make urls clickable only if the deployment is in STARTED state. ([#1740](https://github.com/nuvla/ui/issues/1740)) ([34f8114](https://github.com/nuvla/ui/commit/34f811404bcbaccbe89685bff6141f1082e88097))
+* **general-utils:** Fix json parsing ([#1738](https://github.com/nuvla/ui/issues/1738)) ([fe9ffac](https://github.com/nuvla/ui/commit/fe9ffacae3798cfd9c338f6f9e9ab1c03f76dac3))
+* **uix:** Reusable ModalActionButton component ([fe9ffac](https://github.com/nuvla/ui/commit/fe9ffacae3798cfd9c338f6f9e9ab1c03f76dac3))
+
 ## [2.46.0](https://github.com/nuvla/ui/compare/2.45.0...2.46.0) (2025-02-19)
 
 

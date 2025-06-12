@@ -94,29 +94,31 @@
      [ui/TableCell url-name]
      [ui/TableCell
       (cond
-        (and @url (deployments-utils/stopped? state)) @url
-        @url [uix/CopyToClipboard
-              {:content   [:a {:href @url, :target "_blank"} @url false]
-               :value     @url
-               :on-hover? true}]
+        (and @url (deployments-utils/started? state))
+        [uix/CopyToClipboard
+         {:content   [:a {:href @url, :target "_blank"} @url false]
+          :value     @url
+          :on-hover? true}]
+
+        @url @url
         :else url-pattern)]]))
 
 (defn url-to-button
-  ([url-name url-pattern] (url-to-button url-name url-pattern false))
-  ([url-name url-pattern primary?]
-   (let [url (subscribe [::subs/url url-pattern])]
-     (when @url
-       [ui/Button {:color    (if primary? "green" nil)
-                   :icon     "external"
-                   :content  url-name
-                   :href     @url
-                   :on-click (fn [event]
-                               (js/window.open @url)
-                               (.stopPropagation event)
-                               (.preventDefault event))
-                   :target   "_blank"
-                   :rel      "noreferrer"
-                   :style    {:margin 2}}]))))
+  [{:keys [url-name url-pattern primary?]
+    :or {primary? false}}]
+  (let [url (subscribe [::subs/url url-pattern])]
+    (when @url
+      [ui/Button {:color    (if primary? "green" nil)
+                  :icon     "external"
+                  :content  url-name
+                  :href     @url
+                  :on-click (fn [event]
+                              (js/window.open @url)
+                              (.stopPropagation event)
+                              (.preventDefault event))
+                  :target   "_blank"
+                  :rel      "noreferrer"
+                  :style    {:margin 2}}])))
 
 
 (defn urls-section
@@ -585,12 +587,12 @@
            [ui/TableCell (str/capitalize (@tr [:deployment-group]))]
            [ui/TableCell
             [DeplSetLink deployment-set deployment-set-name]]])]]]
-     (when-not (deployments-utils/stopped? state)
+     (when (deployments-utils/started? state)
        [ui/Segment {:attached  false
                     :secondary true}
         (for [[i [url-name url-pattern]] (map-indexed list urls)]
           ^{:key url-name}
-          [url-to-button url-name url-pattern (zero? i)])])]))
+          [url-to-button {:url-name url-name :url-pattern url-pattern :primary? (zero? i)}])])]))
 
 
 (defn OverviewPane

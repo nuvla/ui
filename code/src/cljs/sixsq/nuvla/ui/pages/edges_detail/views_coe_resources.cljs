@@ -178,9 +178,9 @@
           [tt/WithTooltip
            [:div [ui/FormCheckbox {:label     (@tr [:private-registry])
                                    :checked   use-private-registry?
-                                   :disabled  (edges-utils/before-v2-19-0? @ne-version)
+                                   :disabled  (edges-utils/before-v2-19-2? @ne-version)
                                    :on-change (ui-callback/checked set-use-private-registry?)}]]
-           (when (edges-utils/before-v2-19-0? @ne-version)
+           (when (edges-utils/before-v2-19-2? @ne-version)
              (@tr [:image-pull-with-credentials-unavailable]))]
           (when use-private-registry?
             [ui/Table {:style {:margin-top 10}}

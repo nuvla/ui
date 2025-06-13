@@ -48,13 +48,19 @@
     (= result (t/older-version? (first args) (second args)))
     true [nil nil]
     true ["" (semver/Version. 2 1 0 nil nil)]
-    false ["3.0.0" (semver/Version. 2 14 4 nil nil)]))
+    false ["3.0.0" (semver/Version. 2 14 4 nil nil)]
+    false ["2.109.2" (semver/Version. 2 19 2 nil nil)]
+    false ["2.19.2" (semver/Version. 2 19 2 nil nil)]
+    false ["dev" (semver/Version. 2 19 2 nil nil)]
+    true ["2.18.25" (semver/Version. 2 19 2 nil nil)]))
 
 (deftest newer-version?
   (are [result args]
     (= result (t/newer-version? (first args) (second args)))
     false [nil nil]
     false ["" (semver/Version. 2 1 0 nil nil)]
+    true ["dev" (semver/Version. 2 1 0 nil nil)]
+    false ["2.14.4" (semver/Version. 2 14 4 nil nil)]
     true ["3.0.0" (semver/Version. 2 14 4 nil nil)]))
 
 (deftest ne-go?

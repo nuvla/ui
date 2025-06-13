@@ -2,6 +2,14 @@
 
 ## Released
 
+## [2.47.1](https://github.com/nuvla/ui/compare/2.47.0...2.47.1) (2025-06-13)
+
+
+### Bug Fixes
+
+* **Edge details page:** COE resource action pull image private registries NE version &gt;=2.19.2 ([#1742](https://github.com/nuvla/ui/issues/1742)) ([339b7d4](https://github.com/nuvla/ui/commit/339b7d468a97123445c658484bd548f5c72df6fb))
+* **Edge utils:** consider ne-dev as always a new version refactor utils ([339b7d4](https://github.com/nuvla/ui/commit/339b7d468a97123445c658484bd548f5c72df6fb))
+
 ## [2.47.0](https://github.com/nuvla/ui/compare/2.46.0...2.47.0) (2025-06-12)
 
 

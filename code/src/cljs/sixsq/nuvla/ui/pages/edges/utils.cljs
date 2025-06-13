@@ -279,20 +279,23 @@
 
 (defn newer-version?
   [v ref-v]
-  (and
-    (not (str/blank? v))
-    (semver/newer? (semver/parse v) ref-v)))
+  (or
+    (ne-dev? v)
+    (and
+     (not (str/blank? v))
+     (semver/newer? (semver/parse v) ref-v))))
 
 (defn older-version?
   [v ref-v]
-  (or
-    (str/blank? v)
-    (semver/older? (semver/parse v) ref-v)))
+  (and
+    (not (ne-dev? v))
+    (or
+     (str/blank? v)
+     (semver/older? (semver/parse v) ref-v))))
 
 (defn old-version?
   [v]
-  (and (not (ne-dev? v))
-       (older-version? v (semver/Version. 1 16 0 nil nil))))
+  (older-version? v (semver/Version. 1 16 0 nil nil)))
 
 (defn before-v2-14-4?
   [v]
@@ -311,9 +314,9 @@
         unknown         (- total (+ online offline))]
     {:total total :online online :offline offline :unknown unknown}))
 
-(defn before-v2-19-0?
+(defn before-v2-19-2?
   [v]
-  (older-version? v (semver/Version. 2 19 0 nil nil)))
+  (older-version? v (semver/Version. 2 19 2 nil nil)))
 
 (defn telemetry-outdated?
   [{:keys [next-telemetry] :as _nb-status}]

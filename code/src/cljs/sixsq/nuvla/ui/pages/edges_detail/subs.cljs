@@ -65,6 +65,51 @@
   [doc]
   (update doc :NetworkSettings (comp #(map name %) keys :Networks)))
 
+(defn update-service-id
+  [doc]
+  (assoc doc :Id (:ID doc)))
+
+(defn update-service-name
+  [doc]
+  (assoc doc :Name (-> doc :Spec :Name)))
+
+(defn update-service-version
+  [doc]
+  (assoc doc :Version (-> doc :Version :Index)))
+
+(defn update-service-status
+  [{:keys [ServiceStatus] :as doc}]
+  (assoc doc
+    :CompletedTasks (str (:CompletedTasks ServiceStatus) "/" (:DesiredTasks ServiceStatus))
+    :RunningTasks (str (:RunningTasks ServiceStatus) "/" (:DesiredTasks ServiceStatus))))
+
+(defn update-service-image
+  [doc]
+  (assoc doc :Image (-> doc :Spec :Labels :com.docker.stack.image)))
+
+(defn update-service-namespace
+  [doc]
+  (assoc doc :Namespace (-> doc :Spec :Labels :com.docker.stack.namespace)))
+
+(defn update-service-labels
+  [{{:keys [Labels]} :Spec :as doc}]
+  (assoc doc :Labels Labels))
+
+(defn update-service-ports
+  [{{:keys [Ports]} :Endpoint :as doc}]
+  (let [new-Ports (map #(when-let [published-port (:PublishedPort %)]
+                          (str (:PublishMode %) " " published-port "->" (:TargetPort %) "/" (:Protocol %))) Ports)]
+    (assoc doc :Ports (remove nil? new-Ports))))
+
+(defn update-service-virtual-ips
+  [{{:keys [VirtualIPs]} :Endpoint :as doc}]
+  (let [new-VirtualIPs (map :Addr VirtualIPs)]
+    (assoc doc :VirtualIPs (remove nil? new-VirtualIPs))))
+
+(defn update-service-replicas
+  [{{:keys [Mode]} :Spec :as doc}]
+  (assoc doc :Replicas (-> Mode :Replicated :Replicas)))
+
 (defn save-raw-data
   [resource]
   (assoc resource :raw resource))
@@ -88,7 +133,10 @@
             [:containers ::docker-containers
              #(-> % update-ports update-created update-mounts update-network-settings)]
             [:networks ::docker-networks
-             #(update % :IPAM (comp first :Config))]])
+             #(update % :IPAM (comp first :Config))]
+            [:services ::docker-services
+             #(-> % update-service-id update-service-name update-service-version update-service-image update-service-namespace
+                  update-service-labels update-service-ports update-service-virtual-ips update-service-replicas update-service-status)]])
 
 (reg-sub
   ::kubernetes

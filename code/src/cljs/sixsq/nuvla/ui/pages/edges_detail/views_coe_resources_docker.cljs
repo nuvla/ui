@@ -3,7 +3,9 @@
             [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table]
             [sixsq.nuvla.ui.pages.edges-detail.views-coe-resources :as coe]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]))
+            [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 (def field-id {::table/field-key      :Id
                ::table/header-content "Id"
@@ -16,6 +18,9 @@
                         ::table/field-cell     table/CellTimeAgo})
 (def field-created-at {::table/field-key      :CreatedAt
                        ::table/header-content "Created"
+                       ::table/field-cell     table/CellTimeAgo})
+(def field-updated-at {::table/field-key      :UpdatedAt
+                       ::table/header-content "Updated"
                        ::table/field-cell     table/CellTimeAgo})
 (def field-labels {::table/field-key      :Labels
                    ::table/header-content "Labels"
@@ -147,9 +152,42 @@
                                                                   {::table/field-key      :Scope
                                                                    ::table/header-content "Scope"}])
                                   ::coe/!default-columns (r/atom [:Id :Name :Created :Driver :Scope :Attachable :Internal :Ingress :EnableIPv6 :IPAM])
-                                  ::coe/resource-type    "network"}]
+                                  ::coe/resource-type    "network"}
+               !services         (subscribe [::subs/docker-services])
+               docker-services   {::coe/!data            !services
+                                  ::coe/!columns         (r/atom [field-id
+                                                                  field-name
+                                                                  {::table/field-key      :Version
+                                                                   ::table/header-content "Version"}
+                                                                  field-created-at
+                                                                  field-updated-at
+                                                                  {::table/field-key      :Image
+                                                                   ::table/header-content "Image"
+                                                                   ::table/field-cell     (table/CellOverflowTooltipAs :div.max-width-12ch.ellipsing)}
+                                                                  {::table/field-key      :Namespace
+                                                                   ::table/header-content "Namespace"
+                                                                   ::table/field-cell     (table/CellOverflowTooltipAs :div.max-width-12ch.ellipsing)}
+                                                                  field-labels
+                                                                  {::table/field-key      :Ports
+                                                                   ::table/header-content "Ports"
+                                                                   ::table/no-sort?       true
+                                                                   ::table/field-cell     coe/CellLabelGroup}
+                                                                  {::table/field-key      :VirtualIPs
+                                                                   ::table/header-content "Virtual IPs"
+                                                                   ::table/no-sort?       true
+                                                                   ::table/field-cell     coe/CellLabelGroup}
+                                                                  {::table/field-key      :Replicas
+                                                                   ::table/header-content "Replicas"}
+                                                                  {::table/field-key      :RunningTasks
+                                                                   ::table/header-content "Running Tasks"}
+                                                                  {::table/field-key      :CompletedTasks
+                                                                   ::table/header-content "Completed Tasks"}])
+                                  ::coe/!default-columns (r/atom [:Id :Name :CreatedAt :UpdatedAt :Image :Ports])
+                                  ::coe/resource-type    "service"}]
     [coe/Tab
      [["Containers" ::docker-containers docker-containers]
       ["Images" ::docker-images docker-images]
       ["Volumes" ::docker-volumes docker-volumes]
-      ["Networks" ::docker-networks docker-networks]]]))
+      ["Networks" ::docker-networks docker-networks]
+      (when (seq @!services)
+        ["Services" ::docker-services docker-services])]]))

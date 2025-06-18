@@ -31,9 +31,17 @@
 (def field-driver {::table/field-key      :Driver
                    ::table/header-content "Driver"})
 
-(defmethod coe/pull-image-available? ::docker-images [_k]
+(defmethod coe/delete-available? ::docker-containers [_k]
+  true)
+(defmethod coe/delete-available? ::docker-images [_k]
+  true)
+(defmethod coe/delete-available? ::docker-volumes [_k]
+  true)
+(defmethod coe/delete-available? ::docker-networks [_k]
   true)
 
+(defmethod coe/pull-image-available? ::docker-images [_k]
+  true)
 
 (defn Tab []
   (r/with-let [docker-images     {::coe/!data            (subscribe [::subs/docker-images])

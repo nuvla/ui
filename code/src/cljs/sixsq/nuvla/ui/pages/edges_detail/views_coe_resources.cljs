@@ -252,6 +252,11 @@
                        :content  "Pull image"
                        :on-click #(pull-action-fn @!image-spec)}]]]))))
 
+(defmulti delete-available? identity)
+
+(defmethod delete-available? :default [_k]
+  false)
+
 (defmulti pull-image-available? identity)
 
 (defmethod pull-image-available? :default [_k]
@@ -261,7 +266,9 @@
   [{:keys [::!can-action?] :as control} k]
   [ui/Menu
    (when @!can-action?
-     [:<> [DeleteMenuItem control k]
+     [:<>
+      (when (delete-available? k)
+        [DeleteMenuItem control k])
       (when (pull-image-available? k)
         [PullImageModal control])])
    [ui/MenuMenu {:position "right"}
@@ -306,6 +313,7 @@
                                                        (fn [[_title k data]]
                                                          [k data])
                                                        title-k-data-list)))]
+    (prn :c @!can-actions?)
     [ui/Tab
      {:menu          {:style     {:display   :flex
                                   :flex-wrap :wrap}

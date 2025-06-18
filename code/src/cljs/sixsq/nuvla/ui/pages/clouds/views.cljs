@@ -70,7 +70,7 @@
                              (dispatch-sync [::events/reset-infra-service])
                              (dispatch-sync [::events/update-infra-service :parent id])
                              (dispatch [::events/open-add-service-modal]))}
-      [icons/InfoIconFull {:style {:cursor :pointer}}]
+      [icons/AddIconFull {:style {:cursor :pointer}}]
       ; use content to work around bug in icon in label for cursor
       ]
      [ui/CardContent

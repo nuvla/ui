@@ -238,7 +238,8 @@
                                                                   field-updated-at
                                                                   field-labels
                                                                   {::table/field-key      :Data
-                                                                   ::table/header-content "Data"}])
+                                                                   ::table/header-content "Data"
+                                                                   ::table/field-cell     coe/CellRawText}])
                                   ::coe/!default-columns (r/atom [:Id :Name :CreatedAt :UpdatedAt :Labels])
                                   ::coe/resource-type    "config"}
                !secrets          (subscribe [::subs/docker-secrets])

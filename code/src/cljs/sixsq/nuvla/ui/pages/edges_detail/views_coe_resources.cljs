@@ -93,6 +93,15 @@
     [uix/EditorJson {:value     (general-utils/edn->json cell-data)
                      :read-only true}]]])
 
+(defn CellRawText
+  [cell-data row _column]
+  [ui/Modal {:trigger    (r/as-element [:span [icons/ZoomInIcon {:style {:cursor :pointer}}]])
+             :close-icon true}
+   [ui/ModalHeader (or (:name row) (first (:names row)) (:uid row))]
+   [ui/ModalContent {:scrolling true}
+    [uix/EditorRawText {:value     cell-data
+                        :read-only true}]]])
+
 (defn CoeTable
   [{:keys [::!selected ::set-selected-fn ::!global-filter ::!pagination ::!can-action?] :as control} k]
   (let [{:keys [::!data ::!columns ::!default-columns ::row-id-fn]} (get control k)]

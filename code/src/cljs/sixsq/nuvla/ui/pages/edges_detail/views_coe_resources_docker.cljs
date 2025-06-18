@@ -3,9 +3,7 @@
             [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table]
             [sixsq.nuvla.ui.pages.edges-detail.views-coe-resources :as coe]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+            [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]))
 
 (def field-id {::table/field-key      :Id
                ::table/header-content "Id"
@@ -28,6 +26,8 @@
                    ::table/field-cell     coe/CellKeyValueLabelGroup})
 (def field-name {::table/field-key      :Name
                  ::table/header-content "Name"})
+(def field-version {::table/field-key      :Version
+                    ::table/header-content "Version"})
 (def field-driver {::table/field-key      :Driver
                    ::table/header-content "Driver"})
 
@@ -153,12 +153,35 @@
                                                                    ::table/header-content "Scope"}])
                                   ::coe/!default-columns (r/atom [:Id :Name :Created :Driver :Scope :Attachable :Internal :Ingress :EnableIPv6 :IPAM])
                                   ::coe/resource-type    "network"}
+               !nodes            (subscribe [::subs/docker-nodes])
+               docker-nodes      {::coe/!data            !nodes
+                                  ::coe/!columns         (r/atom [field-id
+                                                                  field-name
+                                                                  field-version
+                                                                  field-created-at
+                                                                  field-updated-at
+                                                                  field-labels
+                                                                  {::table/field-key      :Role
+                                                                   ::table/header-content "Role"}
+                                                                  {::table/field-key      :Availability
+                                                                   ::table/header-content "Availability"}
+                                                                  {::table/field-key      :Hostname
+                                                                   ::table/header-content "Hostname"}
+                                                                  {::table/field-key      :Platform
+                                                                   ::table/header-content "Platform"}
+                                                                  {::table/field-key      :EngineVersion
+                                                                   ::table/header-content "Engine Version"}
+                                                                  {::table/field-key      :Memory
+                                                                   ::table/header-content "Memory (Mb)"}
+                                                                  {::table/field-key      :CPUs
+                                                                   ::table/header-content "CPUs"}])
+                                  ::coe/!default-columns (r/atom [:Id :Name :CreatedAt :UpdatedAt :Role :Availability])
+                                  ::coe/resource-type    "node"}
                !services         (subscribe [::subs/docker-services])
                docker-services   {::coe/!data            !services
                                   ::coe/!columns         (r/atom [field-id
                                                                   field-name
-                                                                  {::table/field-key      :Version
-                                                                   ::table/header-content "Version"}
+                                                                  field-version
                                                                   field-created-at
                                                                   field-updated-at
                                                                   {::table/field-key      :Image
@@ -183,11 +206,63 @@
                                                                   {::table/field-key      :CompletedTasks
                                                                    ::table/header-content "Completed Tasks"}])
                                   ::coe/!default-columns (r/atom [:Id :Name :CreatedAt :UpdatedAt :Image :Ports])
-                                  ::coe/resource-type    "service"}]
+                                  ::coe/resource-type    "service"}
+               !tasks            (subscribe [::subs/docker-tasks])
+               docker-tasks      {::coe/!data            !tasks
+                                  ::coe/!columns         (r/atom [field-id
+                                                                  field-name
+                                                                  field-version
+                                                                  field-created-at
+                                                                  field-updated-at
+                                                                  field-labels
+                                                                  {::table/field-key      :State
+                                                                   ::table/header-content "State"}
+                                                                  {::table/field-key      :NodeID
+                                                                   ::table/header-content "Node"}
+                                                                  {::table/field-key      :ServiceID
+                                                                   ::table/header-content "Service"}
+                                                                  {::table/field-key      :Container
+                                                                   ::table/header-content "Container"}
+                                                                  {::table/field-key      :PID
+                                                                   ::table/header-content "PID"}
+                                                                  {::table/field-key      :ExitCode
+                                                                   ::table/header-content "Exit Code"}])
+                                  ::coe/!default-columns (r/atom [:Id :CreatedAt :UpdatedAt :State :Labels])
+                                  ::coe/resource-type    "task"}
+               !configs          (subscribe [::subs/docker-configs])
+               docker-configs    {::coe/!data            !configs
+                                  ::coe/!columns         (r/atom [field-id
+                                                                  field-name
+                                                                  field-version
+                                                                  field-created-at
+                                                                  field-updated-at
+                                                                  field-labels
+                                                                  {::table/field-key      :Data
+                                                                   ::table/header-content "Data"}])
+                                  ::coe/!default-columns (r/atom [:Id :Name :CreatedAt :UpdatedAt :Labels])
+                                  ::coe/resource-type    "config"}
+               !secrets          (subscribe [::subs/docker-secrets])
+               docker-secrets    {::coe/!data            !secrets
+                                  ::coe/!columns         (r/atom [field-id
+                                                                  field-name
+                                                                  field-version
+                                                                  field-created-at
+                                                                  field-updated-at
+                                                                  field-labels])
+                                  ::coe/!default-columns (r/atom [:Id :Name :CreatedAt :UpdatedAt :Labels])
+                                  ::coe/resource-type    "secret"}]
     [coe/Tab
      [["Containers" ::docker-containers docker-containers]
       ["Images" ::docker-images docker-images]
       ["Volumes" ::docker-volumes docker-volumes]
       ["Networks" ::docker-networks docker-networks]
+      (when (seq @!nodes)
+        ["Nodes" ::docker-nodes docker-nodes])
       (when (seq @!services)
-        ["Services" ::docker-services docker-services])]]))
+        ["Services" ::docker-services docker-services])
+      (when (seq @!tasks)
+        ["Tasks" ::docker-tasks docker-tasks])
+      (when (seq @!configs)
+        ["Configs" ::docker-configs docker-configs])
+      (when (seq @!secrets)
+        ["Secrets" ::docker-secrets docker-secrets])]]))

@@ -2,6 +2,13 @@
 
 ## Released
 
+## [2.47.2](https://github.com/nuvla/ui/compare/2.47.1...2.47.2) (2025-06-18)
+
+
+### Bug Fixes
+
+* **Clouds page:** Fix icon for adding infra service to an infra service group ([2505e18](https://github.com/nuvla/ui/commit/2505e183f66eac43fcfca881fca84f6e50396105))
+
 ## [2.47.1](https://github.com/nuvla/ui/compare/2.47.0...2.47.1) (2025-06-13)
 
 

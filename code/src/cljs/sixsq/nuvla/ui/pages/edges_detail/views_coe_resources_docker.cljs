@@ -30,6 +30,9 @@
                     ::table/header-content "Version"})
 (def field-driver {::table/field-key      :Driver
                    ::table/header-content "Driver"})
+(def field-in-use {::table/field-key      :InUse
+                   ::table/header-content "In use"
+                   ::table/field-cell     coe/CellBoolean})
 
 (defmethod coe/delete-available? ::docker-containers [_k]
   true)
@@ -44,7 +47,7 @@
   true)
 
 (defn Tab []
-  (r/with-let [docker-images     {::coe/!data            (subscribe [::subs/docker-images])
+  (r/with-let [docker-images     {::coe/!data            (subscribe [::subs/docker-images-with-usage-check])
                                   ::coe/!columns         (r/atom [field-id
                                                                   {::table/field-key      :ParentId
                                                                    ::table/header-content "Parent Id"
@@ -63,7 +66,8 @@
                                                                   {::table/field-key      :Repository
                                                                    ::table/header-content "Repository"}
                                                                   {::table/field-key      :Tag
-                                                                   ::table/header-content "Tag"}])
+                                                                   ::table/header-content "Tag"}
+                                                                  field-in-use])
                                   ::coe/!default-columns (r/atom [:Id :Size :Created :RepoTags])
                                   ::coe/resource-type    "image"}
                docker-containers {::coe/!data            (subscribe [::subs/docker-containers])
@@ -109,7 +113,7 @@
                                                                    ::table/field-cell     coe/CellLabelGroup}])
                                   ::coe/!default-columns (r/atom [:Id :Name :Image :Status :Created :Ports])
                                   ::coe/resource-type    "container"}
-               docker-volumes    {::coe/!data            (subscribe [::subs/docker-volumes])
+               docker-volumes    {::coe/!data            (subscribe [::subs/docker-volumes-with-usage-check])
                                   ::coe/!columns         (r/atom [{::table/field-key      :Name
                                                                    ::table/header-content "Name"
                                                                    ::table/field-cell     (table/CellOverflowTooltipAs :div.max-width-50ch.ellipsing)}
@@ -121,7 +125,8 @@
                                                                   field-created-at
                                                                   field-labels
                                                                   {::table/field-key      :Options
-                                                                   ::table/header-content "Options"}])
+                                                                   ::table/header-content "Options"}
+                                                                  field-in-use])
                                   ::coe/row-id-fn        :Name
                                   ::coe/!default-columns (r/atom [:Name :CreatedAt :Driver])
                                   ::coe/resource-type    "volume"}
@@ -179,6 +184,10 @@
                                                                    ::table/header-content "Platform"}
                                                                   {::table/field-key      :EngineVersion
                                                                    ::table/header-content "Engine Version"}
+                                                                  {::table/field-key      :EnginePlugins
+                                                                   ::table/header-content "Engine Plugins"
+                                                                   ::table/no-sort?       true
+                                                                   ::table/field-cell     coe/CellKeyValueLabelGroup}
                                                                   {::table/field-key      :Memory
                                                                    ::table/header-content "Memory (Mb)"}
                                                                   {::table/field-key      :CPUs
@@ -237,7 +246,7 @@
                                                                    ::table/header-content "Exit Code"}])
                                   ::coe/!default-columns (r/atom [:Id :CreatedAt :UpdatedAt :State :Labels])
                                   ::coe/resource-type    "task"}
-               !configs          (subscribe [::subs/docker-configs])
+               !configs          (subscribe [::subs/docker-configs-with-usage-check])
                docker-configs    {::coe/!data            !configs
                                   ::coe/!columns         (r/atom [field-id
                                                                   field-name
@@ -247,17 +256,19 @@
                                                                   field-labels
                                                                   {::table/field-key      :Data
                                                                    ::table/header-content "Data"
-                                                                   ::table/field-cell     coe/CellRawText}])
+                                                                   ::table/field-cell     coe/CellRawText}
+                                                                  field-in-use])
                                   ::coe/!default-columns (r/atom [:Id :Name :CreatedAt :UpdatedAt :Labels])
                                   ::coe/resource-type    "config"}
-               !secrets          (subscribe [::subs/docker-secrets])
+               !secrets          (subscribe [::subs/docker-secrets-with-usage-check])
                docker-secrets    {::coe/!data            !secrets
                                   ::coe/!columns         (r/atom [field-id
                                                                   field-name
                                                                   field-version
                                                                   field-created-at
                                                                   field-updated-at
-                                                                  field-labels])
+                                                                  field-labels
+                                                                  field-in-use])
                                   ::coe/!default-columns (r/atom [:Id :Name :CreatedAt :UpdatedAt :Labels])
                                   ::coe/resource-type    "secret"}]
     [coe/Tab

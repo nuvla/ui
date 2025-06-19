@@ -60,7 +60,7 @@
                                 (:Name %)
                                 (:Source %))
                               ":" (:Destination %) ":" (if (:RW %) "rw" "ro")) Mounts)]
-    (assoc doc :Mounts new-Mounts)))
+    (assoc doc :RawMounts Mounts :Mounts new-Mounts)))
 
 (defn update-network-settings
   [doc]
@@ -101,6 +101,10 @@
 (defn update-node-engine-version
   [{{:keys [Engine]} :Description :as doc}]
   (assoc doc :EngineVersion (:EngineVersion Engine)))
+
+(defn update-node-engine-plugins
+  [{{:keys [Engine]} :Description :as doc}]
+  (assoc doc :EnginePlugins (reduce (fn [m {:keys [Name Type]}] (assoc m Name Type)) {} (:Plugins Engine))))
 
 (defn update-node-memory
   [{{:keys [Resources]} :Description :as doc}]
@@ -187,7 +191,7 @@
             [:nodes ::docker-nodes
              #(-> % update-coe-resource-id update-coe-resource-name update-coe-resource-version update-coe-resource-labels
                   update-node-role update-node-availability update-node-hostname update-node-platform
-                  update-node-memory update-node-cpus update-node-engine-version)]
+                  update-node-memory update-node-cpus update-node-engine-version update-node-engine-plugins)]
             [:services ::docker-services
              #(-> % update-coe-resource-id update-coe-resource-name update-coe-resource-version update-coe-resource-labels
                   update-service-image update-service-namespace update-service-ports update-service-virtual-ips
@@ -200,6 +204,56 @@
                   update-config-data)]
             [:secrets ::docker-secrets
              #(-> % update-coe-resource-id update-coe-resource-name update-coe-resource-version update-coe-resource-labels)]])
+
+(defn containers-using-image
+  [image containers]
+  (filter #(= (-> image :raw :Id) (:ImageID %)) containers))
+
+(reg-sub
+  ::docker-images-with-usage-check
+  :<- [::docker-images]
+  :<- [::docker-containers]
+  (fn [[images containers]]
+    (mapv #(assoc % :InUse (not (empty? (containers-using-image % containers)))) images)))
+
+(defn containers-using-volume
+  [volume containers]
+  (filter (fn [{:keys [RawMounts]}]
+            (some #(and (= "volume" (:Type %)) (= (:Name volume) (:Name %)))
+                  RawMounts)) containers))
+
+(reg-sub
+  ::docker-volumes-with-usage-check
+  :<- [::docker-volumes]
+  :<- [::docker-containers]
+  (fn [[volumes containers]]
+    (mapv #(assoc % :InUse (not (empty? (containers-using-volume % containers)))) volumes)))
+
+(defn tasks-using-config
+  [config tasks]
+  (filter (fn [{:keys [Spec]}]
+            (some #(= (:ID config) (:ConfigID %))
+                  (-> Spec :ContainerSpec :Configs))) tasks))
+
+(reg-sub
+  ::docker-configs-with-usage-check
+  :<- [::docker-configs]
+  :<- [::docker-tasks]
+  (fn [[configs tasks]]
+    (mapv #(assoc % :InUse (not (empty? (tasks-using-config % tasks)))) configs)))
+
+(defn tasks-using-secret
+  [secret tasks]
+  (filter (fn [{:keys [Spec]}]
+            (some #(= (:ID secret) (:SecretID %))
+                  (-> Spec :ContainerSpec :Secrets))) tasks))
+
+(reg-sub
+  ::docker-secrets-with-usage-check
+  :<- [::docker-secrets]
+  :<- [::docker-tasks]
+  (fn [[secrets tasks]]
+    (mapv #(assoc % :InUse (not (empty? (tasks-using-secret % tasks)))) secrets)))
 
 (reg-sub
   ::kubernetes

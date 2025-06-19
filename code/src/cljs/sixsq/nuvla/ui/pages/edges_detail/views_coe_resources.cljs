@@ -313,7 +313,6 @@
                                                        (fn [[_title k data]]
                                                          [k data])
                                                        title-k-data-list)))]
-    (prn :c @!can-actions?)
     [ui/Tab
      {:menu          {:style     {:display   :flex
                                   :flex-wrap :wrap}

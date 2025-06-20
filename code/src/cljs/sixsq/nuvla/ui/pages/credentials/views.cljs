@@ -7,16 +7,19 @@
             [sixsq.nuvla.ui.common-components.acl.views :as acl]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.pages.credentials.events :as events]
             [sixsq.nuvla.ui.pages.credentials.spec :as spec]
             [sixsq.nuvla.ui.pages.credentials.subs :as subs]
             [sixsq.nuvla.ui.pages.credentials.utils :as utils]
             [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table-refactor :refer [TableController]]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.validation :as utils-validation]))
@@ -252,7 +255,7 @@
             :type :password, :on-change (partial on-change :password)]
            [row-infrastructure-services-selector (if (= "infrastructure-service-helm-repo" subtype)
                                                    ["helm-repo"]
-                                                   ["registry"])  nil editable? ::spec/parent
+                                                   ["registry"]) nil editable? ::spec/parent
             (partial on-change :parent)]]]]))))
 
 
@@ -716,7 +719,7 @@
         :icon     icons/i-plus-large
         :on-click #(dispatch [::events/open-add-credential-modal])}]
       [components/RefreshMenu
-       {:on-refresh #(dispatch [::events/get-credentials])}]]]))
+       {:on-refresh #(dispatch [::events/refresh])}]]]))
 
 
 (defn DeleteButton
@@ -734,8 +737,6 @@
       :header      (@tr [:delete-credential])
       :danger-msg  (@tr [:credential-delete-warning])
       :button-text (@tr [:delete])}]))
-
-(def color-silver "silver")
 
 (defn SingleCredential
   [{:keys [subtype name description id] :as credential}]
@@ -766,6 +767,12 @@
                        :style    {:cursor :pointer}
                        :on-click #(dispatch [::events/open-credential-modal credential false])}])]])
 
+(defn Pagination
+  []
+  (let [credentials @(subscribe [::subs/credentials2])]
+    [pagination-plugin/Pagination {:db-path      [::spec/pagination]
+                                   :total-items  (get credentials :count 0)
+                                   :change-event [::events/refresh]}]))
 
 (defn CredentialsPane
   [section-sub-text credentials]
@@ -775,17 +782,51 @@
      (if (empty? credentials)
        [ui/Message
         (str/capitalize (str (@tr [:no-credentials]) "."))]
-       [:div [ui/Table {:style {:margin-top 10}}
-              [ui/TableHeader
-               [ui/TableRow
-                [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
-                [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
-                [ui/TableHeaderCell {:content (str/capitalize (@tr [:type]))}]
-                [ui/TableHeaderCell {:content (str/capitalize (@tr [:actions]))}]]]
-              [ui/TableBody
-               (for [credential credentials]
-                 ^{:key (:id credential)}
-                 [SingleCredential credential])]]])]))
+       [:div
+        (r/with-let [!resources  (subscribe [::subs/credentials2-resources])]
+          [:<>
+           [TableController {:!columns               (r/atom [{::table-refactor/field-key      :name
+                                                               ::table-refactor/header-content (str/capitalize (@tr [:name]))
+                                                               ::table-refactor/no-delete true
+                                                               ;::table-refactor/field-cell     CellName
+                                                               }
+                                                              {::table-refactor/field-key      :description
+                                                               ::table-refactor/header-content (str/capitalize (@tr [:description]))
+                                                               ::table-refactor/no-delete true
+                                                               ;::table-refactor/field-cell     CellDescription
+                                                               }
+                                                              {::table-refactor/field-key      :subtype
+                                                               ::table-refactor/header-content (str/capitalize (@tr [:type]))
+                                                               ;::table-refactor/field-cell     CellState
+                                                               }
+
+                                                              {::table-refactor/field-key      :actions
+                                                               ::table-refactor/header-content (str/capitalize (@tr [:actions]))
+                                                               ::table-refactor/no-delete true
+                                                               ;::table-refactor/field-cell     CellTags
+                                                               }])
+                             :!default-columns       (r/atom [:name :description :subtype :actions])
+                             :!current-columns       (subscribe [::subs/table-current-cols])
+                             :set-current-columns-fn #(dispatch [::events/set-table-current-cols %])
+                             :!data                  !resources
+                             ;:on-row-click           #(dispatch [::routing-events/navigate routes/deployment-groups-details
+                             ;                                    {:uuid (general-utils/id->uuid (:id %))}])
+                             :!enable-global-filter? (r/atom false)
+                             :!enable-sorting?       (r/atom true)}]
+           [Pagination]])
+        [ui/Table {:style {:margin-top 10}}
+         [ui/TableHeader
+          [ui/TableRow
+           [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
+           [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
+           [ui/TableHeaderCell {:content (str/capitalize (@tr [:type]))}]
+           [ui/TableHeaderCell {:content (str/capitalize (@tr [:actions]))}]]]
+         [ui/TableBody
+          (for [credential credentials]
+            ^{:key (:id credential)}
+            [SingleCredential credential])]]
+
+        ])]))
 
 
 (defn credential
@@ -816,8 +857,8 @@
                                        @credentials)
         api-key-creds          (filter #(in? api-key-subtypes (:subtype %))
                                        @credentials)
-        helm-creds              (filter #(in? helm-subtypes (:subtype %))
-                                        @credentials)]
+        helm-creds             (filter #(in? helm-subtypes (:subtype %))
+                                       @credentials)]
     [(credential coe-service-creds :coe-services :credential-coe-service-section-sub-text icons/i-docker)
      (credential access-key-creds :access-services :credential-ssh-keys-section-sub-text icons/i-key)
      (credential storage-service-creds :storage-services :credential-storage-service-section-sub-text icons/i-hard-drive)
@@ -828,7 +869,7 @@
 
 (defn TabsCredentials
   []
-  (dispatch [::events/get-credentials])
+  (dispatch [::events/refresh])
   (fn []
     [components/LoadingPage {}
      [tab-plugin/Tab

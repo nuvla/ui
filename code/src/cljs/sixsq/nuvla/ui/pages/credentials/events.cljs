@@ -4,9 +4,12 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.common-components.job.events :as job-events]
             [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
+            [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.pages.cimi-detail.events :as cimi-detail-events]
             [sixsq.nuvla.ui.pages.credentials.spec :as spec]
+            [sixsq.nuvla.ui.pages.credentials.subs :as subs]
             [sixsq.nuvla.ui.pages.credentials.utils :as utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
@@ -71,6 +74,36 @@
     {::cimi-api-fx/search [:credential
                            {:orderby "name:asc, id:asc"}
                            #(dispatch [::set-credentials (:resources %)])]}))
+
+(reg-event-db
+  ::set-credentials2
+  (fn [db [_ credentials]]
+    (assoc db ::spec/credentials2 credentials
+              ::main-spec/loading? false)))
+
+(reg-event-fx
+  ::get-credentials2
+  (fn [{db :db}]
+    (let [params (pagination-plugin/first-last-params
+                   db [::spec/pagination]
+                   {:orderby "created:desc"})]
+      {::cimi-api-fx/search [:credential params
+                             #(dispatch [::set-credentials2 %])]})))
+
+(main-events/reg-set-current-cols-event-fx
+  ::set-table-current-cols-main subs/credentials-table-col-configs-local-storage-key)
+
+(reg-event-fx
+  ::set-table-current-cols
+  (fn [_ [_ columns]]
+    {:fx [[:dispatch [::set-table-current-cols-main ::subs/credentials-columns-ordering columns]]]}))
+
+(reg-event-fx
+  ::refresh
+  (fn []
+    {:fx [[:dispatch [::get-credentials]]
+          [:dispatch [::get-credentials2]]]}))
+
 
 
 (reg-event-db

@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.pages.credentials.subs
-  (:require [re-frame.core :refer [reg-sub]]
+  (:require [re-frame.core :refer [reg-sub reg-event-fx]]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.pages.credentials.spec :as spec]))
 
 (reg-sub
@@ -32,6 +33,24 @@
   ::credentials
   (fn [db]
     (::spec/credentials db)))
+
+(reg-sub
+  ::credentials2
+  :-> ::spec/credentials2)
+
+(reg-sub
+  ::credentials2-resources
+  :<- [::credentials2]
+  (fn [credentials-response]
+    (vec (:resources credentials-response))))
+
+
+(def credentials-table-col-configs-local-storage-key "nuvla.ui.table.credentials.column-configs")
+
+(reg-sub
+  ::table-current-cols
+  :<- [::main-subs/current-cols credentials-table-col-configs-local-storage-key ::events-columns-ordering]
+  identity)
 
 (reg-sub
   ::credentials-summary

@@ -1,11 +1,14 @@
 (ns sixsq.nuvla.ui.pages.credentials.spec
   (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.utils.spec :as utils-spec]))
 
 
 (s/def ::credential any?)
 
 (s/def ::credentials any?)
+
+(s/def ::credentials2 any?)
 
 (s/def ::credentials-summary any?)
 
@@ -112,12 +115,15 @@
 
 (s/def ::tab any?)
 
+(s/def ::pagination any?)
+
 (def defaults {::add-credential-modal-visible?     false
                ::credential-modal-visible?         false
                ::generated-credential-modal        nil
                ::credentials                       []
                ::credentials-summary               []
                ::credential                        {}
+               ::credentials2                      {}
                ::active-input                      nil
                ::form-spec                         nil
                ::form-valid?                       true
@@ -126,4 +132,5 @@
                ::error-message                     nil
                ::state-selector                    nil
                ::infrastructure-services-available nil
-               ::credential-check-table            nil})
+               ::credential-check-table            nil
+               ::pagination                        (pagination-plugin/build-spec)})

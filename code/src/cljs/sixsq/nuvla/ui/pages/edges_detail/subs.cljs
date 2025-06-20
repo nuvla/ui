@@ -63,8 +63,10 @@
     (assoc doc :RawMounts Mounts :Mounts new-Mounts)))
 
 (defn update-network-settings
-  [doc]
-  (update doc :NetworkSettings (comp #(map name %) keys :Networks)))
+  [{:keys [NetworkSettings] :as doc}]
+  (assoc doc
+    :RawNetworkSettings NetworkSettings
+    :NetworkSettings (map name (keys (:Networks NetworkSettings)))))
 
 (defn update-coe-resource-id
   [doc]
@@ -145,7 +147,8 @@
 
 (defn update-config-data
   [{{:keys [Data]} :Spec :as doc}]
-  (let [decoded-data (b64/decodeString Data)]
+  ;; passing true to b64/decodeString to make sure Data is decoded as per rfc 4648
+  (let [decoded-data (b64/decodeString Data true)]
     (assoc doc :Data decoded-data)))
 
 (defn update-task-state
@@ -228,6 +231,21 @@
   :<- [::docker-containers]
   (fn [[volumes containers]]
     (mapv #(assoc % :InUse (not (empty? (containers-using-volume % containers)))) volumes)))
+
+(defn containers-using-network
+  [network containers]
+  (filter (fn [{:keys [RawNetworkSettings]}]
+            (some (fn [[_network-name {:keys [NetworkID]}]]
+                    (= (:Id network) NetworkID))
+                  (:Networks RawNetworkSettings)))
+          containers))
+
+(reg-sub
+  ::docker-networks-with-usage-check
+  :<- [::docker-networks]
+  :<- [::docker-containers]
+  (fn [[networks containers]]
+    (mapv #(assoc % :InUse (not (empty? (containers-using-network % containers)))) networks)))
 
 (defn tasks-using-config
   [config tasks]

@@ -5,42 +5,31 @@
 
 (reg-sub
   ::is-new?
-  ::spec/is-new?)
-
-;; Validation
-
-; Is the form valid?
+  :-> ::spec/is-new?)
 
 (reg-sub
   ::form-valid?
-  ::spec/form-valid?)
-
-; Should the form be validated?
+  :-> ::spec/form-valid?)
 
 (reg-sub
   ::validate-form?
-  ::spec/validate-form?)
+  :-> ::spec/validate-form?)
 
 (reg-sub
   ::active-input
-  ::spec/active-input)
+  :-> ::spec/active-input)
 
 (reg-sub
   ::credential
-  ::spec/credential)
+  :-> ::spec/credential)
 
 (reg-sub
   ::credentials
-  (fn [db]
-    (::spec/credentials db)))
+  :-> ::spec/credentials)
 
 (reg-sub
-  ::credentials2
-  :-> ::spec/credentials2)
-
-(reg-sub
-  ::credentials2-resources
-  :<- [::credentials2]
+  ::credentials-resources
+  :<- [::credentials]
   (fn [credentials-response]
     (vec (:resources credentials-response))))
 
@@ -54,30 +43,24 @@
 
 (reg-sub
   ::credentials-summary
-  (fn [db]
-    (::spec/credentials-summary db)))
+  :-> ::spec/credentials-summary)
 
 (reg-sub
   ::credential-password
-  (fn [db]
-    (::spec/credential-password db)))
+  :-> ::spec/credential-password)
 
 (reg-sub
   ::add-credential-modal-visible?
-  (fn [db]
-    (::spec/add-credential-modal-visible? db)))
+  :-> ::spec/add-credential-modal-visible?)
 
 (reg-sub
   ::infrastructure-services-available
-  (fn [db]
-    (::spec/infrastructure-services-available db)))
+  :-> ::spec/infrastructure-services-available)
 
 (reg-sub
   ::generated-credential-modal
-  (fn [db]
-    (::spec/generated-credential-modal db)))
+  :-> ::spec/generated-credential-modal)
 
 (reg-sub
   ::credential-modal-visible?
-  (fn [db]
-    (::spec/credential-modal-visible? db)))
+  :-> ::spec/credential-modal-visible?)

@@ -146,7 +146,7 @@
         deployments       (subscribe [::deployments-subs/deployments-summary-all])
         no-of-deployments (:count @deployments)
         credentials       (subscribe [::credentials-subs/credentials-summary])
-        no-of-creds       (:count @credentials)]
+        no-of-creds       (get-in @credentials [:aggregations :value_count:id :value])]
     [ui/StatisticGroup (merge {:widths 10 :size "tiny"
                                :style  {:margin     "0px auto 10px auto"
                                         :display    "flex"

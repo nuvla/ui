@@ -7,6 +7,7 @@
             [sixsq.nuvla.ui.common-components.acl.views :as acl]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.pages.credentials.events :as events]
             [sixsq.nuvla.ui.pages.credentials.spec :as spec]
@@ -17,16 +18,10 @@
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table-refactor :refer [TableController]]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.validation :as utils-validation]))
-
-
-(defn in?
-  "true if coll contains elm"
-  [coll elm]
-  (some #(= elm %) coll))
-
 
 (defn row-infrastructure-services-selector
   [subtypes additional-filter _editable? _value-spec _on-change]
@@ -43,7 +38,7 @@
             valid?    (s/valid? value-spec value)]
         [ui/TableRow
          [ui/TableCell {:collapsing true}
-          (utils-general/mandatory-name (if (= "infrastructure-service-helm-repo" subtype)
+          (utils-general/mandatory-name (if (= utils/subtype-infrastructure-service-helm-repo subtype)
                                           "Helm Repository"
                                           (@tr [:infrastructure])))]
          [ui/TableCell {:error (and validate? (not valid?))}
@@ -63,7 +58,6 @@
                                             @infra-services)}]
             [ui/Message {:content (str (str/capitalize (@tr [:no-infra-service-of-subtype]))
                                        " " subtypes ".")}])]]))))
-
 
 (defn credential-coe
   []
@@ -105,7 +99,6 @@
            [row-infrastructure-services-selector coe-subtypes nil editable? ::spec/parent
             (partial on-change :parent)]]]]))))
 
-
 (defn credential-ssh
   []
   (let [tr             (subscribe [::i18n-subs/tr])
@@ -146,7 +139,6 @@
             :required? false, :default-value private-key, :spec ::spec/private-key-optional,
             :validate-form? @validate-form?, :type :textarea, :on-change (partial on-change :private-key)]]]]))))
 
-
 (defn credential-gpg
   []
   (let [tr             (subscribe [::i18n-subs/tr])
@@ -180,7 +172,6 @@
             :required? false, :default-value private-key, :validate-form? @validate-form?,
             :spec ::spec/private-key-optional, :type :textarea,
             :on-change (partial on-change :private-key)]]]]))))
-
 
 (defn credential-object-store
   []
@@ -217,7 +208,6 @@
            [row-infrastructure-services-selector ["s3"] nil editable? ::spec/parent
             (partial on-change :parent)]]]]))))
 
-
 (defn credential-registry
   []
   (let [tr             (subscribe [::i18n-subs/tr])
@@ -250,11 +240,10 @@
            [uix/TableRowField "password", :editable? editable?, :required? true,
             :default-value password, :spec ::spec/password, :validate-form? @validate-form?,
             :type :password, :on-change (partial on-change :password)]
-           [row-infrastructure-services-selector (if (= "infrastructure-service-helm-repo" subtype)
+           [row-infrastructure-services-selector (if (= utils/subtype-infrastructure-service-helm-repo subtype)
                                                    ["helm-repo"]
-                                                   ["registry"])  nil editable? ::spec/parent
+                                                   ["registry"]) nil editable? ::spec/parent
             (partial on-change :parent)]]]]))))
-
 
 (defn credential-api-key
   []
@@ -282,7 +271,6 @@
            [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
             :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
             :on-change (partial on-change :description)]]]]))))
-
 
 (defn credential-vpn
   []
@@ -363,7 +351,6 @@
             [ui/Header (@tr [:credential-save])]
             [icons/TextFileIcon {:size :massive}]]]]]))))
 
-
 (defn MessageKeyGenerated
   [header-key]
   [uix/Msg
@@ -371,7 +358,6 @@
     :content [uix/TR :warning-secret-displayed-once]
     :icon    icons/i-circle-check
     :type    :success}])
-
 
 (defn ApiKeyGeneratedCredential
   []
@@ -383,7 +369,6 @@
                                      :value (:resource-id @generated-cred)}]
        [uix/CopyToClipboardDownload {:name  "Secret"
                                      :value (:secret-key @generated-cred)}]])))
-
 
 (defn SshGeneratedCredential
   []
@@ -401,7 +386,6 @@
                                        :download true
                                        :filename "ssh_private.key"}]]))))
 
-
 (defn save-callback
   [form-validation-spec]
   (dispatch-sync [::events/set-validate-form? true])
@@ -412,48 +396,30 @@
       (dispatch [::events/edit-credential]))))
 
 (def infrastructure-service-storage-validation-map
-  {"infrastructure-service-minio"
+  {utils/subtype-infrastructure-service-minio
    {:validation-spec ::spec/minio-credential
     :modal-content   credential-object-store}})
 
-
-(def infrastructure-service-storage-subtypes
-  (keys infrastructure-service-storage-validation-map))
-
-
 (def infrastructure-service-coe-validation-map
-  {"infrastructure-service-swarm"
+  {utils/subtype-infrastructure-service-swarm
    {:validation-spec ::spec/coe-credential
     :modal-content   credential-coe},
-   "infrastructure-service-kubernetes"
+   utils/subtype-infrastructure-service-kubernetes
    {:validation-spec ::spec/coe-credential
     :modal-content   credential-coe}})
 
-
-(def coe-subtypes
-  (keys infrastructure-service-coe-validation-map))
-
-
 (def infrastructure-service-registry-validation-map
-  {"infrastructure-service-registry"
+  {utils/subtype-infrastructure-service-registry
    {:validation-spec ::spec/registry-credential
     :modal-content   credential-registry}})
 
 (def infrastructure-service-helm-repository-validation-map
-  {"infrastructure-service-helm-repo"
+  {utils/subtype-infrastructure-service-helm-repo
    {:validation-spec ::spec/registry-credential
     :modal-content   credential-registry}})
 
-(def helm-subtypes
-  (keys infrastructure-service-helm-repository-validation-map))
-
-
-(def registry-service-subtypes
-  (keys infrastructure-service-registry-validation-map))
-
-
 (def api-key-validation-map
-  {"generate-api-key"
+  {utils/subtype-generate-api-key
    {:validation-spec ::spec/api-key-credential
     :modal-content   credential-api-key
     :modal-generated ApiKeyGeneratedCredential}
@@ -461,31 +427,21 @@
    {:validation-spec ::spec/api-key-credential
     :modal-content   credential-api-key}})
 
-
-(def api-key-subtypes
-  (keys api-key-validation-map))
-
-
 (def infrastructure-service-access-keys-validation-map
-  {"infrastructure-service-vpn"
+  {utils/subtype-infrastructure-service-vpn
    {:validation-spec ::spec/vpn-credential
     :modal-content   credential-vpn
     :modal-generated VpnGeneratedCredential}
-   "gpg-key"
+   utils/subtype-gpg-key
    {:validation-spec ::spec/gpg-credential
     :modal-content   credential-gpg}
-   "ssh-key"
+   utils/subtype-ssh-key
    {:validation-spec ::spec/ssh-credential
     :modal-content   credential-ssh}
-   "generate-ssh-key"
+   utils/subtype-generate-ssh-key
    {:validation-spec ::spec/ssh-credential
     :modal-content   credential-ssh
     :modal-generated SshGeneratedCredential}})
-
-
-(def access-keys-subtypes
-  (keys infrastructure-service-access-keys-validation-map))
-
 
 (def infrastructure-service-validation-map
   (merge infrastructure-service-storage-validation-map
@@ -494,23 +450,6 @@
          infrastructure-service-registry-validation-map
          api-key-validation-map
          infrastructure-service-helm-repository-validation-map))
-
-
-(defn subtype->info
-  [subtype]
-  (case subtype
-    "infrastructure-service-minio" {:tab-key :storage-services, :icon icons/i-hard-drive, :name "S3/Minio"}
-    "infrastructure-service-swarm" {:tab-key :coe-services, :icon icons/i-docker, :name "Docker Swarm"}
-    "infrastructure-service-kubernetes" {:tab-key :coe-services, :icon icons/i-docker, :name "Kubernetes"}
-    "infrastructure-service-registry" {:tab-key :registry-services, :icon icons/i-docker, :name "Docker Registry"}
-    "infrastructure-service-vpn" {:tab-key :access-services, :icon icons/i-key, :name "VPN"}
-    "gpg-key" {:tab-key :access-services, :icon icons/i-key, :name "GPG keys"}
-    "api-key" {:tab-key :api-keys, :icon icons/i-key, :name "API keys"}
-    "generate-api-key" {:tab-key :api-keys, :icon icons/i-key, :name "API keys"}
-    "ssh-key" {:tab-key :access-services, :icon icons/i-key, :name "SSH keys"}
-    "generate-ssh-key" {:tab-key :access-services, :icon icons/i-key, :name "SSH keys"}
-    {}))
-
 
 (defn CredentialModal
   []
@@ -521,9 +460,9 @@
         is-new?     (subscribe [::subs/is-new?])]
     (fn []
       (let [subtype         (:subtype @credential "")
-            tab-key         (:tab-key (subtype->info subtype))
-            icon            (:icon (subtype->info subtype))
-            name            (:name (subtype->info subtype))
+            tab-key         (:tab-key (utils/subtype->info subtype))
+            icon            (:icon (utils/subtype->info subtype))
+            name            (:name (utils/subtype->info subtype))
             header          (str (str/capitalize (str (if @is-new?
                                                         (@tr [:new])
                                                         (@tr [:update]))))
@@ -548,10 +487,10 @@
               :positive true
               :disabled (when-not @form-valid? true)
               :active   true
-              :on-click #(do (save-callback validation-spec)
-                             (dispatch [::tab-plugin/change-tab
-                                        {:db-path [::spec/tab] :tab-key tab-key}]))}]]])))))
-
+              :on-click #(do
+                           (save-callback validation-spec)
+                           (dispatch [::tab-plugin/change-tab
+                                      {:db-path [::spec/tab] :tab-key tab-key}]))}]]])))))
 
 (defn AddCredentialModal
   []
@@ -584,7 +523,7 @@
                                    ;; infrastructure-service-kubernetes doesn't work either. So, this is
                                    ;; a temporary default until COE IS is selected and submit button is
                                    ;; pressed.
-                                   {:subtype "infrastructure-service-swarm"} true]))}
+                                   {:subtype utils/subtype-infrastructure-service-swarm} true]))}
           [ui/CardContent {:text-align :center}
            [ui/Header "Swarm / Kubernetes"]
            [icons/DockerIcon {:size :massive}]
@@ -598,7 +537,7 @@
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
                           (dispatch [::events/open-credential-modal
-                                     {:subtype "infrastructure-service-vpn"} true]))})
+                                     {:subtype utils/subtype-infrastructure-service-vpn} true]))})
           [ui/CardContent {:text-align :center}
            [ui/Header "OpenVPN"]
            [ui/Image {:src   "/ui/images/openvpn.png"
@@ -614,7 +553,7 @@
                         (dispatch [::events/form-valid])
                         (dispatch [::events/close-add-credential-modal])
                         (dispatch [::events/open-credential-modal
-                                   {:subtype "infrastructure-service-registry"} true]))}
+                                   {:subtype utils/subtype-infrastructure-service-registry} true]))}
           [ui/CardContent {:text-align :center}
            [ui/Header "Docker registry"]
            [:div]
@@ -628,7 +567,7 @@
                         (dispatch [::events/form-valid])
                         (dispatch [::events/close-add-credential-modal])
                         (dispatch [::events/open-credential-modal
-                                   {:subtype "infrastructure-service-helm-repo"} true]))}
+                                   {:subtype utils/subtype-infrastructure-service-helm-repo} true]))}
           [ui/CardContent {:text-align :center}
            [ui/Header "Helm Repository"]
            [ui/Image {:src   "/ui/images/helm.svg"
@@ -640,7 +579,7 @@
                         (dispatch [::events/form-valid])
                         (dispatch [::events/close-add-credential-modal])
                         (dispatch [::events/open-credential-modal
-                                   {:subtype "infrastructure-service-minio"} true]))}
+                                   {:subtype utils/subtype-infrastructure-service-minio} true]))}
           [ui/CardContent {:text-align :center}
            [ui/Header "Object Store"]
            [:div]
@@ -653,7 +592,7 @@
                         (dispatch [::events/form-valid])
                         (dispatch [::events/close-add-credential-modal])
                         (dispatch [::events/open-credential-modal
-                                   {:subtype "generate-ssh-key"} true]))}
+                                   {:subtype utils/subtype-generate-ssh-key} true]))}
           [ui/CardContent {:text-align :center}
            [ui/Header "SSH Keypair"]
            [:div]
@@ -666,7 +605,7 @@
                         (dispatch [::events/form-valid])
                         (dispatch [::events/close-add-credential-modal])
                         (dispatch [::events/open-credential-modal
-                                   {:subtype "gpg-key"} true]))}
+                                   {:subtype utils/subtype-gpg-key} true]))}
           [ui/CardContent {:text-align :center}
            [ui/Header "GPG Keypair"]
            [:div]
@@ -679,13 +618,12 @@
                         (dispatch [::events/form-valid])
                         (dispatch [::events/close-add-credential-modal])
                         (dispatch [::events/open-credential-modal
-                                   {:subtype "generate-api-key"} true]))}
+                                   {:subtype utils/subtype-generate-api-key} true]))}
           [ui/CardContent {:text-align :center}
            [ui/Header "Api-Key"]
            [:div]
            [ui/Image {:src   "/ui/images/nuvla_logo_red_on_transparent_1000px.png"
                       :style {:max-width 120}}]]]]]])))
-
 
 (defn GeneratedCredentialModal
   []
@@ -706,7 +644,6 @@
           (when modal-content
             [modal-content])]]))))
 
-
 (defn MenuBar []
   (let [tr (subscribe [::i18n-subs/tr])]
     [components/StickyBar
@@ -716,8 +653,7 @@
         :icon     icons/i-plus-large
         :on-click #(dispatch [::events/open-add-credential-modal])}]
       [components/RefreshMenu
-       {:on-refresh #(dispatch [::events/get-credentials])}]]]))
-
+       {:on-refresh #(dispatch [::events/refresh])}]]]))
 
 (defn DeleteButton
   [credential]
@@ -735,111 +671,99 @@
       :danger-msg  (@tr [:credential-delete-warning])
       :button-text (@tr [:delete])}]))
 
-(def color-silver "silver")
+(defn Pagination
+  []
+  (let [credentials @(subscribe [::subs/credentials])]
+    [pagination-plugin/Pagination {:db-path      [::spec/pagination]
+                                   :total-items  (get credentials :count 0)
+                                   :change-event [::events/refresh]}]))
 
-(defn SingleCredential
-  [{:keys [subtype name description id] :as credential}]
-  [ui/TableRow
-   [ui/TableCell {:floated :left
-                  :width   4}
-    [uix/CopyToClipboard
-     {:content    [:span name]
-      :value      id
-      :popup-text "Copy credential ID"
-      :on-hover?  true}]]
-   [ui/TableCell {:floated :left
-                  :width   7}
-    [:span description]]
-   [ui/TableCell {:floated :left
-                  :width   4}
-    [:span subtype]]
-   [ui/TableCell {:floated :right
-                  :width   1
-                  :align   :right
-                  :style   {}}
+(defn CellAction
+  [_cell-data credential _column]
+  [:<>
+   (when (utils-general/can-delete? credential)
+     [DeleteButton credential])
 
-    (when (utils-general/can-delete? credential)
-      [DeleteButton credential])
-
-    (when (utils-general/can-edit? credential)
-      [icons/GearIcon {:color    :blue
-                       :style    {:cursor :pointer}
-                       :on-click #(dispatch [::events/open-credential-modal credential false])}])]])
-
+   (when (utils-general/can-edit? credential)
+     [icons/GearIcon {:color    :blue
+                      :style    {:cursor :pointer}
+                      :on-click #(dispatch [::events/open-credential-modal credential false])}])])
 
 (defn CredentialsPane
-  [section-sub-text credentials]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  [tab-key]
+  (let [tr                   @(subscribe [::i18n-subs/tr])
+        credentials          @(subscribe [::subs/credentials])
+        section-sub-text-key (utils/tab->section-sub-text tab-key)
+        !resources           (subscribe [::subs/credentials-resources])]
     [ui/TabPane
-     [:div (@tr [section-sub-text])]
+     [:div (when section-sub-text-key (tr [section-sub-text-key]))]
      (if (empty? credentials)
-       [ui/Message
-        (str/capitalize (str (@tr [:no-credentials]) "."))]
-       [:div [ui/Table {:style {:margin-top 10}}
-              [ui/TableHeader
-               [ui/TableRow
-                [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
-                [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
-                [ui/TableHeaderCell {:content (str/capitalize (@tr [:type]))}]
-                [ui/TableHeaderCell {:content (str/capitalize (@tr [:actions]))}]]]
-              [ui/TableBody
-               (for [credential credentials]
-                 ^{:key (:id credential)}
-                 [SingleCredential credential])]]])]))
+       [ui/Message (str/capitalize (str (tr [:no-credentials]) "."))]
+       [:div
+        [TableController {:!columns               (r/atom [{::table-refactor/field-key      :name
+                                                            ::table-refactor/header-content (str/capitalize (tr [:name]))
+                                                            ::table-refactor/no-delete      true}
+                                                           {::table-refactor/field-key      :description
+                                                            ::table-refactor/header-content (str/capitalize (tr [:description]))
+                                                            ::table-refactor/no-delete      true}
+                                                           {::table-refactor/field-key      :subtype
+                                                            ::table-refactor/header-content (str/capitalize (tr [:type]))}
+                                                           {::table-refactor/field-key      :actions
+                                                            ::table-refactor/header-content (str/capitalize (tr [:actions]))
+                                                            ::table-refactor/no-delete      true
+                                                            ::table-refactor/collapsing     true
+                                                            ::table-refactor/field-cell     CellAction}
+                                                           ])
+                          :!default-columns       (r/atom [:name :description :subtype :actions])
+                          :!current-columns       (subscribe [::subs/table-current-cols])
+                          :set-current-columns-fn #(dispatch [::events/set-table-current-cols %])
+                          :!data                  !resources
+                          :!enable-global-filter? (r/atom false)
+                          :!enable-sorting?       (r/atom false)}]
+        [Pagination]])]))
 
+(defn CredentialMenuItem
+  [tab-key]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        summary    (subscribe [::subs/credentials-summary])
+        cred-count (utils/get-cred-count @summary tab-key)]
+    [:span (@tr [tab-key])
+     (when (pos? cred-count)
+       [ui/Label {:circular true
+                  :size     "mini"
+                  :attached "top right"}
+        cred-count])]))
 
 (defn credential
-  [credentials section-name section-sub-text icon]
-  (let [tr               (subscribe [::i18n-subs/tr])
-        credential-count (count credentials)]
-    {:menuItem {:content (r/as-element [:span (@tr [section-name])
-                                        (when (pos? credential-count)
-                                          [ui/Label {:circular true
-                                                     :size     "mini"
-                                                     :attached "top right"}
-                                           credential-count])])
-                :key     section-name
-                :icon    icon}
-     :render   #(r/as-element [CredentialsPane section-sub-text credentials])}))
-
+  [tab-key]
+  {:menuItem {:content (r/as-element [CredentialMenuItem tab-key])
+              :key     tab-key
+              :icon    (:icon (utils/subtype->info tab-key))}
+   :render   #(r/as-element [CredentialsPane tab-key])})
 
 (defn panes
   []
-  (let [credentials            (subscribe [::subs/credentials])
-        coe-service-creds      (filter #(in? coe-subtypes (:subtype %))
-                                       @credentials)
-        access-key-creds       (filter #(in? access-keys-subtypes (:subtype %))
-                                       @credentials)
-        storage-service-creds  (filter #(in? infrastructure-service-storage-subtypes (:subtype %))
-                                       @credentials)
-        register-service-creds (filter #(in? registry-service-subtypes (:subtype %))
-                                       @credentials)
-        api-key-creds          (filter #(in? api-key-subtypes (:subtype %))
-                                       @credentials)
-        helm-creds              (filter #(in? helm-subtypes (:subtype %))
-                                        @credentials)]
-    [(credential coe-service-creds :coe-services :credential-coe-service-section-sub-text icons/i-docker)
-     (credential access-key-creds :access-services :credential-ssh-keys-section-sub-text icons/i-key)
-     (credential storage-service-creds :storage-services :credential-storage-service-section-sub-text icons/i-hard-drive)
-     (credential register-service-creds :registry-services :credential-registry-service-section-sub-text icons/i-docker)
-     (credential api-key-creds :api-keys :api-keys-section-sub-text icons/i-key)
-     (credential helm-creds :helm-repositories :helm-repo-section-sub-text icons/i-key)]))
-
+  [(credential :coe-services)
+   (credential :access-services)
+   (credential :storage-services)
+   (credential :registry-services)
+   (credential :api-keys)
+   (credential :helm-repositories)])
 
 (defn TabsCredentials
   []
-  (dispatch [::events/get-credentials])
+  (dispatch [::events/refresh])
   (fn []
     [components/LoadingPage {}
      [tab-plugin/Tab
-      {:db-path [::spec/tab]
-       :menu    {:secondary true
-                 :pointing  true
-                 :style     {:display        "flex"
-                             :flex-direction "row"
-                             :flex-wrap      "wrap"}}
-       :panes   (panes)}]]))
-
+      {:db-path      [::spec/tab]
+       :change-event [::pagination-plugin/change-page [::spec/pagination] 1]
+       :menu         {:secondary true
+                      :pointing  true
+                      :style     {:display        "flex"
+                                  :flex-direction "row"
+                                  :flex-wrap      "wrap"}}
+       :panes        (panes)}]]))
 
 (defn credentials-view
   [_path]

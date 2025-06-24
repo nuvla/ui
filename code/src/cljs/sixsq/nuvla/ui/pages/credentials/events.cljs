@@ -4,18 +4,17 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.common-components.job.events :as job-events]
             [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
+            [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
-            [sixsq.nuvla.ui.pages.cimi-detail.events :as cimi-detail-events]
             [sixsq.nuvla.ui.pages.credentials.spec :as spec]
+            [sixsq.nuvla.ui.pages.credentials.subs :as subs]
             [sixsq.nuvla.ui.pages.credentials.utils :as utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
-
-
 ; Perform form validation if validate-form? is true.
-
-
 (reg-event-db
   ::validate-credential-form
   (fn [db [_ form-spec]]
@@ -25,38 +24,26 @@
       (s/explain form-spec credential)
       (assoc db ::spec/form-valid? valid?))))
 
-
 (reg-event-db
   ::set-validate-form?
   (fn [db [_ validate-form?]]
     (assoc db ::spec/validate-form? validate-form?)))
 
-
 ; Set the spec to apply for form validation
-
 (reg-event-db
   ::set-form-spec
   (fn [db [_ form-spec]]
     (assoc db ::spec/form-spec form-spec)))
-
 
 (reg-event-db
   ::active-input
   (fn [db [_ input-name]]
     (assoc db ::spec/active-input input-name)))
 
-
 (reg-event-db
   ::form-valid
-  (fn [db [_]]
+  (fn [db]
     (assoc db ::spec/form-valid? true)))
-
-
-(reg-event-db
-  ::set-credential
-  (fn [db [_ credential]]
-    (assoc db ::spec/credential credential)))
-
 
 (reg-event-db
   ::set-credentials
@@ -64,39 +51,52 @@
     (assoc db ::spec/credentials credentials
               ::main-spec/loading? false)))
 
-
 (reg-event-fx
   ::get-credentials
-  (fn [_ _]
-    {::cimi-api-fx/search [:credential
-                           {:orderby "name:asc, id:asc"}
-                           #(dispatch [::set-credentials (:resources %)])]}))
+  (fn [{db :db}]
+    (let [tab-subtypes    (-> db (tab-plugin/get-active-tab [::spec/tab]) utils/tab->subtypes)
+          filter-subtypes (general-utils/filter-eq-subtypes tab-subtypes)
+          params          (pagination-plugin/first-last-params
+                            db [::spec/pagination]
+                            {:orderby "name:asc, id:asc"
+                             :filter  filter-subtypes})]
+      {:db                  (assoc db ::spec/credentials {})
+       ::cimi-api-fx/search [:credential params
+                             #(dispatch [::set-credentials %])]})))
 
+(main-events/reg-set-current-cols-event-fx
+  ::set-table-current-cols-main subs/credentials-table-col-configs-local-storage-key)
+
+(reg-event-fx
+  ::set-table-current-cols
+  (fn [_ [_ columns]]
+    {:fx [[:dispatch [::set-table-current-cols-main ::subs/credentials-columns-ordering columns]]]}))
+
+(reg-event-fx
+  ::refresh
+  (fn []
+    {:fx [[:dispatch [::get-credentials]]
+          [:dispatch [::get-credentials-summary]]]}))
 
 (reg-event-db
   ::set-credentials-summary
   (fn [db [_ credentials]]
     (assoc db ::spec/credentials-summary credentials)))
 
-
 "FIXME: aggregation is limited to 10 terms. In this case, there are more than 10 terms for
   credentials. Filter first and aggregate second, and do this twice?"
 (reg-event-fx
   ::get-credentials-summary
-  (fn [_ _]
+  (fn []
     {::cimi-api-fx/search [:credential
-                           {:orderby     "name:asc, id:asc"
-                            :aggregation "terms:subtype"
-                            :first       0
+                           {:aggregation "terms:subtype,value_count:id"
                             :last        0}
                            #(dispatch [::set-credentials-summary %])]}))
-
 
 (reg-event-db
   ::set-generated-credential-modal
   (fn [db [_ credential]]
     (assoc db ::spec/generated-credential-modal credential)))
-
 
 (reg-event-fx
   ::edit-credential
@@ -105,9 +105,8 @@
       (if (nil? id)
         (let [new-credential (utils/db->new-credential db)]
           {::cimi-api-fx/add [:credential new-credential
-                              #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
-                                   (dispatch [::close-credential-modal])
-                                   (dispatch [::get-credentials])
+                              #(do (dispatch [::close-credential-modal])
+                                   (dispatch [::refresh])
                                    (if (utils/show-generated-cred-modal? new-credential)
                                      (dispatch [::set-generated-credential-modal %])
                                      (let [{:keys [status message resource-id]} (response/parse %)]
@@ -115,8 +114,7 @@
                                                   {:header  (cond-> (str "added " resource-id)
                                                                     status (str " (" status ")"))
                                                    :content message
-                                                   :type    :success}])))
-                                   )]})
+                                                   :type    :success}]))))]})
         {::cimi-api-fx/edit [id credential
                              #(if (instance? js/Error %)
                                 (let [{:keys [status message]} (response/parse-ex-info %)]
@@ -125,29 +123,24 @@
                                                                status (str " (" status ")"))
                                               :content message
                                               :type    :error}]))
-                                (do (dispatch [::cimi-detail-events/get (:id %)])
-                                    (dispatch [::close-credential-modal])
-                                    (dispatch [::get-credentials])))]}))))
-
+                                (do (dispatch [::close-credential-modal])
+                                    (dispatch [::refresh])))]}))))
 
 (reg-event-fx
   ::delete-credential
   (fn [{:keys [db]} [_ id]]
     {:db                  db
-     ::cimi-api-fx/delete [id #(dispatch [::get-credentials])]}))
-
+     ::cimi-api-fx/delete [id #(dispatch [::refresh])]}))
 
 (reg-event-db
   ::open-add-credential-modal
-  (fn [db _]
+  (fn [db]
     (assoc db ::spec/add-credential-modal-visible? true)))
-
 
 (reg-event-db
   ::close-add-credential-modal
-  (fn [db _]
+  (fn [db]
     (assoc db ::spec/add-credential-modal-visible? false)))
-
 
 (reg-event-db
   ::open-credential-modal
@@ -157,18 +150,15 @@
         (assoc ::spec/credential-modal-visible? true)
         (assoc ::spec/is-new? is-new?))))
 
-
 (reg-event-db
   ::close-credential-modal
   (fn [db _]
     (assoc db ::spec/credential-modal-visible? false)))
 
-
 (reg-event-db
   ::update-credential
   (fn [db [_ key value]]
     (assoc-in db [::spec/credential key] value)))
-
 
 (reg-event-fx
   ::set-infrastructure-services-available
@@ -178,7 +168,6 @@
               (= (:count response) 1) (assoc :dispatch
                                              [::update-credential :parent
                                               (-> infrastructure-services first :id)])))))
-
 
 (reg-event-fx
   ::fetch-infrastructure-services-available
@@ -191,7 +180,6 @@
                             :last   10000}
                            #(dispatch [::set-infrastructure-services-available %])]}))
 
-
 (reg-event-db
   ::set-credential-after-check
   (fn [{:keys [::spec/credential-check-table] :as db}
@@ -202,7 +190,6 @@
                 :status status
                 :check-in-progress? false))))
 
-
 (reg-event-fx
   ::check-credential-complete
   (fn [{db :db} [_ {:keys [target-resource status-message return-code] :as _job}]]
@@ -211,7 +198,6 @@
         {::cimi-api-fx/get [id #(dispatch [::set-credential-after-check %])]}
         (not= return-code 0) (assoc :db (assoc-in db [::spec/credential-check-table id :error-msg]
                                                   status-message))))))
-
 
 (reg-event-fx
   ::check-credential

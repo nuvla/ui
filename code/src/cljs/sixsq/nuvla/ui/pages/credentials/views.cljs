@@ -671,35 +671,6 @@
       :danger-msg  (@tr [:credential-delete-warning])
       :button-text (@tr [:delete])}]))
 
-(defn SingleCredential
-  [{:keys [subtype name description id] :as credential}]
-  [ui/TableRow
-   [ui/TableCell {:floated :left
-                  :width   4}
-    [uix/CopyToClipboard
-     {:content    [:span name]
-      :value      id
-      :popup-text "Copy credential ID"
-      :on-hover?  true}]]
-   [ui/TableCell {:floated :left
-                  :width   7}
-    [:span description]]
-   [ui/TableCell {:floated :left
-                  :width   4}
-    [:span subtype]]
-   [ui/TableCell {:floated :right
-                  :width   1
-                  :align   :right
-                  :style   {}}
-
-    (when (utils-general/can-delete? credential)
-      [DeleteButton credential])
-
-    (when (utils-general/can-edit? credential)
-      [icons/GearIcon {:color    :blue
-                       :style    {:cursor :pointer}
-                       :on-click #(dispatch [::events/open-credential-modal credential false])}])]])
-
 (defn Pagination
   []
   (let [credentials @(subscribe [::subs/credentials])]
@@ -722,40 +693,34 @@
   [tab-key]
   (let [tr                   @(subscribe [::i18n-subs/tr])
         credentials          @(subscribe [::subs/credentials])
-        section-sub-text-key (utils/tab->section-sub-text tab-key)]
+        section-sub-text-key (utils/tab->section-sub-text tab-key)
+        !resources           (subscribe [::subs/credentials-resources])]
     [ui/TabPane
      [:div (when section-sub-text-key (tr [section-sub-text-key]))]
      (if (empty? credentials)
-       [ui/Message
-        (str/capitalize (str (tr [:no-credentials]) "."))]
+       [ui/Message (str/capitalize (str (tr [:no-credentials]) "."))]
        [:div
-        (r/with-let [!resources (subscribe [::subs/credentials-resources])]
-          [:<>
-           ;; sorting client side todo make it server side
-           ;; action column
-           ;; add tags column maybe
-           ;; subtypes var and tabkey var
-           [TableController {:!columns               (r/atom [{::table-refactor/field-key      :name
-                                                               ::table-refactor/header-content (str/capitalize (tr [:name]))
-                                                               ::table-refactor/no-delete      true}
-                                                              {::table-refactor/field-key      :description
-                                                               ::table-refactor/header-content (str/capitalize (tr [:description]))
-                                                               ::table-refactor/no-delete      true}
-                                                              {::table-refactor/field-key      :subtype
-                                                               ::table-refactor/header-content (str/capitalize (tr [:type]))}
-                                                              {::table-refactor/field-key      :actions
-                                                               ::table-refactor/header-content (str/capitalize (tr [:actions]))
-                                                               ::table-refactor/no-delete      true
-                                                               ::table-refactor/collapsing     true
-                                                               ::table-refactor/field-cell     CellAction}
-                                                              ])
-                             :!default-columns       (r/atom [:name :description :subtype :actions])
-                             :!current-columns       (subscribe [::subs/table-current-cols])
-                             :set-current-columns-fn #(dispatch [::events/set-table-current-cols %])
-                             :!data                  !resources
-                             :!enable-global-filter? (r/atom false)
-                             :!enable-sorting?       (r/atom false)}]
-           [Pagination]])])]))
+        [TableController {:!columns               (r/atom [{::table-refactor/field-key      :name
+                                                            ::table-refactor/header-content (str/capitalize (tr [:name]))
+                                                            ::table-refactor/no-delete      true}
+                                                           {::table-refactor/field-key      :description
+                                                            ::table-refactor/header-content (str/capitalize (tr [:description]))
+                                                            ::table-refactor/no-delete      true}
+                                                           {::table-refactor/field-key      :subtype
+                                                            ::table-refactor/header-content (str/capitalize (tr [:type]))}
+                                                           {::table-refactor/field-key      :actions
+                                                            ::table-refactor/header-content (str/capitalize (tr [:actions]))
+                                                            ::table-refactor/no-delete      true
+                                                            ::table-refactor/collapsing     true
+                                                            ::table-refactor/field-cell     CellAction}
+                                                           ])
+                          :!default-columns       (r/atom [:name :description :subtype :actions])
+                          :!current-columns       (subscribe [::subs/table-current-cols])
+                          :set-current-columns-fn #(dispatch [::events/set-table-current-cols %])
+                          :!data                  !resources
+                          :!enable-global-filter? (r/atom false)
+                          :!enable-sorting?       (r/atom false)}]
+        [Pagination]])]))
 
 (defn CredentialMenuItem
   [tab-key]

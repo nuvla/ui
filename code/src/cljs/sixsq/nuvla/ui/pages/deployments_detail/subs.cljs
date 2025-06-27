@@ -1,10 +1,12 @@
 (ns sixsq.nuvla.ui.pages.deployments-detail.subs
-  (:require [re-frame.core :refer [reg-sub]]
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.pages.deployments-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.deployments.utils :as deployments-utils]
-            [sixsq.nuvla.ui.utils.general :as general-utils]))
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (reg-sub
@@ -42,7 +44,6 @@
   :<- [::deployment-module]
   (fn [module]
     (:content module)))
-
 
 (reg-sub
   ::is-deployment-application?
@@ -164,6 +165,69 @@
   :<- [::current-module-content-id]
   (fn [[module-versions id]]
     (apps-utils/find-current-version module-versions id)))
+
+(reg-sub
+  ::coe-resources
+  :-> ::spec/coe-resources)
+
+(reg-sub
+  ::docker
+  :<- [::coe-resources]
+  (fn [coe-resources]
+    (-> coe-resources :docker)))
+
+(reg-sub
+  ::coe-resource-docker-available?
+  :<- [::docker]
+  (fn [docker]
+    (seq docker)))
+
+(defn update-created
+  [doc]
+  (update doc :Created #(some-> % time/parse-unix time/time->utc-str)))
+
+(defn update-ports
+  [{:keys [Ports] :as doc}]
+  (let [new-Ports (map #(when-let [public-port (:PublicPort %)]
+                          (str (:IP %) ":" public-port "->" (:PrivatePort %) "/" (:Type %))) Ports)]
+    (assoc doc :Ports (remove nil? new-Ports))))
+
+(defn update-mounts
+  [{:keys [Mounts] :as doc}]
+  (let [new-Mounts (map #(str (if (= (:Type %) "volume")
+                                (:Name %)
+                                (:Source %))
+                              ":" (:Destination %) ":" (if (:RW %) "rw" "ro")) Mounts)]
+    (assoc doc :Mounts new-Mounts)))
+
+(defn update-network-settings
+  [doc]
+  (update doc :NetworkSettings (comp #(map name %) keys :Networks)))
+
+(defn save-raw-data
+  [resource]
+  (assoc resource :raw resource))
+
+(defn reg-sub-fn-coe-resource
+  [coe-key sub-key-resource-key-list]
+  (doseq [[resource-key sub-key clean-fn] sub-key-resource-key-list]
+    (reg-sub
+      sub-key
+      :<- [coe-key]
+      :-> (comp #(mapv (comp (or clean-fn identity) save-raw-data) %) resource-key))))
+
+(reg-sub-fn-coe-resource
+  ::docker [[:images ::docker-images
+             (fn [image]
+               (-> image
+                   (update :Id str/replace #"^sha256:" "")
+                   update-created
+                   (dissoc :SharedSize :Containers)))]
+            [:volumes ::docker-volumes]
+            [:containers ::docker-containers
+             #(-> % update-ports update-created update-mounts update-network-settings)]
+            [:networks ::docker-networks
+             #(update % :IPAM (comp first :Config))]])
 
 (reg-sub
   ::not-found?

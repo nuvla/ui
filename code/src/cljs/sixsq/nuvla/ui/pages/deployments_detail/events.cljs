@@ -139,3 +139,14 @@
   (fn [db [_ e]]
     (let [{:keys [_status _message]} (response/parse-ex-info e)]
       (assoc db ::spec/not-found? (instance? js/Error e)))))
+
+(reg-event-db
+  ::set-coe-resources
+  (fn [db [_ coe-resources]]
+    (assoc db ::spec/coe-resources coe-resources)))
+
+(reg-event-fx
+  ::fetch-coe-resources
+  (fn [_ [_ href]]
+    (let [on-success #(dispatch [::set-coe-resources %])]
+      {::cimi-api-fx/operation [href "fetch-coe-resources" on-success]})))

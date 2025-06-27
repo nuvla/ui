@@ -10,6 +10,7 @@
 (s/def ::events any?)
 (s/def ::node-parameters any?)
 (s/def ::upcoming-invoice any?)
+(s/def ::coe-resources any?)
 (s/def ::not-found? boolean?)
 
 (def defaults
@@ -23,4 +24,5 @@
                                  :default-items-per-page 15
                                  :default-show-all-events? true)
    ::node-parameters           nil
-   ::deployment-log-controller nil})
+   ::deployment-log-controller nil
+   ::coe-resources             nil})

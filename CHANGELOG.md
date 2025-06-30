@@ -2,6 +2,19 @@
 
 ## Released
 
+## [2.48.0](https://github.com/nuvla/ui/compare/2.47.1...2.48.0) (2025-06-30)
+
+
+### Features
+
+* **Deplyment details page:** New docker tab for NE that support COE resources ([#1750](https://github.com/nuvla/ui/issues/1750)) ([4299642](https://github.com/nuvla/ui/commit/4299642cbe4af1e74d0831238d17b53e39326ff9))
+
+
+### Bug Fixes
+
+* **Clouds page:** Fix icon for adding infra service to an infra service group ([2505e18](https://github.com/nuvla/ui/commit/2505e183f66eac43fcfca881fca84f6e50396105))
+* **Credential page:** Pagination and table and bugfixes ([#1747](https://github.com/nuvla/ui/issues/1747)) ([7109d50](https://github.com/nuvla/ui/commit/7109d50511694a720f6d1e57231da6d2f385c39f))
+
 ## [2.47.1](https://github.com/nuvla/ui/compare/2.47.0...2.47.1) (2025-06-13)
 
 

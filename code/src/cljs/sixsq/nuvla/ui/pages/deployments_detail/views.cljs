@@ -35,18 +35,13 @@
 
 
 (def refresh-action-id :deployment-get-deployment)
-(def refresh-coe-resources-id :deployment-get-coe-resources)
 
 (defn refresh
   [resource-id]
   (dispatch [::main-events/action-interval-start
              {:id        refresh-action-id
               :frequency 10000
-              :event     [::events/get-deployment resource-id]}])
-  (dispatch [::main-events/action-interval-start
-             {:id        refresh-coe-resources-id
-              :frequency 10000
-              :event     [::events/fetch-coe-resources resource-id]}]))
+              :event     [::events/get-deployment resource-id]}]))
 
 
 (defn sum-replicas

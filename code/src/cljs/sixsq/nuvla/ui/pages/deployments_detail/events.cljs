@@ -66,7 +66,8 @@
                :fx               [[:dispatch [::get-deployment-parameters id]]
                                   [:dispatch [::audit-log-plugin/load-events
                                               [::spec/events] {:href id} true]]
-                                  [:dispatch [::job-events/get-jobs id]]]
+                                  [:dispatch [::job-events/get-jobs id]]
+                                  [:dispatch [::fetch-coe-resources id]]]
                ::cimi-api-fx/get [id #(dispatch [::set-deployment %])
                                   :on-error #(dispatch [::set-deployment nil])]}
               different-deployment? (assoc :db (merge db spec/defaults))))))

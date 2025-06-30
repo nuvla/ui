@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.pages.edges-detail.subs
   (:require [clojure.string :as str]
+            [goog.crypt.base64 :as b64]
             [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.pages.edges-detail.spec :as spec]
@@ -59,11 +60,112 @@
                                 (:Name %)
                                 (:Source %))
                               ":" (:Destination %) ":" (if (:RW %) "rw" "ro")) Mounts)]
-    (assoc doc :Mounts new-Mounts)))
+    (assoc doc :RawMounts Mounts :Mounts new-Mounts)))
 
 (defn update-network-settings
+  [{:keys [NetworkSettings] :as doc}]
+  (assoc doc
+    :RawNetworkSettings NetworkSettings
+    :NetworkSettings (map name (keys (:Networks NetworkSettings)))))
+
+(defn update-coe-resource-id
   [doc]
-  (update doc :NetworkSettings (comp #(map name %) keys :Networks)))
+  (assoc doc :Id (:ID doc)))
+
+(defn update-coe-resource-name
+  [doc]
+  (assoc doc :Name (-> doc :Spec :Name)))
+
+(defn update-coe-resource-version
+  [doc]
+  (assoc doc :Version (-> doc :Version :Index)))
+
+(defn update-coe-resource-labels
+  [{{:keys [Labels]} :Spec :as doc}]
+  (assoc doc :Labels Labels))
+
+(defn update-node-role
+  [{{:keys [Role]} :Spec :as doc}]
+  (assoc doc :Role Role))
+
+(defn update-node-availability
+  [{{:keys [Availability]} :Spec :as doc}]
+  (assoc doc :Availability Availability))
+
+(defn update-node-hostname
+  [{{:keys [Hostname]} :Description :as doc}]
+  (assoc doc :Hostname Hostname))
+
+(defn update-node-platform
+  [{{:keys [Platform]} :Description :as doc}]
+  (assoc doc :Platform (str (:Architecture Platform) " " (:OS Platform))))
+
+(defn update-node-engine-version
+  [{{:keys [Engine]} :Description :as doc}]
+  (assoc doc :EngineVersion (:EngineVersion Engine)))
+
+(defn update-node-engine-plugins
+  [{{:keys [Engine]} :Description :as doc}]
+  (assoc doc :EnginePlugins (reduce (fn [m {:keys [Name Type]}] (assoc m Name Type)) {} (:Plugins Engine))))
+
+(defn update-node-memory
+  [{{:keys [Resources]} :Description :as doc}]
+  (assoc doc :Memory (some-> (:MemoryBytes Resources) (/ 1000000) int)))
+
+(defn update-node-cpus
+  [{{:keys [Resources]} :Description :as doc}]
+  (assoc doc :CPUs (some-> (:NanoCPUs Resources) (/ 1000000000))))
+
+(defn update-service-status
+  [{:keys [ServiceStatus] :as doc}]
+  (assoc doc
+    :CompletedTasks (str (:CompletedTasks ServiceStatus) "/" (:DesiredTasks ServiceStatus))
+    :RunningTasks (str (:RunningTasks ServiceStatus) "/" (:DesiredTasks ServiceStatus))))
+
+(defn update-service-image
+  [doc]
+  (assoc doc :Image (-> doc :Spec :Labels :com.docker.stack.image)))
+
+(defn update-service-namespace
+  [doc]
+  (assoc doc :Namespace (-> doc :Spec :Labels :com.docker.stack.namespace)))
+
+(defn update-service-ports
+  [{{:keys [Ports]} :Endpoint :as doc}]
+  (let [new-Ports (map #(when-let [published-port (:PublishedPort %)]
+                          (str (:PublishMode %) " " published-port "->" (:TargetPort %) "/" (:Protocol %))) Ports)]
+    (assoc doc :Ports (remove nil? new-Ports))))
+
+(defn update-service-virtual-ips
+  [{{:keys [VirtualIPs]} :Endpoint :as doc}]
+  (let [new-VirtualIPs (map :Addr VirtualIPs)]
+    (assoc doc :VirtualIPs (remove nil? new-VirtualIPs))))
+
+(defn update-service-replicas
+  [{{:keys [Mode]} :Spec :as doc}]
+  (assoc doc :Replicas (-> Mode :Replicated :Replicas)))
+
+(defn update-config-data
+  [{{:keys [Data]} :Spec :as doc}]
+  ;; passing true to b64/decodeString to make sure Data is decoded as per rfc 4648
+  (let [decoded-data (b64/decodeString Data true)]
+    (assoc doc :Data decoded-data)))
+
+(defn update-task-state
+  [{{:keys [State]} :Status :as doc}]
+  (assoc doc :State State))
+
+(defn update-task-container
+  [{{:keys [ContainerStatus]} :Status :as doc}]
+  (assoc doc :Container (:ContainerID ContainerStatus)))
+
+(defn update-task-pid
+  [{{:keys [ContainerStatus]} :Status :as doc}]
+  (assoc doc :PID (:PID ContainerStatus)))
+
+(defn update-task-exit-code
+  [{{:keys [ContainerStatus]} :Status :as doc}]
+  (assoc doc :ExitCode (:ExitCode ContainerStatus)))
 
 (defn save-raw-data
   [resource]
@@ -88,7 +190,88 @@
             [:containers ::docker-containers
              #(-> % update-ports update-created update-mounts update-network-settings)]
             [:networks ::docker-networks
-             #(update % :IPAM (comp first :Config))]])
+             #(update % :IPAM (comp first :Config))]
+            [:nodes ::docker-nodes
+             #(-> % update-coe-resource-id update-coe-resource-name update-coe-resource-version update-coe-resource-labels
+                  update-node-role update-node-availability update-node-hostname update-node-platform
+                  update-node-memory update-node-cpus update-node-engine-version update-node-engine-plugins)]
+            [:services ::docker-services
+             #(-> % update-coe-resource-id update-coe-resource-name update-coe-resource-version update-coe-resource-labels
+                  update-service-image update-service-namespace update-service-ports update-service-virtual-ips
+                  update-service-replicas update-service-status)]
+            [:tasks ::docker-tasks
+             #(-> % update-coe-resource-id update-coe-resource-version update-task-state
+                  update-task-container update-task-pid update-task-exit-code)]
+            [:configs ::docker-configs
+             #(-> % update-coe-resource-id update-coe-resource-name update-coe-resource-version update-coe-resource-labels
+                  update-config-data)]
+            [:secrets ::docker-secrets
+             #(-> % update-coe-resource-id update-coe-resource-name update-coe-resource-version update-coe-resource-labels)]])
+
+(defn containers-using-image
+  [image containers]
+  (filter #(= (-> image :raw :Id) (:ImageID %)) containers))
+
+(reg-sub
+  ::docker-images-with-usage-check
+  :<- [::docker-images]
+  :<- [::docker-containers]
+  (fn [[images containers]]
+    (mapv #(assoc % :InUse (not (empty? (containers-using-image % containers)))) images)))
+
+(defn containers-using-volume
+  [volume containers]
+  (filter (fn [{:keys [RawMounts]}]
+            (some #(and (= "volume" (:Type %)) (= (:Name volume) (:Name %)))
+                  RawMounts)) containers))
+
+(reg-sub
+  ::docker-volumes-with-usage-check
+  :<- [::docker-volumes]
+  :<- [::docker-containers]
+  (fn [[volumes containers]]
+    (mapv #(assoc % :InUse (not (empty? (containers-using-volume % containers)))) volumes)))
+
+(defn containers-using-network
+  [network containers]
+  (filter (fn [{:keys [RawNetworkSettings]}]
+            (some (fn [[_network-name {:keys [NetworkID]}]]
+                    (= (:Id network) NetworkID))
+                  (:Networks RawNetworkSettings)))
+          containers))
+
+(reg-sub
+  ::docker-networks-with-usage-check
+  :<- [::docker-networks]
+  :<- [::docker-containers]
+  (fn [[networks containers]]
+    (mapv #(assoc % :InUse (not (empty? (containers-using-network % containers)))) networks)))
+
+(defn tasks-using-config
+  [config tasks]
+  (filter (fn [{:keys [Spec]}]
+            (some #(= (:ID config) (:ConfigID %))
+                  (-> Spec :ContainerSpec :Configs))) tasks))
+
+(reg-sub
+  ::docker-configs-with-usage-check
+  :<- [::docker-configs]
+  :<- [::docker-tasks]
+  (fn [[configs tasks]]
+    (mapv #(assoc % :InUse (not (empty? (tasks-using-config % tasks)))) configs)))
+
+(defn tasks-using-secret
+  [secret tasks]
+  (filter (fn [{:keys [Spec]}]
+            (some #(= (:ID secret) (:SecretID %))
+                  (-> Spec :ContainerSpec :Secrets))) tasks))
+
+(reg-sub
+  ::docker-secrets-with-usage-check
+  :<- [::docker-secrets]
+  :<- [::docker-tasks]
+  (fn [[secrets tasks]]
+    (mapv #(assoc % :InUse (not (empty? (tasks-using-secret % tasks)))) secrets)))
 
 (reg-sub
   ::kubernetes

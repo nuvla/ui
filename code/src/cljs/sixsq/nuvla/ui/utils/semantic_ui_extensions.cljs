@@ -268,6 +268,11 @@
           :position "top center"}
          [TR :click-to-copy]])]]]])
 
+(defn EditorRawText
+  [{:keys [value] :as props}]
+  [ui/CodeMirror
+   (assoc props :value (or value ""))])
+
 (defn EditorCode
   [{:keys [value] :as props}]
   [ui/CodeMirror

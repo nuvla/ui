@@ -29,13 +29,19 @@
                        :frequency 10000
                        :event     [::get-nuvlabox (str "nuvlabox/" uuid)]}]]]}))
 
+(defn retain-coe-resources
+  "Return provided nuvlabox-status but retain :coe-resources if already present."
+  [db nuvlabox-status]
+  (merge (select-keys (::spec/nuvlabox-status db) [:coe-resources])
+         nuvlabox-status))
+
 (reg-event-fx
   ::set-nuvlabox-status
   (fn [{{:keys [::spec/coe-resource-docker-available?
                 ::spec/coe-resource-k8s-available?] :as db} :db}
        [_ {:keys [vulnerabilities coe-resources] :as nuvlabox-status}]]
     {:db (assoc db
-           ::spec/nuvlabox-status nuvlabox-status
+           ::spec/nuvlabox-status (retain-coe-resources db nuvlabox-status)
            ::spec/nuvlabox-status-set-time (time/now)
            ::spec/coe-resource-docker-available? (or coe-resource-docker-available?
                                                      (some? (:docker coe-resources)))

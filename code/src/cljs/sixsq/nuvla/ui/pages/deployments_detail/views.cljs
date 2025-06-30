@@ -18,6 +18,7 @@
             [sixsq.nuvla.ui.pages.deployments-detail.events :as events]
             [sixsq.nuvla.ui.pages.deployments-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.deployments-detail.subs :as subs]
+            [sixsq.nuvla.ui.pages.deployments-detail.views-coe-resources-docker :as coe-resources-docker]
             [sixsq.nuvla.ui.pages.deployments.utils :as deployments-utils]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
@@ -34,7 +35,6 @@
 
 
 (def refresh-action-id :deployment-get-deployment)
-
 
 (defn refresh
   [resource-id]
@@ -105,7 +105,7 @@
 
 (defn url-to-button
   [{:keys [url-name url-pattern primary?]
-    :or {primary? false}}]
+    :or   {primary? false}}]
   (let [url (subscribe [::subs/url url-pattern])]
     (when @url
       [ui/Button {:color    (if primary? "green" nil)
@@ -223,6 +223,15 @@
   (let [module-content (subscribe [::subs/deployment-module-content])
         env-vars       (get @module-content :environmental-variables [])]
     (list-section env-vars :env-vars :env-variables)))
+
+(defn coe-resources-section
+  []
+  (let [coe-res-docker-available? @(subscribe [::subs/coe-resource-docker-available?])]
+    (when coe-res-docker-available?
+      {:menuItem {:content "Docker"
+                  :key     :docker
+                  :icon    icons/i-docker}
+       :render   #(r/as-element [coe-resources-docker/Tab])})))
 
 (defn logs-section
   []
@@ -646,6 +655,7 @@
           :filters {:href (:id @deployment)}}))
      (parameters-section)
      (env-vars-section)
+     (coe-resources-section)
      (job-views/jobs-section)
      (acl/TabAcls {:e          deployment
                    :can-edit?  (not @read-only?)

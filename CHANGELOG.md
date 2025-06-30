@@ -2,6 +2,13 @@
 
 ## Released
 
+## [2.49.0](https://github.com/nuvla/ui/compare/2.48.0...2.49.0) (2025-06-30)
+
+
+### Features
+
+* **edge-docker-resources-v2:** Edge docker resources - phase 2 ([#1745](https://github.com/nuvla/ui/issues/1745)) ([582cd92](https://github.com/nuvla/ui/commit/582cd92efbf7f677bf12f8daa5577b28e2f41acf))
+
 ## [2.48.0](https://github.com/nuvla/ui/compare/2.47.1...2.48.0) (2025-06-30)
 
 

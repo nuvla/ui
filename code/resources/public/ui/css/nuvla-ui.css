@@ -1253,3 +1253,7 @@ table.ui i.icon.sort.ascending,
 table.ui i.icon.sort.descending {
   opacity: 0.8;
 }
+
+.nuvla-group-item:hover {
+  background: rgba(0,0,0,0.05);
+}

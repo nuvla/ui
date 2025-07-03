@@ -5,6 +5,7 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.common-components.acl.views :as acl-views]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.pages.profile.events :as events]
             [sixsq.nuvla.ui.pages.profile.subs :as subs]
@@ -166,53 +167,60 @@
        ^{:key (random-uuid)}
        [GroupMembers @group]])))
 
+(def selected-group (r/atom nil))
+
 (defn Group
   []
   (let [collapsed (r/atom true)]
-    (fn [{:keys [id name description children] :as _group}]
-      [ui/ListItem {:on-click #(do (swap! collapsed not)
-                                   (.stopPropagation %))}
-       [ui/ListIcon {:name "group"}]
-       [ui/ListContent
-        [ui/ListHeader (or name id)]
-        (when description [ui/ListDescription description])
+    (fn [{:keys [id name children] :as _group}]
+      [ui/ListItem {:active true
+                    :on-click #(do
+                                 (reset! selected-group id)
+                                 (.stopPropagation %))
+                    :style    {:cursor :pointer}}
+       [ui/ListIcon {:style    (cond-> {:padding   5
+                                        :min-width "17px"}
+                                       (seq children) (assoc :cursor :pointer))
+                     :on-click #(do (swap! collapsed not)
+                                    (.stopPropagation %))
+                     :name     (if (seq children)
+                                 (if @collapsed "angle right" "angle down")
+                                 "")}]
+       [ui/ListContent {:className "nuvla-group-item"
+                        :style     (cond-> {:padding       5
+                                            :border-radius 5}
+                                           (= @selected-group id) (assoc :background-color "lightgray"))}
+        [ui/ListHeader (when (not= @selected-group id) {:style {:font-weight 400}})
+         (or name id)]
         (when (and (not @collapsed) (seq children))
           [ui/ListList
-           (for [child children]
+           (for [child (sort-by (juxt :id :name) children)]
              ^{:key (:id child)}
              [Group child])])]])))
 
 (defn GroupHierarchySegment
   []
   (let [groups-hierarchy @(subscribe [::session-subs/groups-hierarchies])]
-    [ui/Segment {:padded true
-                 :color  "purple"}
-     [ui/Header {:as :h2 :dividing true} "Group Hierarchy"]
-     [ui/ListSA {:celled true
-                 :style  {:cursor :pointer}}
-      (for [group-hierarchy groups-hierarchy]
+    [ui/Segment {:raised true :style {:min-height "100%"}}
+     [ui/Header {:as :h3} "Groups"]
+     [full-text-search-plugin/FullTextSearch
+      {:db-path      [::deployments-search]
+       :change-event [:a]
+       :style        {:width "100%"}}]
+     [ui/ListSA
+      (for [group-hierarchy (sort-by (juxt :id :name) groups-hierarchy)]
         ^{:key (:id group-hierarchy)}
         [Group group-hierarchy])]]))
 
 (defn GroupsViewPage
   []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        groups    (subscribe [::session-subs/groups])
-        is-group? (subscribe [::session-subs/is-group?])
-        is-admin? (subscribe [::session-subs/is-admin?])]
-    (fn []
-      (let [remove-groups #{"group/nuvla-nuvlabox" "group/nuvla-anon" "group/nuvla-user"
-                            (when-not @is-admin? "group/nuvla-admin")}
-            sorted-groups (->> @groups
-                               (remove (comp remove-groups :id))
-                               (sort-by :id))]
-        [:<>
-         (when @is-group?
-           [ui/GridColumn
-            [GroupMembersSegment]])
-         [GroupHierarchySegment]
-         [ui/Segment {:padded true, :color "blue"}
-          [ui/Header {:as :h2} (str/capitalize (@tr [:groups]))]
-          (for [group sorted-groups]
-            ^{:key (str "group-" group)}
-            [GroupMembers group])]]))))
+  [ui/Grid {:columns 2}
+   [ui/GridColumn {:width 4 :stretched true :style {:background-color "light-gray"
+                                                    :padding-right    0}}
+    [GroupHierarchySegment]]
+   [ui/GridColumn {:width 12 :stretched true :style {:background-color "light-gray"
+                                                     :padding-right    0}}
+    [ui/Segment {:style {:min-height "100%"}}
+     (if @selected-group
+       [GroupMembers @(subscribe [::session-subs/group @selected-group])]
+       [:i "Select a group"])]]])

@@ -24,6 +24,7 @@
             [sixsq.nuvla.ui.pages.edges.views :refer [DetailedViewPage edges-view]]
             [sixsq.nuvla.ui.pages.edges.views-cluster :as views-cluster]
             [sixsq.nuvla.ui.pages.profile.views :refer [profile]]
+            [sixsq.nuvla.ui.pages.groups.views :refer [GroupsViewPage]]
             [sixsq.nuvla.ui.pages.welcome.views :refer [home-view]]
             [sixsq.nuvla.ui.routing.events :as events]
             [sixsq.nuvla.ui.routing.routes :as routes]
@@ -218,7 +219,11 @@
     ["profile"
      {:name   ::routes/profile
       :layout #'LayoutPage
-      :view   #'profile}]]
+      :view   #'profile}]
+    ["groups"
+     {:name   ::routes/groups
+      :layout #'LayoutPage
+      :view   #'GroupsViewPage}]]
    ["/*"
     {:name   ::routes/catch-all
      :layout #'LayoutPage

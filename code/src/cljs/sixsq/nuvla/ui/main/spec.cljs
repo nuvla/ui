@@ -107,9 +107,13 @@
                                                           :label-kw   :infra-service-short
                                                           :icon       icons/i-cloud
                                                           :order      80}
+                                       "groups"          {:key        routes/groups
+                                                          :label-kw   :groups
+                                                          :icon       icons/i-users
+                                                          :order      90}
                                        "api"             {:key        routes/api
                                                           :label-kw   :api
                                                           :icon       icons/i-code
-                                                          :order      90}}
+                                                          :order      100}}
                ::open-modal           nil
                ::stripe               nil})

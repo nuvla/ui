@@ -193,32 +193,32 @@
   []
   (let [collapsed (r/atom true)]
     (fn [{:keys [id name children] :as _group}]
-      [ui/ListItem {:active   true
-                    :on-click #(do
-                                 (reset! selected-group id)
-                                 (.stopPropagation %))
-                    :style    {:cursor :pointer}}
-       [ui/ListIcon {:style    (cond-> {:padding   5
-                                        :min-width "17px"}
-                                       (seq children) (assoc :cursor :pointer))
-                     :on-click #(do (swap! collapsed not)
+      (let [selected? (= @selected-group id)
+            children? (boolean (seq children))]
+        [ui/ListItem {:on-click #(do
+                                   (reset! selected-group id)
+                                   (.stopPropagation %))}
+         [ui/ListIcon {:style    {:padding   5
+                                  :min-width "17px"}
+                       :on-click #(when children?
+                                    (swap! collapsed not)
                                     (.stopPropagation %))
-                     :name     (if (seq children)
-                                 (if @collapsed "angle right" "angle down")
-                                 "")}]
-       [ui/ListContent
-        [ui/ListHeader
-         {:className "nuvla-group-item"
-          :style     (cond-> {:padding       5
-                              :border-radius 5}
-                             (= @selected-group id) (assoc :background-color "lightgray")
-                             (not= @selected-group id) (assoc :font-weight 400))}
-         (or name id)]
-        (when (and (not @collapsed) (seq children))
-          [ui/ListList
-           (for [child (sort-by (juxt :id :name) children)]
-             ^{:key (:id child)}
-             [Group child])])]])))
+                       :name     (if (seq children)
+                                   (if @collapsed "angle right" "angle down")
+                                   "")}]
+         [ui/ListContent
+          [ui/ListHeader
+           {:className "nuvla-group-item"
+            :style     (cond-> {:padding       5
+                                :border-radius 5}
+                               selected? (assoc :background-color "lightgray")
+                               (not selected?) (assoc :font-weight 400))}
+           (or name id)]
+          (when (and (not @collapsed) (seq children))
+            [ui/ListList
+             (for [child (sort-by (juxt :id :name) children)]
+               ^{:key (:id child)}
+               [Group child])])]]))))
 
 (defn GroupHierarchySegment
   []
@@ -230,7 +230,7 @@
       {:db-path      [::deployments-search]
        :change-event [:a]
        :style        {:width "100%"}}]
-     [ui/ListSA
+     [ui/ListSA {:selection true}
       (for [group-hierarchy (sort-by (juxt :id :name) groups-hierarchy)]
         ^{:key (:id group-hierarchy)}
         [Group group-hierarchy])]]))

@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.pages.groups.views
   (:require ["@stripe/react-stripe-js" :as react-stripe]
+            [clojure.set :as set]
             [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
@@ -27,26 +28,56 @@
     (dispatch [::main-events/reset-changes-protection])))
 
 (defn GroupMember
-  [id group-name principal members editable?]
-  (let [tr             (subscribe [::i18n-subs/tr])
-        principal-name (subscribe [::session-subs/resolve-principal principal])]
+  [id group-name principal members editable? {:keys [owners manage view-data view-acl] :as acl}]
+  (let [tr                (subscribe [::i18n-subs/tr])
+        principal-name    (subscribe [::session-subs/resolve-principal principal])
+        manager?          (boolean ((set (concat owners manage)) principal))
+        can-view-members? (boolean ((set (concat owners view-data view-acl)) principal))]
     [ui/ListItem
-
-     [ui/ListContent
-      [ui/ListIcon {:className icons/i-user :size "large" :verticalAlign "middle"}]
-      @principal-name
-      utils-general/nbsp
-      (when editable?
+     (when editable?
+       [ui/ListContent {:floated :right}
+        (if manager?
+          [ui/Popup {:content "Remove manager"
+                     :trigger (r/as-element
+                                [ui/Button {:icon true :basic true}
+                                 [ui/IconGroup
+                                  [icons/Icon {:name "fal fa-crown"}]
+                                  [icons/Icon {:name "fal fa-slash"}]]])}]
+          [:<>
+           (if can-view-members?
+             [ui/Popup {:content "Limit member’s view to only the group name and description"
+                        :trigger (r/as-element
+                                   [ui/Button {:icon true :basic true}
+                                    [icons/Icon {:name "far fa-eye-slash"}]])}]
+             [ui/Popup {:content "Extend user view to member's list"
+                        :trigger (r/as-element
+                                   [ui/Button {:icon true :basic true}
+                                    [icons/Icon {:name "far fa-eye"}]])}])
+           [ui/Popup {:content "Make manager"
+                      :trigger (r/as-element
+                                 [ui/Button {:icon true :basic true} [icons/Icon {:name "fal fa-crown"}]])}]])
         [uix/ModalDanger
          {:button-text (@tr [:yes])
           :on-confirm  (fn []
                          (reset! members (-> @members set (disj principal) vec))
                          (dispatch [::main-events/changes-protection? true])
                          (set-group-changed! id))
-          :trigger     (r/as-element [ui/MenuItem
-                                      [icons/TrashIcon]])
+          :trigger     (r/as-element
+                         [:span [ui/Popup {:content "Remove member"
+                                           :trigger (r/as-element
+                                                      [ui/Button {:icon  true
+                                                                  :basic true}
+                                                       [icons/TrashIcon]])}]])
           :header      "Remove member"
-          :content     [:span "Do you want to remove " [:b @principal-name] " from " [:b group-name] " group?"]}])]]))
+          :content     [:span "Do you want to remove " [:b @principal-name] " from " [:b group-name] " group?"]}]])
+
+
+     [ui/ListContent {:style {:display :flex :align-items :flex-end}}
+      [ui/IconGroup
+       [ui/Icon {:className icons/i-user :size "large"}]
+       (when manager? [ui/Icon {:className "fa-solid fa-crown" :corner true}])]
+      @principal-name]
+     ]))
 
 (defn DropdownPrincipals
   [_add-user _opts _members]
@@ -84,35 +115,38 @@
         show-acl?   (r/atom false)
         invite-user (r/atom nil)
         add-user    (r/atom nil)]
-    (fn [{:keys [id name description]}]
-      (let [invite-fn #(do
-                         (when-not (str/blank? @invite-user)
-                           (dispatch [::events/invite-to-group id @invite-user])
-                           (reset! invite-user nil)))
+    (fn [{:keys [id name description acl]}]
+      (let [invite-fn  #(do
+                          (when-not (str/blank? @invite-user)
+                            (dispatch [::events/invite-to-group id @invite-user])
+                            (reset! invite-user nil)))
             group-name (or name id)]
         [:<>
-         [ui/Grid {:columns 2}
-          [ui/GridColumn {:floated :left}
+         [ui/Grid {:columns 2 :stackable true}
+          [ui/GridColumn {:floated :left :width 13}
            [ui/Header {:as :h3}
             [icons/UserGroupIcon]
             [ui/HeaderContent
              group-name
              [ui/HeaderSubheader description " (" id ")"]]]]
-          [ui/GridColumn {:floated :right}
+          [ui/GridColumn {:floated :right :width 3}
            [ui/Button {:basic true :floated :right} [:b "Add Subgroup"]]]]
          [ui/Header {:as :h3 :dividing true} "Members"]
          (if (empty? @members)
            [uix/MsgNoItemsToShow [uix/TR (if editable? :empty-group-message
                                                        :empty-group-or-no-access-message)]]
-           [ui/ListSA {:relaxed true :vertical-align "middle"}
+
+           [ui/ListSA {:divided true :vertical-align "middle"}
             (for [m @members]
               ^{:key m}
-              [GroupMember id group-name m members editable?])])
+              [GroupMember id group-name m members editable? acl])])
          (when (utils-general/can-operation? "invite" group)
            [ui/Input {:placeholder  (@tr [:invite-by-email])
+                      :type         :email
                       :icon         (r/as-element
-                                      [icons/PaperPlaneIcon {:style    {:cursor :pointer :font-size "unset"}
-                                                             :link     true
+                                      [icons/PaperPlaneIcon {:style    {:font-size "unset"}
+                                                             :link     (not (str/blank? @invite-user))
+                                                             :color    (when (not (str/blank? @invite-user)) "blue")
                                                              :circular true
                                                              :onClick  invite-fn}])
                       :style        {:width "280px" :cursor :pointer}

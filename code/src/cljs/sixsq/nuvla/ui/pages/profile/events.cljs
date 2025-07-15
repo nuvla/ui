@@ -98,10 +98,12 @@
                                                                       status (str " (" status ")"))
                                                      :content message
                                                      :type    :error}]))
-                                       (dispatch [::messages-events/add
-                                                  {:header  "Group updated"
-                                                   :content "Group updated successfully."
-                                                   :type    :info}]))]})))
+                                       (do
+                                         (dispatch [::session-events/search-groups])
+                                         (dispatch [::messages-events/add
+                                                   {:header  "Group updated"
+                                                    :content "Group updated successfully."
+                                                    :type    :info}])))]})))
 
 (reg-event-fx
   ::invite-to-group

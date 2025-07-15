@@ -6,6 +6,8 @@
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.pages.profile.events :as events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.forms :as forms]
             [sixsq.nuvla.ui.utils.general :as utils-general]
@@ -13,8 +15,6 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
-
-(def selected-group (r/atom nil))
 
 (defn ConfirmActionModal
   [{:keys [on-confirm header Content Icon]}]
@@ -88,7 +88,7 @@
                                                     )]))
                        :header     "Limit member’s view"
                        :Content    "Limit member’s view to only the group name and description"
-                       :Icon       [icons/Icon {:name "far fa-eye-slash"}]}])
+                       :Icon       [icons/Icon {:className "far fa-eye-slash"}]}])
 
 (defn ExtendMemberViewButton
   [group principal]
@@ -97,7 +97,7 @@
                                                 (utils-general/acl-append-resource group :view-acl principal)]))
                        :header     "Extend user view"
                        :Content    "Extend user view to member's list"
-                       :Icon       [icons/Icon {:name "far fa-eye"}]}])
+                       :Icon       [icons/Icon {:className "far fa-eye"}]}])
 
 (defn GroupMember
   [id group-name principal editable? {{:keys [owners manage view-data view-acl] :as acl} :acl :as group}]
@@ -109,7 +109,7 @@
      (when editable?
        [ui/ListContent {:floated :right}
         (if manager?
-          [RemoveManagerButton group principal @principal-name group-name]
+          [RemoveManagerButton group principal principal-name group-name]
           [:<>
            (if can-view-members?
              [LimitMemberViewButton group principal]
@@ -202,13 +202,13 @@
          ]))))
 
 (defn Group
-  []
-  (let [collapsed (r/atom true)]
-    (fn [{:keys [id name children] :as _group}]
-      (let [selected? (= @selected-group id)
+  [{:keys [id] :as _group} {:keys [parents] :as _selected-group}]
+  (let [collapsed (r/atom (not ((set parents) id)))]
+    (fn [{:keys [id name children] :as _group} selected-group]
+      (let [selected? (= (:id selected-group) id)
             children? (boolean (seq children))]
         [ui/ListItem {:on-click #(do
-                                   (reset! selected-group id)
+                                   (dispatch [::routing-events/navigate routes/groups-details {:uuid (utils-general/id->uuid id)}])
                                    (.stopPropagation %))}
          [ui/ListIcon {:style    {:padding   5
                                   :min-width "17px"}
@@ -230,10 +230,10 @@
             [ui/ListList
              (for [child (sort-by (juxt :id :name) children)]
                ^{:key (:id child)}
-               [Group child])])]]))))
+               [Group child selected-group])])]]))))
 
 (defn GroupHierarchySegment
-  []
+  [selected-group]
   (let [groups-hierarchy @(subscribe [::session-subs/groups-hierarchies])]
     [ui/Segment {:raised true :style {:overflow-x :auto
                                       :min-height "100%"}}
@@ -245,12 +245,13 @@
      [ui/ListSA {:selection true}
       (for [group-hierarchy (sort-by (juxt :id :name) groups-hierarchy)]
         ^{:key (:id group-hierarchy)}
-        [Group group-hierarchy])]]))
+        [Group group-hierarchy selected-group])]]))
 
 (defn GroupsViewPage
-  []
-  (let [group (when @selected-group
-                @(subscribe [::session-subs/group @selected-group]))]
+  [{path :path}]
+  (let [[_ uuid] path
+        selected-group (when uuid
+                @(subscribe [::session-subs/group (str "group/" uuid)]))]
     [ui/Grid {:stackable false}
      [ui/GridColumn {:stretched true
                      :computer  4
@@ -258,7 +259,7 @@
                      :mobile    8
                      :style     {:background-color "light-gray"
                                  :padding-right    0}}
-      [GroupHierarchySegment]]
+      [GroupHierarchySegment selected-group]]
      [ui/GridColumn {:stretched true
                      :tablet    10
                      :computer  12
@@ -267,7 +268,7 @@
                                  :padding-right    0}}
       [ui/Segment {:style {:min-height "100%"
                            :overflow-x :auto}}
-       (if @selected-group
-         ^{:key group}
-         [GroupMembers group]
+       (if selected-group
+         ^{:key selected-group}
+         [GroupMembers selected-group]
          [uix/MsgNoItemsToShow [uix/TR "Select a Group"]])]]]))

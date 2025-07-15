@@ -61,6 +61,22 @@
              :view   #'views-cluster/ClusterViewPage}]])
         (utils/canonical->all-page-names "edges")))
 
+(def groups-routes
+  (mapv (fn [page-alias]
+          [page-alias
+           {:name       (create-route-name page-alias)
+            :layout     #'LayoutPage
+            :view       #'GroupsViewPage
+            :protected? true
+            :dict-key   :groups}
+           [""]
+           ["/" (create-route-name page-alias "-slashed")]
+           ["/:uuid"
+            {:name   (create-route-name page-alias "-details")
+             :layout #'LayoutPage
+             :view   #'GroupsViewPage}]])
+        (utils/canonical->all-page-names "groups")))
+
 (def cloud-routes
   (mapv (fn [page-alias]
           [page-alias
@@ -122,6 +138,7 @@
     cloud-routes
     deployment-routes
     deployment-group-routes
+    groups-routes
     ["sign-up"
      {:name          ::routes/sign-up
       :layout        #'LayoutAuthentication
@@ -219,11 +236,7 @@
     ["profile"
      {:name   ::routes/profile
       :layout #'LayoutPage
-      :view   #'profile}]
-    ["groups"
-     {:name   ::routes/groups
-      :layout #'LayoutPage
-      :view   #'GroupsViewPage}]]
+      :view   #'profile}]]
    ["/*"
     {:name   ::routes/catch-all
      :layout #'LayoutPage

@@ -1,11 +1,13 @@
 (ns sixsq.nuvla.ui.pages.groups.views
   (:require ["@stripe/react-stripe-js" :as react-stripe]
+            [cljs.spec.alpha :as s]
             [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.pages.profile.events :as events]
+            [sixsq.nuvla.ui.pages.profile.spec :as spec]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -14,6 +16,7 @@
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn ConfirmActionModal
@@ -179,15 +182,20 @@
     (fn [{:keys [id name description users] :as group}]
       (let [group-name (or name id)]
         [:<>
-         [ui/Grid {:columns 2 :stackable true}
-          [ui/GridColumn {:floated :left :width 13}
-           [ui/Header {:as :h3}
-            [icons/UserGroupIcon]
-            [ui/HeaderContent
-             group-name
-             [ui/HeaderSubheader description " (" id ")"]]]]
-          [ui/GridColumn {:floated :right :width 3}
-           [ui/Button {:basic true :floated :right} [:b "Add Subgroup"]]]]
+         [:div {:style {:display         :flex
+                        :align-items     :flex-start
+                        :justify-content :space-between
+                        :flex-wrap       :wrap
+                        :padding-bottom  "1em"}}
+          [ui/Header {:as :h3}
+           [icons/UserGroupIcon]
+           [ui/HeaderContent
+            group-name
+            [ui/HeaderSubheader description " (" id ")"]]]
+          (when (utils-general/can-operation? "add-subgroup" group)
+            [ui/Button {:secondary true :size "small" :icon true}
+             [icons/PlusSquareIcon]
+             "Add Subgroup"])]
          [ui/Header {:as :h3 :dividing true} "Members"]
          (if (empty? users)
            [uix/MsgNoItemsToShow [uix/TR (if editable? :empty-group-message
@@ -232,12 +240,84 @@
                ^{:key (:id child)}
                [Group child selected-group])])]]))))
 
+(defn sanitize-name [name]
+  (when name
+    (str/lower-case
+      (str/replace
+        (str/trim
+          (str/join "" (re-seq #"[a-zA-Z0-9-_\ ]" name)))
+        " " "-"))))
+
+(defn AddGroupButton
+  []
+  (let [tr         (subscribe [::i18n-subs/tr])
+        show?      (r/atom false)
+        group-name (r/atom "")
+        group-desc (r/atom "")
+        validate?  (r/atom false)
+        loading?   (r/atom false)
+        close-fn   #(reset! show? false)]
+    (fn []
+      (let [group-identifier (sanitize-name @group-name)
+            form-valid?      (and (s/valid? ::spec/group-name @group-name)
+                                  (s/valid? ::spec/group-description @group-desc))]
+        [ui/Modal
+         {:open       @show?
+          :close-icon true
+          :on-close   close-fn
+          :trigger    (r/as-element
+                        [ui/Button {:primary  true
+                                    :size     "small"
+                                    :icon     true
+                                    :on-click #(reset! show? true)}
+                         [icons/PlusSquareIcon] (@tr [:add-group])])}
+         [uix/ModalHeader {:header (@tr [:add-group])}]
+         [ui/ModalContent
+          [ui/Message {:hidden (not (and @validate? (not form-valid?)))
+                       :error  true}
+           [ui/MessageHeader (@tr [:validation-error])]
+           [ui/MessageContent (@tr [:validation-error-message])]]
+          (when-not (str/blank? group-identifier)
+            [:i {:style {:padding-left "1ch"
+                         :color :grey}}
+             [:b "id : "]
+             (str "group/" group-identifier)])
+          [ui/Table style/definition
+           [ui/TableBody
+            [uix/TableRowField (@tr [:name]), :required? true, :default-value @group-name,
+             :validate-form? @validate?, :spec ::spec/group-name,
+             :on-change #(reset! group-name %)]
+            [uix/TableRowField (@tr [:description]), :required? true,
+             :spec ::spec/group-description, :validate-form? @validate?,
+             :default-value @group-desc, :on-change #(reset! group-desc %)]]]]
+         [ui/ModalActions
+          [uix/Button
+           {:text     (@tr [:create])
+            :primary  true
+            :disabled (and @validate? (not form-valid?))
+            :icon     icons/i-info-full
+            :loading  @loading?
+            :on-click #(if (not form-valid?)
+                         (reset! validate? true)
+                         (do
+                           (reset! show? false)
+                           (dispatch
+                             [::events/add-group group-identifier @group-name @group-desc loading?])))}]]]))))
+
 (defn GroupHierarchySegment
   [selected-group]
   (let [groups-hierarchy @(subscribe [::session-subs/groups-hierarchies])]
     [ui/Segment {:raised true :style {:overflow-x :auto
                                       :min-height "100%"}}
-     [ui/Header {:as :h3} "Groups"]
+
+     [:div {:style {:display         :flex
+                    :align-items     :baseline
+                    :justify-content :space-between
+                    :flex-wrap       :wrap
+                    :padding-bottom  "1em"}}
+      [ui/Header {:as :h3} "Groups"]
+      [AddGroupButton]]
+
      [full-text-search-plugin/FullTextSearch
       {:db-path      [::deployments-search]
        :change-event [:a]
@@ -251,7 +331,7 @@
   [{path :path}]
   (let [[_ uuid] path
         selected-group (when uuid
-                @(subscribe [::session-subs/group (str "group/" uuid)]))]
+                         @(subscribe [::session-subs/group (str "group/" uuid)]))]
     [ui/Grid {:stackable false}
      [ui/GridColumn {:stretched true
                      :computer  4

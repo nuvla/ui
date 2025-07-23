@@ -199,11 +199,6 @@
     (::spec/vendor db)))
 
 (reg-sub
-  ::group
-  (fn [db]
-    (::spec/group db)))
-
-(reg-sub
   ::two-factor-step
   (fn [db]
     (::spec/two-factor-step db)))

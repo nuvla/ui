@@ -1,13 +1,11 @@
 (ns sixsq.nuvla.ui.pages.groups.views
-  (:require ["@stripe/react-stripe-js" :as react-stripe]
-            [cljs.spec.alpha :as s]
+  (:require [cljs.spec.alpha :as s]
             [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
-            [sixsq.nuvla.ui.pages.profile.events :as events]
-            [sixsq.nuvla.ui.pages.profile.spec :as spec]
+            [sixsq.nuvla.ui.pages.groups.events :as events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -16,8 +14,12 @@
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.spec :as us]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+
+(s/def ::group-name us/nonblank-string)
+(s/def ::group-description us/nonblank-string)
 
 (defn ConfirmActionModal
   [{:keys [on-confirm header Content Icon]}]
@@ -259,8 +261,8 @@
         close-fn   #(reset! show? false)]
     (fn []
       (let [group-identifier (sanitize-name @group-name)
-            form-valid?      (and (s/valid? ::spec/group-name @group-name)
-                                  (s/valid? ::spec/group-description @group-desc))]
+            form-valid?      (and (s/valid? ::group-name @group-name)
+                                  (s/valid? ::group-description @group-desc))]
         [ui/Modal
          {:open       @show?
           :close-icon true
@@ -279,23 +281,22 @@
            [ui/MessageContent (@tr [:validation-error-message])]]
           (when-not (str/blank? group-identifier)
             [:i {:style {:padding-left "1ch"
-                         :color :grey}}
+                         :color        :grey}}
              [:b "id : "]
              (str "group/" group-identifier)])
           [ui/Table style/definition
            [ui/TableBody
             [uix/TableRowField (@tr [:name]), :required? true, :default-value @group-name,
-             :validate-form? @validate?, :spec ::spec/group-name,
+             :validate-form? @validate?, :spec ::group-name,
              :on-change #(reset! group-name %)]
             [uix/TableRowField (@tr [:description]), :required? true,
-             :spec ::spec/group-description, :validate-form? @validate?,
+             :spec ::group-description, :validate-form? @validate?,
              :default-value @group-desc, :on-change #(reset! group-desc %)]]]]
          [ui/ModalActions
           [uix/Button
-           {:text     (@tr [:create])
+           {:text     (str/capitalize (@tr [:add]))
             :primary  true
             :disabled (and @validate? (not form-valid?))
-            :icon     icons/i-info-full
             :loading  @loading?
             :on-click #(if (not form-valid?)
                          (reset! validate? true)

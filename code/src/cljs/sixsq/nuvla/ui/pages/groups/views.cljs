@@ -178,6 +178,74 @@
                    :value        (or @invite-user "")
                    :on-change    (ui-callback/value #(reset! invite-user %))}]))))
 
+(defn sanitize-name [name]
+  (when name
+    (str/lower-case
+      (str/replace
+        (str/trim
+          (str/join "" (re-seq #"[a-zA-Z0-9-_\ ]" name)))
+        " " "-"))))
+
+(defn AddGroupButton
+  [_opts]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        show?      (r/atom false)
+        group-name (r/atom "")
+        group-desc (r/atom "")
+        validate?  (r/atom false)
+        loading?   (r/atom false)
+        close-fn   #(reset! show? false)]
+    (fn [{:keys [parent-group header]}]
+      (let [group-identifier (sanitize-name @group-name)
+            form-valid?      (and (s/valid? ::group-name @group-name)
+                                  (s/valid? ::group-description @group-desc))]
+        [ui/Modal
+         {:open       @show?
+          :close-icon true
+          :on-close   close-fn
+          :trigger    (r/as-element
+                        [ui/Button {:secondary true
+                                    :size      "small"
+                                    :icon      true
+                                    :on-click  #(reset! show? true)}
+                         [icons/PlusSquareIcon]
+                         header])}
+         [uix/ModalHeader {:header header}]
+         [ui/ModalContent
+          [ui/Message {:hidden (not (and @validate? (not form-valid?)))
+                       :error  true}
+           [ui/MessageHeader (@tr [:validation-error])]
+           [ui/MessageContent (@tr [:validation-error-message])]]
+          (when-not (str/blank? group-identifier)
+            [:i {:style {:padding-left "1ch"
+                         :color        :grey}}
+             [:b "id : "]
+             (str "group/" group-identifier)])
+          [ui/Table style/definition
+           [ui/TableBody
+            [uix/TableRowField (@tr [:name]), :required? true, :default-value @group-name,
+             :validate-form? @validate?, :spec ::group-name,
+             :on-change #(reset! group-name %)]
+            [uix/TableRowField (@tr [:description]), :required? true,
+             :spec ::group-description, :validate-form? @validate?,
+             :default-value @group-desc, :on-change #(reset! group-desc %)]]]]
+         [ui/ModalActions
+          [uix/Button
+           {:text     (str/capitalize (@tr [:add]))
+            :primary  true
+            :disabled (and @validate? (not form-valid?))
+            :loading  @loading?
+            :on-click #(if (not form-valid?)
+                         (reset! validate? true)
+                         (do
+                           (reset! show? false)
+                           (dispatch
+                             [::events/add-group {:parent-group     parent-group
+                                                  :group-identifier group-identifier
+                                                  :group-name       @group-name
+                                                  :group-desc       @group-desc
+                                                  :loading?         loading?}])))}]]]))))
+
 (defn GroupMembers
   [group]
   (let [editable? (utils-general/editable? group false)]
@@ -195,9 +263,8 @@
             group-name
             [ui/HeaderSubheader description " (" id ")"]]]
           (when (utils-general/can-operation? "add-subgroup" group)
-            [ui/Button {:secondary true :size "small" :icon true}
-             [icons/PlusSquareIcon]
-             "Add Subgroup"])]
+            [AddGroupButton {:header "Add Subgroup"
+                             :parent-group group}])]
          [ui/Header {:as :h3 :dividing true} "Members"]
          (if (empty? users)
            [uix/MsgNoItemsToShow [uix/TR (if editable? :empty-group-message
@@ -242,72 +309,10 @@
                ^{:key (:id child)}
                [Group child selected-group])])]]))))
 
-(defn sanitize-name [name]
-  (when name
-    (str/lower-case
-      (str/replace
-        (str/trim
-          (str/join "" (re-seq #"[a-zA-Z0-9-_\ ]" name)))
-        " " "-"))))
-
-(defn AddGroupButton
-  []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        show?      (r/atom false)
-        group-name (r/atom "")
-        group-desc (r/atom "")
-        validate?  (r/atom false)
-        loading?   (r/atom false)
-        close-fn   #(reset! show? false)]
-    (fn []
-      (let [group-identifier (sanitize-name @group-name)
-            form-valid?      (and (s/valid? ::group-name @group-name)
-                                  (s/valid? ::group-description @group-desc))]
-        [ui/Modal
-         {:open       @show?
-          :close-icon true
-          :on-close   close-fn
-          :trigger    (r/as-element
-                        [ui/Button {:primary  true
-                                    :size     "small"
-                                    :icon     true
-                                    :on-click #(reset! show? true)}
-                         [icons/PlusSquareIcon] (@tr [:add-group])])}
-         [uix/ModalHeader {:header (@tr [:add-group])}]
-         [ui/ModalContent
-          [ui/Message {:hidden (not (and @validate? (not form-valid?)))
-                       :error  true}
-           [ui/MessageHeader (@tr [:validation-error])]
-           [ui/MessageContent (@tr [:validation-error-message])]]
-          (when-not (str/blank? group-identifier)
-            [:i {:style {:padding-left "1ch"
-                         :color        :grey}}
-             [:b "id : "]
-             (str "group/" group-identifier)])
-          [ui/Table style/definition
-           [ui/TableBody
-            [uix/TableRowField (@tr [:name]), :required? true, :default-value @group-name,
-             :validate-form? @validate?, :spec ::group-name,
-             :on-change #(reset! group-name %)]
-            [uix/TableRowField (@tr [:description]), :required? true,
-             :spec ::group-description, :validate-form? @validate?,
-             :default-value @group-desc, :on-change #(reset! group-desc %)]]]]
-         [ui/ModalActions
-          [uix/Button
-           {:text     (str/capitalize (@tr [:add]))
-            :primary  true
-            :disabled (and @validate? (not form-valid?))
-            :loading  @loading?
-            :on-click #(if (not form-valid?)
-                         (reset! validate? true)
-                         (do
-                           (reset! show? false)
-                           (dispatch
-                             [::events/add-group group-identifier @group-name @group-desc loading?])))}]]]))))
-
 (defn GroupHierarchySegment
   [selected-group]
-  (let [groups-hierarchy @(subscribe [::session-subs/groups-hierarchies])]
+  (let [tr @(subscribe [::i18n-subs/tr])
+        groups-hierarchy @(subscribe [::session-subs/groups-hierarchies])]
     [ui/Segment {:raised true :style {:overflow-x :auto
                                       :min-height "100%"}}
 
@@ -317,7 +322,7 @@
                     :flex-wrap       :wrap
                     :padding-bottom  "1em"}}
       [ui/Header {:as :h3} "Groups"]
-      [AddGroupButton]]
+      [AddGroupButton {:header (tr [:add-group])}]]
 
      [full-text-search-plugin/FullTextSearch
       {:db-path      [::deployments-search]

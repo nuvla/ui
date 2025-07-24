@@ -10,21 +10,27 @@
 
 (reg-event-fx
   ::add-group
-  (fn [{_db :db} [_ id name description loading?]]
-    (let [user {:template    {:href             "group-template/generic"
-                              :group-identifier id}
-                :name        name
-                :description description}]
-      {::cimi-api-fx/add
-       ["group" user
-        #(let [{:keys [status message resource-id]} (response/parse %)]
-           (dispatch [::session-events/search-groups])
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "added " resource-id)
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :success}])
-           (reset! loading? false))]})))
+  (fn [{_db :db} [_ {:keys [parent-group group-identifier group-name group-desc loading?]}]]
+    (let [on-success #(let [{:keys [status message resource-id]} (response/parse %)]
+                        (dispatch [::session-events/search-groups])
+                        (dispatch [::messages-events/add
+                                   {:header  (cond-> (str "added " resource-id)
+                                                     status (str " (" status ")"))
+                                    :content message
+                                    :type    :success}])
+                        (reset! loading? false))]
+      (if parent-group
+        {::cimi-api-fx/operation
+         [(:id parent-group) "add-subgroup"
+          on-success
+          :data {:group-identifier group-identifier
+                 :name             group-name
+                 :description      group-desc}]}
+        {::cimi-api-fx/add
+         ["group" {:template    {:href             "group-template/generic"
+                                 :group-identifier group-identifier}
+                   :name        group-name
+                   :description group-desc} on-success]}))))
 
 (reg-event-fx
   ::edit-group

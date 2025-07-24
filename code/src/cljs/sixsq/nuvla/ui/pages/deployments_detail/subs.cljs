@@ -182,6 +182,69 @@
   (fn [docker]
     (seq docker)))
 
+(defn save-raw-data
+  [resource]
+  (assoc resource :raw resource))
+
+(defn reg-sub-fn-coe-resource
+  [coe-key sub-key-resource-key-list]
+  (doseq [[resource-key sub-key clean-fn] sub-key-resource-key-list]
+    (reg-sub
+      sub-key
+      :<- [coe-key]
+      :-> (comp #(mapv (comp (or clean-fn identity) save-raw-data) %) resource-key))))
+
+(reg-sub
+  ::kubernetes
+  :<- [::coe-resources]
+  :-> :kubernetes)
+
+(defn k8s-flat-metadata
+  [{:keys [metadata] :as resource}]
+  (assoc resource
+    :uid (:uid metadata)
+    :name (:name metadata)
+    :creation_timestamp (:creation_timestamp metadata)
+    :resource_version (:resource_version metadata)))
+
+(defn k8s-namespace-metadata
+  [{:keys [metadata] :as resource}]
+  (assoc resource :namespace (:namespace metadata)))
+
+(defn k8s-flat-metadata-namespace
+  [resource]
+  ((comp k8s-flat-metadata k8s-namespace-metadata) resource))
+
+(reg-sub-fn-coe-resource
+  ::kubernetes [[:images ::k8s-images]
+                [:namespaces ::k8s-namespaces k8s-flat-metadata]
+                [:pods ::k8s-pods
+                 (fn [{:keys [status] :as resource}]
+                   (-> (k8s-flat-metadata-namespace resource)
+                       (assoc :phase (:phase status))))]
+                [:nodes ::k8s-nodes
+                 (fn [{:keys [status] :as resource}]
+                   (-> (k8s-flat-metadata resource)
+                       (assoc :node_info (:node_info status))))]
+                [:configmaps ::k8s-configmaps k8s-flat-metadata-namespace]
+                [:secrets ::k8s-secrets k8s-flat-metadata-namespace]
+                [:statefulsets ::k8s-statefulsets k8s-flat-metadata-namespace]
+                [:persistentvolumes ::k8s-persistentvolumes k8s-flat-metadata-namespace]
+                [:persistentvolumeclaims ::k8s-persistentvolumeclaims k8s-flat-metadata-namespace]
+                [:daemonsets ::k8s-daemonsets k8s-flat-metadata-namespace]
+                [:deployments ::k8s-deployments k8s-flat-metadata-namespace]
+                [:jobs ::k8s-jobs k8s-flat-metadata-namespace]
+                [:ingresses ::k8s-ingresses k8s-flat-metadata-namespace]
+                [:cronjobs ::k8s-cronjobs k8s-flat-metadata-namespace]
+                [:services ::k8s-services k8s-flat-metadata-namespace]
+                [:helmreleases ::k8s-helmreleases]])
+
+(reg-sub
+  ::coe-resource-k8s-available?
+  :<- [::kubernetes]
+  (fn [k8s]
+    (seq k8s)))
+
 (defn update-created
   [doc]
   (update doc :Created #(some-> % time/parse-unix time/time->utc-str)))
@@ -203,18 +266,6 @@
 (defn update-network-settings
   [doc]
   (update doc :NetworkSettings (comp #(map name %) keys :Networks)))
-
-(defn save-raw-data
-  [resource]
-  (assoc resource :raw resource))
-
-(defn reg-sub-fn-coe-resource
-  [coe-key sub-key-resource-key-list]
-  (doseq [[resource-key sub-key clean-fn] sub-key-resource-key-list]
-    (reg-sub
-      sub-key
-      :<- [coe-key]
-      :-> (comp #(mapv (comp (or clean-fn identity) save-raw-data) %) resource-key))))
 
 (reg-sub-fn-coe-resource
   ::docker [[:images ::docker-images

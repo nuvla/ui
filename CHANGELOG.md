@@ -2,6 +2,14 @@
 
 ## Released
 
+## [2.50.0](https://github.com/nuvla/ui/compare/2.49.0...2.50.0) (2025-07-24)
+
+
+### Features
+
+* **deployment-coe-resources:** New Kubernetes resources tab in k8s Deployment details page ([aa3c242](https://github.com/nuvla/ui/commit/aa3c2420af39c3bc1a87c506a64ccf62e36fe43f))
+* **deployment-coe-resources:** New Kubernetes resources tab in k8s Deployment details page ([828220d](https://github.com/nuvla/ui/commit/828220d239d5d332fcc74b1573ca42f9ca3bfd1e))
+
 ## [2.49.0](https://github.com/nuvla/ui/compare/2.48.0...2.49.0) (2025-06-30)
 
 

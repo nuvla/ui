@@ -63,65 +63,6 @@
     1))
 
 
-(defn AddGroupButton
-  []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        show?      (r/atom false)
-        group-name (r/atom "")
-        group-desc (r/atom "")
-        validate?  (r/atom false)
-        loading?   (r/atom false)
-        close-fn   #(reset! show? false)]
-    (fn []
-      (let [group-identifier (utils-general/sanitize-name @group-name)
-            form-valid?      (and (s/valid? ::spec/group-name @group-name)
-                                  (s/valid? ::spec/group-description @group-desc))]
-        [ui/Modal
-         {:open       @show?
-          :close-icon true
-          :on-close   close-fn
-          :trigger    (r/as-element
-                        [ui/MenuItem {:on-click #(reset! show? true)}
-                         [icons/UsersIcon]
-                         (str/capitalize (@tr [:add-group]))])}
-         [uix/ModalHeader {:header (str/capitalize (@tr [:add-group]))}]
-         [ui/ModalContent
-          [ui/Message {:hidden (not (and @validate? (not form-valid?)))
-                       :error  true}
-           [ui/MessageHeader (@tr [:validation-error])]
-           [ui/MessageContent (@tr [:validation-error-message])]]
-          [ui/Input {:name        "name"
-                     :placeholder (@tr [:name])
-                     :type        :text
-                     :error       (when (and @validate?
-                                             (not (s/valid? ::spec/group-name @group-name))) true)
-                     :fluid       true
-                     :on-change   (ui-callback/input-callback
-                                    #(reset! group-name %))}]
-          [:br]
-          [ui/Input {:name        "description"
-                     :placeholder (@tr [:description])
-                     :type        :text
-                     :error       (when (and @validate?
-                                             (not (s/valid? ::spec/group-description @group-desc))) true)
-                     :fluid       true
-                     :on-change   (ui-callback/input-callback
-                                    #(reset! group-desc %))}]]
-         [ui/ModalActions
-          [uix/Button
-           {:text     (@tr [:create])
-            :primary  true
-            :disabled (and @validate? (not form-valid?))
-            :icon     icons/i-info-full
-            :loading  @loading?
-            :on-click #(if (not form-valid?)
-                         (reset! validate? true)
-                         (do
-                           (reset! show? false)
-                           (dispatch
-                             [::events/add-group group-identifier @group-name @group-desc loading?])))}]]]))))
-
-
 (defn ModalChangePassword []
   (let [open?     (subscribe [::subs/modal-open? :change-password])
         error     (subscribe [::subs/error-message])
@@ -1442,7 +1383,6 @@
                     :icon     "user secret"
                     :content  (str/capitalize (@tr [:change-password]))
                     :on-click #(dispatch [::events/open-modal :change-password])}]
-      [AddGroupButton]
       (when can-enable-2fa?
         [ui/MenuItem
          {:icon     "shield"

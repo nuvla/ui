@@ -101,7 +101,8 @@
                        "infrastructures"        "clouds"
                        "deployment"             "deployments"
                        "deployment-set"         "deployment-groups"
-                       "deployment-set-details" "deployment-groups-details"})
+                       "deployment-set-details" "deployment-groups-details"
+                       "group"                  "groups"})
 
 (defn ->canonical-route-name
   [route-name]

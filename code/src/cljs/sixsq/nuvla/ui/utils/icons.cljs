@@ -717,3 +717,13 @@
 
 (def i-cloud-download "fal fa-cloud-download")
 (def i-cloud-upload "fal fa-cloud-upload")
+
+(def i-ellipsis "fas fa-ellipsis")
+(defn EllipsisIcon
+  [opts]
+  [I opts i-ellipsis])
+
+(def i-paper-plane "fal fa-paper-plane")
+(defn PaperPlaneIcon
+  [opts]
+  [I opts i-paper-plane])

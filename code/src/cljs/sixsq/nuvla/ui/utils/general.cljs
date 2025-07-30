@@ -482,3 +482,23 @@
         (if (not= c 0)
           c
           (recur (rest rest-orders)))))))
+
+(defn acl-append
+  [acl right-kw user-id]
+  (if user-id
+    (update acl right-kw (comp vec set conj) user-id)
+    acl))
+
+(defn acl-remove
+  [acl right-kw user-id]
+  (if user-id
+    (update acl right-kw (fn [user-ids] (vec (remove #{user-id} user-ids))))
+    acl))
+
+(defn acl-append-resource
+  [resource right-kw user-id]
+  (update resource :acl acl-append right-kw user-id))
+
+(defn acl-remove-resource
+  [resource right-kw user-id]
+  (update resource :acl acl-remove right-kw user-id))

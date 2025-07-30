@@ -24,6 +24,7 @@
             [sixsq.nuvla.ui.pages.edges.views :refer [DetailedViewPage edges-view]]
             [sixsq.nuvla.ui.pages.edges.views-cluster :as views-cluster]
             [sixsq.nuvla.ui.pages.profile.views :refer [profile]]
+            [sixsq.nuvla.ui.pages.groups.views :refer [GroupsViewPage]]
             [sixsq.nuvla.ui.pages.welcome.views :refer [home-view]]
             [sixsq.nuvla.ui.routing.events :as events]
             [sixsq.nuvla.ui.routing.routes :as routes]
@@ -59,6 +60,22 @@
              :layout #'LayoutPage
              :view   #'views-cluster/ClusterViewPage}]])
         (utils/canonical->all-page-names "edges")))
+
+(def groups-routes
+  (mapv (fn [page-alias]
+          [page-alias
+           {:name       (create-route-name page-alias)
+            :layout     #'LayoutPage
+            :view       #'GroupsViewPage
+            :protected? true
+            :dict-key   :groups}
+           [""]
+           ["/" (create-route-name page-alias "-slashed")]
+           ["/:uuid"
+            {:name   (create-route-name page-alias "-details")
+             :layout #'LayoutPage
+             :view   #'GroupsViewPage}]])
+        (utils/canonical->all-page-names "groups")))
 
 (def cloud-routes
   (mapv (fn [page-alias]
@@ -121,6 +138,7 @@
     cloud-routes
     deployment-routes
     deployment-group-routes
+    groups-routes
     ["sign-up"
      {:name          ::routes/sign-up
       :layout        #'LayoutAuthentication

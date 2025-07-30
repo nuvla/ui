@@ -1,47 +1,134 @@
 (ns sixsq.nuvla.ui.pages.groups.views
-  (:require ["@stripe/react-stripe-js" :as react-stripe]
+  (:require [cljs.spec.alpha :as s]
             [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.common-components.acl.views :as acl-views]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.main.events :as main-events]
-            [sixsq.nuvla.ui.pages.profile.events :as events]
-            [sixsq.nuvla.ui.pages.profile.subs :as subs]
+            [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.pages.groups.events :as events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.forms :as forms]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.spec :as us]
+            [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
+(s/def ::group-name us/nonblank-string)
+(s/def ::group-description us/nonblank-string)
 
-(def group-changed! (r/atom {}))
-(defn set-group-changed! [id] (swap! group-changed! assoc id true))
-(defn disable-changes-protection!
-  [id]
-  (swap! group-changed! assoc id false)
-  (when-not (some true? (vals @group-changed!))
-    (dispatch [::main-events/reset-changes-protection])))
+(defn ConfirmActionModal
+  [{:keys [on-confirm header Content Icon]}]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/ModalDanger
+     {:button-text (@tr [:yes])
+      :on-confirm  on-confirm
+      :trigger     (r/as-element
+                     [:span [ui/Popup {:content header
+                                       :trigger (r/as-element
+                                                  [ui/Button {:icon true :basic true}
+                                                   Icon])}]])
+      :header      header
+      :content     Content}]))
+
+(defn RemoveManagerButton
+  [group principal principal-name group-name]
+  [ConfirmActionModal {:on-confirm (fn []
+                                     (dispatch [::events/edit-group
+                                                (-> group
+                                                    (utils-general/acl-append-resource :owners "group/nuvla-admin")
+                                                    (utils-general/acl-remove-resource :owners principal)
+                                                    (utils-general/acl-remove-resource :edit-meta principal)
+                                                    (utils-general/acl-remove-resource :edit-data principal)
+                                                    (utils-general/acl-remove-resource :edit-acl principal)
+                                                    (utils-general/acl-remove-resource :manage principal))]))
+                       :header     "Remove manager"
+                       :Content    [:span "Do you want to remove " [:b @principal-name] " from manager's of group " [:b group-name] "?"]
+                       :Icon       [ui/IconGroup
+                                    [icons/Icon {:name "fal fa-crown"}]
+                                    [icons/Icon {:name "fal fa-slash"}]]}])
+
+(defn MakeManagerButton
+  [group principal principal-name group-name]
+  [ConfirmActionModal {:on-confirm #(dispatch [::events/edit-group
+                                               (-> group
+                                                   (utils-general/acl-append-resource :edit-acl principal)
+                                                   (utils-general/acl-append-resource :manage principal))])
+                       :header     "Make manager"
+                       :Content    [:span "Do you want to make " [:b @principal-name] " a manager of group " [:b group-name] "?"]
+                       :Icon       [icons/Icon {:name "fal fa-crown"}]}])
+
+(defn RemoveMemberButton
+  [group principal principal-name group-name]
+  [ConfirmActionModal {:on-confirm (fn []
+                                     (dispatch [::events/edit-group
+                                                (-> group
+                                                    (update :users (partial remove #{principal}))
+                                                    (utils-general/acl-append-resource :owners "group/nuvla-admin")
+                                                    (utils-general/acl-remove-resource :edit-acl principal)
+                                                    (utils-general/acl-remove-resource :edit-data principal)
+                                                    (utils-general/acl-remove-resource :edit-meta principal)
+                                                    (utils-general/acl-remove-resource :view-acl principal)
+                                                    (utils-general/acl-remove-resource :view-data principal)
+                                                    (utils-general/acl-remove-resource :view-meta principal)
+                                                    (utils-general/acl-remove-resource :manage principal))]))
+                       :header     "Remove member"
+                       :Content    [:span "Do you want to remove " [:b @principal-name] " from " [:b group-name] " group?"]
+                       :Icon       [icons/TrashIcon]}])
+
+(defn LimitMemberViewButton
+  [group principal]
+  [ConfirmActionModal {:on-confirm (fn []
+                                     (dispatch [::events/edit-group
+                                                (-> group
+                                                    (utils-general/acl-remove-resource :edit-meta principal)
+                                                    (utils-general/acl-remove-resource :edit-data principal)
+                                                    (utils-general/acl-remove-resource :edit-acl principal)
+                                                    (utils-general/acl-remove-resource :view-acl principal)
+                                                    (utils-general/acl-remove-resource :view-data principal)
+                                                    )]))
+                       :header     "Limit member’s view"
+                       :Content    "Limit member’s view to only the group name and description"
+                       :Icon       [icons/Icon {:className "far fa-eye-slash"}]}])
+
+(defn ExtendMemberViewButton
+  [group principal]
+  [ConfirmActionModal {:on-confirm (fn []
+                                     (dispatch [::events/edit-group
+                                                (utils-general/acl-append-resource group :view-acl principal)]))
+                       :header     "Extend user view"
+                       :Content    "Extend user view to member's list"
+                       :Icon       [icons/Icon {:className "far fa-eye"}]}])
 
 (defn GroupMember
-  [id principal members editable?]
-  (let [principal-name (subscribe [::session-subs/resolve-principal principal])]
+  [id group-name principal editable? {{:keys [owners manage view-data view-acl] :as acl} :acl :as group}]
+  (let [tr                (subscribe [::i18n-subs/tr])
+        principal-name    (subscribe [::session-subs/resolve-principal principal])
+        manager?          (boolean ((set (concat owners manage)) principal))
+        can-view-members? (boolean ((set (concat owners view-data view-acl)) principal))]
     [ui/ListItem
-     [ui/ListContent
-      [ui/ListHeader
-       [acl-views/PrincipalIcon principal]
-       utils-general/nbsp
-       @principal-name
-       utils-general/nbsp
-       (when editable?
-         [icons/CloseIcon {:link     true
-                           :size     "small"
-                           :color    "red"
-                           :on-click (fn []
-                                       (reset! members (-> @members set (disj principal) vec))
-                                       (dispatch [::main-events/changes-protection? true])
-                                       (set-group-changed! id))}])]]]))
+     (when editable?
+       [ui/ListContent {:floated :right}
+        (if manager?
+          [RemoveManagerButton group principal principal-name group-name]
+          [:<>
+           (if can-view-members?
+             [LimitMemberViewButton group principal]
+             [ExtendMemberViewButton group principal])
+           [MakeManagerButton group principal principal-name group-name]])
+        [RemoveMemberButton group principal principal-name group-name]])
+
+
+     [ui/ListContent {:style {:display :flex :align-items :flex-end}}
+      [ui/IconGroup
+       [ui/Icon {:className icons/i-user :size "large"}]
+       (when manager? [ui/Icon {:className "fa-solid fa-crown" :corner true}])]
+      @principal-name]
+     ]))
 
 (defn DropdownPrincipals
   [_add-user _opts _members]
@@ -68,151 +155,206 @@
                       :style           {:width "250px"}
                       :upward          false}]))))
 
+(defn InviteInput
+  [{:keys [id] :as _group}]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        invite-user (r/atom nil)
+        invite-fn   #(do
+                       (when-not (str/blank? @invite-user)
+                         (dispatch [::events/invite-to-group id @invite-user])
+                         (reset! invite-user nil)))]
+    (fn [group]
+      (when (utils-general/can-operation? "invite" group)
+        [ui/Input {:placeholder  (@tr [:invite-by-email])
+                   :type         :email
+                   :icon         (r/as-element
+                                   [icons/PaperPlaneIcon {:style    {:font-size "unset"}
+                                                          :link     (not (str/blank? @invite-user))
+                                                          :color    (when (not (str/blank? @invite-user)) "blue")
+                                                          :circular true
+                                                          :onClick  invite-fn}])
+                   :style        {:width "280px" :cursor :pointer}
+                   :on-key-press (partial forms/on-return-key invite-fn)
+                   :value        (or @invite-user "")
+                   :on-change    (ui-callback/value #(reset! invite-user %))}]))))
+
+(defn sanitize-name [name]
+  (when name
+    (str/lower-case
+      (str/replace
+        (str/trim
+          (str/join "" (re-seq #"[a-zA-Z0-9-_\ ]" name)))
+        " " "-"))))
+
+(defn AddGroupButton
+  [_opts]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        show?      (r/atom false)
+        group-name (r/atom "")
+        group-desc (r/atom "")
+        validate?  (r/atom false)
+        loading?   (r/atom false)
+        close-fn   #(reset! show? false)]
+    (fn [{:keys [parent-group header]}]
+      (let [group-identifier (sanitize-name @group-name)
+            form-valid?      (and (s/valid? ::group-name @group-name)
+                                  (s/valid? ::group-description @group-desc))]
+        [ui/Modal
+         {:open       @show?
+          :close-icon true
+          :on-close   close-fn
+          :trigger    (r/as-element
+                        [ui/Button {:secondary true
+                                    :size      "small"
+                                    :icon      true
+                                    :on-click  #(reset! show? true)}
+                         [icons/PlusSquareIcon]
+                         header])}
+         [uix/ModalHeader {:header header}]
+         [ui/ModalContent
+          [ui/Message {:hidden (not (and @validate? (not form-valid?)))
+                       :error  true}
+           [ui/MessageHeader (@tr [:validation-error])]
+           [ui/MessageContent (@tr [:validation-error-message])]]
+          (when-not (str/blank? group-identifier)
+            [:i {:style {:padding-left "1ch"
+                         :color        :grey}}
+             [:b "id : "]
+             (str "group/" group-identifier)])
+          [ui/Table style/definition
+           [ui/TableBody
+            [uix/TableRowField (@tr [:name]), :required? true, :default-value @group-name,
+             :validate-form? @validate?, :spec ::group-name,
+             :on-change #(reset! group-name %)]
+            [uix/TableRowField (@tr [:description]), :required? true,
+             :spec ::group-description, :validate-form? @validate?,
+             :default-value @group-desc, :on-change #(reset! group-desc %)]]]]
+         [ui/ModalActions
+          [uix/Button
+           {:text     (str/capitalize (@tr [:add]))
+            :primary  true
+            :disabled (and @validate? (not form-valid?))
+            :loading  @loading?
+            :on-click #(if (not form-valid?)
+                         (reset! validate? true)
+                         (do
+                           (reset! show? false)
+                           (dispatch
+                             [::events/add-group {:parent-group     parent-group
+                                                  :group-identifier group-identifier
+                                                  :group-name       @group-name
+                                                  :group-desc       @group-desc
+                                                  :loading?         loading?}])))}]]]))))
+
 (defn GroupMembers
   [group]
-  (let [tr          (subscribe [::i18n-subs/tr])
-        editable?   (utils-general/editable? group false)
-        users       (:users group)
-        members     (r/atom users)
-        acl         (r/atom (:acl group))
-        changed?    (r/cursor group-changed! [(:id group)])
-        show-acl?   (r/atom false)
-        invite-user (r/atom nil)
-        add-user    (r/atom nil)]
-    (fn [group]
-      (let [{:keys [id name description]} group]
-        [ui/Table {:columns 4}
-         [ui/TableHeader {:fullWidth true}
-          [ui/TableRow
-           [ui/TableHeaderCell
-            [ui/HeaderSubheader {:as :h3}
-             name " (" id ")"]
-            (when description [:p description])]
-           (when (and @acl editable?)
-             [ui/TableHeaderCell
-              [acl-views/AclButtonOnly {:default-value @acl
-                                        :read-only     (not editable?)
-                                        :active?       show-acl?}]])]
-          (when @show-acl?
-            [ui/TableRow
-             [ui/TableCell {:colSpan 4}
-              [acl-views/AclSection {:default-value @acl
-                                     :read-only     (not editable?)
-                                     :active?       show-acl?
-                                     :on-change     #(do
-                                                       (reset! acl %)
-                                                       (set-group-changed! id)
-                                                       (dispatch [::main-events/changes-protection? true]))}]]])]
-         [ui/TableBody
-          [ui/TableRow
-           [ui/TableCell
-            (if (empty? @members)
-              [uix/MsgNoItemsToShow [uix/TR (if editable? :empty-group-message
-                                                          :empty-group-or-no-access-message)]]
-              [ui/ListSA
-               (for [m @members]
-                 ^{:key m}
-                 [GroupMember id m members editable?])])]]
-          (when editable?
-            [ui/TableRow
-             [ui/TableCell
-              [:div {:style {:display "flex"}}
-               [DropdownPrincipals
-                add-user
-                {:placeholder (@tr [:add-group-members])
-                 :fluid       true} @members]
-               [:span utils-general/nbsp]
-               [uix/Button {:text     (@tr [:add])
-                            :icon     "add user"
-                            :disabled (str/blank? @add-user)
-                            :on-click #(do
-                                         (swap! members conj @add-user)
-                                         (reset! add-user nil)
-                                         (set-group-changed! id)
-                                         (dispatch [::main-events/changes-protection? true]))}]
-               [:span utils-general/nbsp]
-               [:span utils-general/nbsp]
-               [ui/Input {:placeholder (@tr [:invite-by-email])
-                          :style       {:width "250px"}
-                          :value       (or @invite-user "")
-                          :on-change   (ui-callback/value #(reset! invite-user %))}]
-               [:span utils-general/nbsp]
-               [uix/Button {:text     (@tr [:send])
-                            :icon     "send"
-                            :disabled (str/blank? @invite-user)
-                            :on-click #(do
-                                         (dispatch [::events/invite-to-group id @invite-user])
-                                         (reset! invite-user nil))}]]]
-             [ui/TableCell {:textAlign "right"}
-              [uix/Button {:primary  true
-                           :text     (@tr [:save])
-                           :icon     "save"
-                           :disabled (not @changed?)
-                           :on-click #(do (dispatch [::events/edit-group (assoc group :users @members, :acl @acl)])
-                                          (disable-changes-protection! id))}]]])]]))))
+  (let [editable? (utils-general/editable? group false)]
+    (fn [{:keys [id name description users] :as group}]
+      (let [group-name (or name id)]
+        [:<>
+         [:div {:style {:display         :flex
+                        :align-items     :flex-start
+                        :justify-content :space-between
+                        :flex-wrap       :wrap
+                        :padding-bottom  "1em"}}
+          [ui/Header {:as :h3}
+           [icons/UserGroupIcon]
+           [ui/HeaderContent
+            group-name
+            [ui/HeaderSubheader description " (" id ")"]]]
+          (when (utils-general/can-operation? "add-subgroup" group)
+            [AddGroupButton {:header "Add Subgroup"
+                             :parent-group group}])]
+         [ui/Header {:as :h3 :dividing true} "Members"]
+         (if (empty? users)
+           [uix/MsgNoItemsToShow [uix/TR (if editable? :empty-group-message
+                                                       :empty-group-or-no-access-message)]]
 
-(defn GroupMembersSegment
-  []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::subs/loading? :group])
-        group    (subscribe [::subs/group])]
-    (dispatch [::events/get-group])
-    (fn []
-      [ui/Segment {:padded  true
-                   :color   "green"
-                   :loading @loading?
-                   :style   {:height "100%"}}
-       [ui/Header {:as :h2 :dividing true} (@tr [:group-members])]
-       ^{:key (random-uuid)}
-       [GroupMembers @group]])))
+           [ui/ListSA {:divided true :vertical-align "middle"}
+            (for [m users]
+              ^{:key m}
+              [GroupMember id group-name m editable? group])])
+         [InviteInput group]
+
+         ]))))
 
 (defn Group
-  []
-  (let [collapsed (r/atom true)]
-    (fn [{:keys [id name description children] :as _group}]
-      [ui/ListItem {:on-click #(do (swap! collapsed not)
+  [{:keys [id] :as _group} {:keys [parents] :as _selected-group}]
+  (let [collapsed (r/atom (not ((set parents) id)))]
+    (fn [{:keys [id name children] :as _group} selected-group]
+      (let [selected? (= (:id selected-group) id)
+            children? (boolean (seq children))]
+        [ui/ListItem {:on-click #(do
+                                   (dispatch [::routing-events/navigate routes/groups-details {:uuid (utils-general/id->uuid id)}])
                                    (.stopPropagation %))}
-       [ui/ListIcon {:name "group"}]
-       [ui/ListContent
-        [ui/ListHeader (or name id)]
-        (when description [ui/ListDescription description])
-        (when (and (not @collapsed) (seq children))
-          [ui/ListList
-           (for [child children]
-             ^{:key (:id child)}
-             [Group child])])]])))
+         [ui/ListIcon {:style    {:padding   5
+                                  :min-width "17px"}
+                       :on-click #(when children?
+                                    (swap! collapsed not)
+                                    (.stopPropagation %))
+                       :name     (if (seq children)
+                                   (if @collapsed "angle right" "angle down")
+                                   "")}]
+         [ui/ListContent
+          [ui/ListHeader
+           {:className "nuvla-group-item"
+            :style     (cond-> {:padding       5
+                                :border-radius 5}
+                               selected? (assoc :background-color "lightgray")
+                               (not selected?) (assoc :font-weight 400))}
+           (or name id)]
+          (when (and (not @collapsed) (seq children))
+            [ui/ListList
+             (for [child (sort-by (juxt :id :name) children)]
+               ^{:key (:id child)}
+               [Group child selected-group])])]]))))
 
 (defn GroupHierarchySegment
-  []
-  (let [groups-hierarchy @(subscribe [::session-subs/groups-hierarchies])]
-    [ui/Segment {:padded true
-                 :color  "purple"}
-     [ui/Header {:as :h2 :dividing true} "Group Hierarchy"]
-     [ui/ListSA {:celled true
-                 :style  {:cursor :pointer}}
-      (for [group-hierarchy groups-hierarchy]
+  [selected-group]
+  (let [tr @(subscribe [::i18n-subs/tr])
+        groups-hierarchy @(subscribe [::session-subs/groups-hierarchies])]
+    [ui/Segment {:raised true :style {:overflow-x :auto
+                                      :min-height "100%"}}
+
+     [:div {:style {:display         :flex
+                    :align-items     :baseline
+                    :justify-content :space-between
+                    :flex-wrap       :wrap
+                    :padding-bottom  "1em"}}
+      [ui/Header {:as :h3} "Groups"]
+      [AddGroupButton {:header (tr [:add-group])}]]
+
+     [full-text-search-plugin/FullTextSearch
+      {:db-path      [::deployments-search]
+       :change-event [:a]
+       :style        {:width "100%"}}]
+     [ui/ListSA {:selection true}
+      (for [group-hierarchy (sort-by (juxt :id :name) groups-hierarchy)]
         ^{:key (:id group-hierarchy)}
-        [Group group-hierarchy])]]))
+        [Group group-hierarchy selected-group])]]))
 
 (defn GroupsViewPage
-  []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        groups    (subscribe [::session-subs/groups])
-        is-group? (subscribe [::session-subs/is-group?])
-        is-admin? (subscribe [::session-subs/is-admin?])]
-    (fn []
-      (let [remove-groups #{"group/nuvla-nuvlabox" "group/nuvla-anon" "group/nuvla-user"
-                            (when-not @is-admin? "group/nuvla-admin")}
-            sorted-groups (->> @groups
-                               (remove (comp remove-groups :id))
-                               (sort-by :id))]
-        [:<>
-         (when @is-group?
-           [ui/GridColumn
-            [GroupMembersSegment]])
-         [GroupHierarchySegment]
-         [ui/Segment {:padded true, :color "blue"}
-          [ui/Header {:as :h2} (str/capitalize (@tr [:groups]))]
-          (for [group sorted-groups]
-            ^{:key (str "group-" group)}
-            [GroupMembers group])]]))))
+  [{path :path}]
+  (let [[_ uuid] path
+        selected-group (when uuid
+                         @(subscribe [::session-subs/group (str "group/" uuid)]))]
+    [ui/Grid {:stackable false}
+     [ui/GridColumn {:stretched true
+                     :computer  4
+                     :tablet    6
+                     :mobile    8
+                     :style     {:background-color "light-gray"
+                                 :padding-right    0}}
+      [GroupHierarchySegment selected-group]]
+     [ui/GridColumn {:stretched true
+                     :tablet    10
+                     :computer  12
+                     :mobile    8
+                     :style     {:background-color "light-gray"
+                                 :padding-right    0}}
+      [ui/Segment {:style {:min-height "100%"
+                           :overflow-x :auto}}
+       (if selected-group
+         ^{:key selected-group}
+         [GroupMembers selected-group]
+         [uix/MsgNoItemsToShow [uix/TR "Select a Group"]])]]]))

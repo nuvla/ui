@@ -73,7 +73,7 @@
         :add-dropdown                                  "Add:"
         :add-edges                                     "Add edges"
         :add-first-tag                                 "Add your first tag"
-        :add-group                                     "add group"
+        :add-group                                     "Add Group"
         :add-group-members                             "add group members"
         :add-license                                   "Add a license"
         :add-payment-method                            "Add payment method"

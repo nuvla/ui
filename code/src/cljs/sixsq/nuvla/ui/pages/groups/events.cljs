@@ -6,6 +6,7 @@
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.session.events :as session-events]
             [sixsq.nuvla.ui.session.spec :as session-spec]
+            [sixsq.nuvla.ui.pages.groups.spec :as spec]
             [sixsq.nuvla.ui.utils.response :as response]))
 
 (reg-event-fx
@@ -59,13 +60,39 @@
                                                      status (str " (" status ")"))
                                     :content message
                                     :type    :error}]))
-          on-success #(dispatch [::messages-events/add
-                                 {:header  "Invitation successfully sent to user"
-                                  :content (str "User will appear in " group-id
-                                                " when he accept the invitation sent to his email address.")
-                                  :type    :info}])
+          on-success #(do (dispatch [::messages-events/add
+                                     {:header  "Invitation successfully sent to user"
+                                      :content (str "User will appear in " group-id
+                                                    " when he accept the invitation sent to his email address.")
+                                      :type    :info}])
+                          (dispatch [::get-pending-invitations group-id]))
           data       {:username         username
                       :redirect-url     (str (::session-spec/server-redirect-uri db)
                                              "?message=join-group-accepted")
                       :set-password-url (str @config/path-prefix "/set-password")}]
       {::cimi-api-fx/operation [group-id "invite" on-success :on-error on-error :data data]})))
+
+(reg-event-fx
+  ::get-pending-invitations
+  (fn [{db :db} [_ group-id]]
+    (let [on-success #(dispatch [::set-pending-invitations %])]
+      {:db (assoc db ::spec/pending-invitations nil)
+       ::cimi-api-fx/operation
+       [group-id "get-pending-invitations" on-success]})))
+
+(reg-event-db
+  ::set-pending-invitations
+  (fn [db [_ pending-invitations]]
+    (assoc db ::spec/pending-invitations pending-invitations)))
+
+(reg-event-fx
+  ::revoke
+  (fn [_ [_ {group-id :id :as _group} invited-email]]
+    (let [on-success #(do (dispatch [::messages-events/add
+                                     {:header  "Invitation successfully revoked"
+                                      :content (str "Invitation successfully revoked for "
+                                                    invited-email " from " group-id ".")
+                                      :type    :info}])
+                          (dispatch [::get-pending-invitations group-id]))]
+      {::cimi-api-fx/operation [group-id "revoke-invitation" on-success
+                                :data {:email invited-email}]})))

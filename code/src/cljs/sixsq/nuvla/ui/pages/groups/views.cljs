@@ -9,6 +9,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.pages.groups.subs :as subs]
             [sixsq.nuvla.ui.utils.forms :as forms]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
@@ -104,6 +105,14 @@
                        :Content    "Extend user view to member's list"
                        :Icon       [icons/Icon {:className "far fa-eye"}]}])
 
+(defn RevokeInvitationButton
+  [group invited-email]
+  (let [group-name (or (:name group) (:id group))]
+    [ConfirmActionModal {:on-confirm #(dispatch [::events/revoke group invited-email])
+                         :header     "Revoke invitation"
+                         :Content    [:span "Do you want to revoke the invitation of " [:b invited-email] " from " [:b group-name] " group?"]
+                         :Icon       [icons/TrashIcon]}]))
+
 (defn GroupMember
   [id group-name principal editable? {{:keys [owners manage view-data view-acl] :as acl} :acl :as group}]
   (let [tr                (subscribe [::i18n-subs/tr])
@@ -158,25 +167,28 @@
 (defn InviteInput
   [{:keys [id] :as _group}]
   (let [tr          (subscribe [::i18n-subs/tr])
-        invite-user (r/atom nil)
+        reset-key   (r/atom (random-uuid))
+        invite-user (r/atom "")
         invite-fn   #(do
                        (when-not (str/blank? @invite-user)
                          (dispatch [::events/invite-to-group id @invite-user])
-                         (reset! invite-user nil)))]
+                         (reset! reset-key (random-uuid))
+                         (reset! invite-user "")))]
     (fn [group]
       (when (utils-general/can-operation? "invite" group)
-        [ui/Input {:placeholder  (@tr [:invite-by-email])
-                   :type         :email
-                   :icon         (r/as-element
-                                   [icons/PaperPlaneIcon {:style    {:font-size "unset"}
-                                                          :link     (not (str/blank? @invite-user))
-                                                          :color    (when (not (str/blank? @invite-user)) "blue")
-                                                          :circular true
-                                                          :onClick  invite-fn}])
-                   :style        {:width "280px" :cursor :pointer}
-                   :on-key-press (partial forms/on-return-key invite-fn)
-                   :value        (or @invite-user "")
-                   :on-change    (ui-callback/value #(reset! invite-user %))}]))))
+        ^{:key @reset-key}
+        [ui/Input {:placeholder   (@tr [:invite-by-email])
+                   :type          :email
+                   :icon          (r/as-element
+                                    [icons/PaperPlaneIcon {:style    {:font-size "unset"}
+                                                           :link     (not (str/blank? @invite-user))
+                                                           :color    (when (not (str/blank? @invite-user)) "blue")
+                                                           :circular true
+                                                           :onClick  invite-fn}])
+                   :style         {:width "280px" :cursor :pointer}
+                   :on-key-press  (partial forms/on-return-key invite-fn)
+                   :default-value @invite-user
+                   :on-change     (ui-callback/value #(reset! invite-user %))}]))))
 
 (defn sanitize-name [name]
   (when name
@@ -263,9 +275,9 @@
             group-name
             [ui/HeaderSubheader description " (" id ")"]]]
           (when (utils-general/can-operation? "add-subgroup" group)
-            [AddGroupButton {:header "Add Subgroup"
+            [AddGroupButton {:header       "Add Subgroup"
                              :parent-group group}])]
-         [ui/Header {:as :h3 :dividing true} "Members"]
+         [ui/Header {:as :h3} "Members"]
          (if (empty? users)
            [uix/MsgNoItemsToShow [uix/TR (if editable? :empty-group-message
                                                        :empty-group-or-no-access-message)]]
@@ -274,9 +286,29 @@
             (for [m users]
               ^{:key m}
               [GroupMember id group-name m editable? group])])
-         [InviteInput group]
+         [InviteInput group]]))))
 
-         ]))))
+(defn GroupPendingInvitations
+  [group]
+  (let [pending-invitations (subscribe [::subs/pending-invitations (:id group)])]
+    (dispatch [::events/get-pending-invitations (:id group) pending-invitations])
+    (fn [group]
+      [:<>
+       [ui/Header {:as :h3} "Pending invitations"]
+       (if (empty? @pending-invitations)
+         [uix/MsgNoItemsToShow "No pending invitations"]
+         [ui/ListSA {:divided true :vertical-align "middle"}
+          (for [pi @pending-invitations]
+            ^{:key (:invited-email pi)}
+            [ui/ListItem
+             [ui/ListContent {:floated :right}
+              (when (utils-general/can-operation? "revoke-invitation" group)
+                [RevokeInvitationButton group (:invited-email pi)])]
+             [ui/ListContent {:style {:display :flex :align-items :flex-end}}
+              [ui/IconGroup
+               [ui/Icon {:className icons/i-user :size "large"}]]
+              (:invited-email pi)]
+             ])])])))
 
 (defn Group
   [{:keys [id] :as _group} {:keys [parents] :as _selected-group}]
@@ -311,7 +343,7 @@
 
 (defn GroupHierarchySegment
   [selected-group]
-  (let [tr @(subscribe [::i18n-subs/tr])
+  (let [tr               @(subscribe [::i18n-subs/tr])
         groups-hierarchy @(subscribe [::session-subs/groups-hierarchies])]
     [ui/Segment {:raised true :style {:overflow-x :auto
                                       :min-height "100%"}}
@@ -356,5 +388,9 @@
                            :overflow-x :auto}}
        (if selected-group
          ^{:key selected-group}
-         [GroupMembers selected-group]
+         [:<>
+          [GroupMembers selected-group]
+          (when (utils-general/can-operation? "get-pending-invitations" selected-group)
+            ^{:key (:id selected-group)}
+            [GroupPendingInvitations selected-group])]
          [uix/MsgNoItemsToShow [uix/TR "Select a Group"]])]]]))

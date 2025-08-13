@@ -4,13 +4,13 @@
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.pages.groups.events :as events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.pages.groups.subs :as subs]
             [sixsq.nuvla.ui.utils.forms :as forms]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -343,27 +343,30 @@
 
 (defn GroupHierarchySegment
   [selected-group]
-  (let [tr               @(subscribe [::i18n-subs/tr])
-        groups-hierarchy @(subscribe [::session-subs/groups-hierarchies])]
-    [ui/Segment {:raised true :style {:overflow-x :auto
-                                      :min-height "100%"}}
+  (let [tr     (subscribe [::i18n-subs/tr])
+        search (r/atom "")]
+    (fn []
+      (let [filtered-groups-hierarch @(subscribe [::subs/filter-groups-hierarchy @search])]
+        [ui/Segment {:raised true :style {:overflow-x :auto
+                                          :min-height "100%"}}
 
-     [:div {:style {:display         :flex
-                    :align-items     :baseline
-                    :justify-content :space-between
-                    :flex-wrap       :wrap
-                    :padding-bottom  "1em"}}
-      [ui/Header {:as :h3} "Groups"]
-      [AddGroupButton {:header (tr [:add-group])}]]
-
-     [full-text-search-plugin/FullTextSearch
-      {:db-path      [::deployments-search]
-       :change-event [:a]
-       :style        {:width "100%"}}]
-     [ui/ListSA {:selection true}
-      (for [group-hierarchy (sort-by (juxt :id :name) groups-hierarchy)]
-        ^{:key (:id group-hierarchy)}
-        [Group group-hierarchy selected-group])]]))
+         [:div {:style {:display         :flex
+                        :align-items     :baseline
+                        :justify-content :space-between
+                        :flex-wrap       :wrap
+                        :padding-bottom  "1em"}}
+          [ui/Header {:as :h3} "Groups"]
+          [AddGroupButton {:header (@tr [:add-group])}]]
+         [ui/Input
+          {:style         {:width "100%"}
+           :placeholder   (str (@tr [:search]) "...")
+           :icon          "search"
+           :default-value @search
+           :on-change     (ui-callback/input-callback #(reset! search %))}]
+         [ui/ListSA {:selection true}
+          (for [group-hierarchy (sort-by (juxt :id :name) filtered-groups-hierarch)]
+            ^{:key (:id group-hierarchy)}
+            [Group group-hierarchy selected-group])]]))))
 
 (defn GroupsViewPage
   [{path :path}]

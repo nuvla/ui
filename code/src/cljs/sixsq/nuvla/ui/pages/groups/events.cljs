@@ -78,7 +78,7 @@
     (let [on-success #(dispatch [::set-pending-invitations %])]
       {:db (assoc db ::spec/pending-invitations nil)
        ::cimi-api-fx/operation
-       [group-id "get-pending-invitations" on-success]})))
+       [group-id "get-pending-invitations" on-success :on-error #()]})))
 
 (reg-event-db
   ::set-pending-invitations

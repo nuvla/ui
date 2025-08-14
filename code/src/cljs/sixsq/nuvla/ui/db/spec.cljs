@@ -27,6 +27,7 @@
             [sixsq.nuvla.ui.pages.edges-detail.spec :as edges-detail]
             [sixsq.nuvla.ui.pages.edges.spec :as edges]
             [sixsq.nuvla.ui.pages.profile.spec :as profile]
+            [sixsq.nuvla.ui.pages.groups.spec :as groups]
             [sixsq.nuvla.ui.routing.router :refer [router]]
             [sixsq.nuvla.ui.session.spec :as session]))
 
@@ -69,4 +70,5 @@
          resource-log/defaults
          deployment-sets/defaults
          deployment-sets-detail/defaults
+         groups/defaults
          {:router router}))

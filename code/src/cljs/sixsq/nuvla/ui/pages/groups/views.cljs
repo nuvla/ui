@@ -345,7 +345,7 @@
   [selected-group]
   (let [tr     (subscribe [::i18n-subs/tr])
         search (r/atom "")]
-    (fn []
+    (fn [selected-group]
       (let [filtered-groups-hierarch @(subscribe [::subs/filter-groups-hierarchy @search])]
         [ui/Segment {:raised true :style {:overflow-x :auto
                                           :min-height "100%"}}

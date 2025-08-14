@@ -363,10 +363,12 @@
            :icon          "search"
            :default-value @search
            :on-change     (ui-callback/input-callback #(reset! search %))}]
-         [ui/ListSA {:selection true}
-          (for [group-hierarchy (sort-by (juxt :id :name) filtered-groups-hierarch)]
-            ^{:key (:id group-hierarchy)}
-            [Group group-hierarchy selected-group])]]))))
+         (if (seq filtered-groups-hierarch)
+           [ui/ListSA {:selection true}
+           (for [group-hierarchy (sort-by (juxt :id :name) filtered-groups-hierarch)]
+             ^{:key (:id group-hierarchy)}
+             [Group group-hierarchy selected-group])]
+           [uix/MsgNoItemsToShow [uix/TR "No groups found"]])]))))
 
 (defn GroupsViewPage
   [{path :path}]

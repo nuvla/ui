@@ -258,6 +258,52 @@
                                                   :group-desc       @group-desc
                                                   :loading?         loading?}])))}]]]))))
 
+(defn EditGroupButton
+  [{:keys [name description] :as group}]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        show?      (r/atom false)
+        group-name (r/atom name)
+        group-desc (r/atom description)
+        validate?  (r/atom false)
+        close-fn   #(reset! show? false)]
+    (fn [_group]
+      (let [form-valid? (and (s/valid? ::group-name @group-name)
+                             (s/valid? ::group-description @group-desc))]
+        [ui/Modal
+         {:open       @show?
+          :close-icon true
+          :on-close   close-fn
+          :trigger    (r/as-element
+                        [icons/PencilIcon {:on-click #(reset! show? true)
+                                           :style    {:cursor :pointer}}])}
+         [uix/ModalHeader {:header "Edit group"}]
+         [ui/ModalContent
+          [ui/Message {:hidden (not (and @validate? (not form-valid?)))
+                       :error  true}
+           [ui/MessageHeader (@tr [:validation-error])]
+           [ui/MessageContent (@tr [:validation-error-message])]]
+          [ui/Table style/definition
+           [ui/TableBody
+            [uix/TableRowField (@tr [:name]), :required? true, :default-value @group-name,
+             :validate-form? @validate?, :spec ::group-name,
+             :on-change #(reset! group-name %)]
+            [uix/TableRowField (@tr [:description]), :required? true,
+             :spec ::group-description, :validate-form? @validate?,
+             :default-value @group-desc, :on-change #(reset! group-desc %)]]]]
+         [ui/ModalActions
+          [uix/Button
+           {:text     (str/capitalize (@tr [:save]))
+            :primary  true
+            :disabled (and @validate? (not form-valid?))
+            :on-click #(if (not form-valid?)
+                         (reset! validate? true)
+                         (do
+                           (reset! show? false)
+                           (dispatch
+                             [::events/edit-group (assoc group
+                                                    :name @group-name
+                                                    :description @group-desc)])))}]]]))))
+
 (defn GroupMembers
   [group]
   (let [editable? (utils-general/editable? group false)]
@@ -272,7 +318,8 @@
           [ui/Header {:as :h3}
            [icons/UserGroupIcon]
            [ui/HeaderContent
-            group-name
+            group-name " " (when editable?
+                             [EditGroupButton group])
             [ui/HeaderSubheader description " (" id ")"]]]
           (when (utils-general/can-operation? "add-subgroup" group)
             [AddGroupButton {:header       "Add Subgroup"
@@ -365,9 +412,9 @@
            :on-change     (ui-callback/input-callback #(reset! search %))}]
          (if (seq filtered-groups-hierarch)
            [ui/ListSA {:selection true}
-           (for [group-hierarchy (sort-by (juxt :id :name) filtered-groups-hierarch)]
-             ^{:key (:id group-hierarchy)}
-             [Group group-hierarchy selected-group])]
+            (for [group-hierarchy (sort-by (juxt :id :name) filtered-groups-hierarch)]
+              ^{:key (:id group-hierarchy)}
+              [Group group-hierarchy selected-group])]
            [uix/MsgNoItemsToShow [uix/TR "No groups found"]])]))))
 
 (defn GroupsViewPage

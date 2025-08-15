@@ -50,4 +50,5 @@
 (def api-slashed ::api-slashed)
 (def api-sub-page ::api-sub-page)
 (def profile ::profile)
+(def callback ::callback)
 (def catch-all ::catch-all)

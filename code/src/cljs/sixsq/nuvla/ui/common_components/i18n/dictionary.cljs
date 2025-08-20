@@ -3,6 +3,8 @@
 
 (def dictionary
   {:en {
+        :group-name-validation-error                   "Group name should start with an alphanumeric character. Space, dash and underscore characters are allowed but not at the end of the group name."
+        :group-descr-validation-error                  "Description should not be an empty string."
         :stop-deployment-remove-volumes                "Remove volumes"
         :stop-deployment-remove-images                 "Remove images"
         :stop-deployment-remove-opts-require-ne-2.19   "The selected options require NuvlaEdge version 2.19 or higher to be taken into account."
@@ -1207,6 +1209,8 @@
         }
 
    :fr {
+        :group-name-validation-error                   "Le nom du groupe doit commencer par un caractère alphanumérique. Les espaces, les tirets et les traits de soulignement sont autorisés, mais pas à la fin du nom de groupe."
+        :group-descr-validation-error                  "La description ne doit pas être une chaîne de caractères vide."
         :stop-deployment-remove-volumes                "Supprimer les volumes"
         :stop-deployment-remove-images                 "Supprimer les images"
         :stop-deployment-remove-opts-require-ne-2.19   "Les options sélectionnées nécessitent la version 2.19 ou supérieure de NuvlaEdge pour être prises en compte."

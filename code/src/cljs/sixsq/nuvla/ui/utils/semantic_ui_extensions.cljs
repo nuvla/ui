@@ -371,7 +371,9 @@
                  editable? validate-form? type input-help-msg style options input-extra-options]
           :or   {editable?    true, spec any?, type :input
                  show-pencil? true}}]
-      (let [validate?       (boolean (or @local-validate? validate-form?))
+      (let [validate?       (if (some? validate-form?)
+                              validate-form?
+                              @local-validate?)
             error?          (and validate? (not (s/valid? spec default-value)))
             input-cbk       (ui-callback/input-callback
                               #(let [text (when-not (str/blank? %) %)]
@@ -447,22 +449,17 @@
 (defn TableRowField
   [_name & {:keys [_key _placeholder _default-value _spec _on-change _on-validation _style
                    _required? _editable? _validate-form? _type _help-popup]}]
-  (let [local-validate? (r/atom false)]
-    (fn [name & {:keys [key _placeholder default-value spec _on-change on-validation
-                        required? editable? validate-form? _type help-popup _style]
-                 :or   {editable? true, spec any?}
-                 :as   options}]
-      (let [validate? (boolean (or @local-validate? validate-form?))
-            error?    (and validate? (not (s/valid? spec default-value)))]
-        (when on-validation
-          (dispatch [on-validation key error?]))
-        [ui/TableRow
-         [ui/TableCell {:collapsing true}
-          [FieldLabel {:name       name
-                       :required?  (and editable? required?)
-                       :help-popup help-popup}]]
-         ^{:key (or key name)}
-         [TableRowCell options]]))))
+  (fn [name & {:keys [key _placeholder _default-value spec _on-change _on-validation
+                      required? editable? _validate-form? _type help-popup _style]
+               :or   {editable? true, spec any?}
+               :as   options}]
+    [ui/TableRow
+     [ui/TableCell {:collapsing true}
+      [FieldLabel {:name       name
+                   :required?  (and editable? required?)
+                   :help-popup help-popup}]]
+     ^{:key (or key name)}
+     [TableRowCell options]]))
 
 (defn LinkIcon
   [{:keys [name on-click color class aria-label]}]

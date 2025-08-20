@@ -10,7 +10,6 @@
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.pages.groups.subs :as subs]
             [sixsq.nuvla.ui.utils.forms :as forms]
-            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -19,7 +18,12 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
-(s/def ::group-name us/nonblank-string)
+(defn acceptable-group-name?
+  [group-name]
+  (and (string? group-name)
+       (re-matches #"^([a-zA-Z0-9]([a-zA-Z0-9\s_-]*[a-zA-Z0-9])?)?$" group-name)))
+
+(s/def ::group-name acceptable-group-name?)
 (s/def ::group-description us/nonblank-string)
 
 (defn ConfirmActionModal
@@ -227,7 +231,9 @@
           [ui/Message {:hidden (not (and @validate? (not form-valid?)))
                        :error  true}
            [ui/MessageHeader (@tr [:validation-error])]
-           [ui/MessageContent (@tr [:validation-error-message])]]
+           [ui/MessageContent
+            (str/join " " [(when-not (s/valid? ::group-name @group-name) (@tr [:group-name-validation-error]))
+                           (when-not (s/valid? ::group-description @group-desc) (@tr [:group-descr-validation-error]))])]]
           (when-not (str/blank? group-identifier)
             [:i {:style {:padding-left "1ch"
                          :color        :grey}}
@@ -281,7 +287,9 @@
           [ui/Message {:hidden (not (and @validate? (not form-valid?)))
                        :error  true}
            [ui/MessageHeader (@tr [:validation-error])]
-           [ui/MessageContent (@tr [:validation-error-message])]]
+           [ui/MessageContent
+            (str/join " " [(when-not (s/valid? ::group-name @group-name) (@tr [:group-name-validation-error]))
+                           (when-not (s/valid? ::group-description @group-desc) (@tr [:group-descr-validation-error]))])]]
           [ui/Table style/definition
            [ui/TableBody
             [uix/TableRowField (@tr [:name]), :required? true, :default-value @group-name,

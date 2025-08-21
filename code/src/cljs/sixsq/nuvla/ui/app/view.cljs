@@ -81,13 +81,15 @@
 (defn LayoutCallback []
   [:div {:class "login-left"}
    [:div {:style {:background-color "#C10E12"}}
+    [:div {:style {:position :absolute
+                   :right    10
+                   :padding  10}} [i18n-views/LocaleDropdown]]
     [ui/Image {:alt      "logo"
                :src      "/ui/images/nuvla-logo.png"
                :size     "small"
                :centered true}]]
-   [:div {:style {:float "right"}} [i18n-views/LocaleDropdown]]
-   [:div {:style {:margin-top "10%"
-                  :padding "1em"
+   [:div {:style {:margin-top       "10%"
+                  :padding          "1em"
                   :background-color "rgba(0,0,0,0.5)"
                   :box-shadow       "0px 0px 50px black"
                   }}

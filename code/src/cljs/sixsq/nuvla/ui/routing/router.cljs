@@ -6,7 +6,8 @@
             [reitit.frontend.easy :as rfe]
             [reitit.frontend.history :as rfh]
             [sixsq.nuvla.ui.app.view :refer [LayoutAuthentication
-                                             LayoutPage]]
+                                             LayoutPage
+                                             LayoutCallback]]
             [sixsq.nuvla.ui.common-components.notifications.views :refer [notifications-view]]
             [sixsq.nuvla.ui.config :refer [base-path]]
             [sixsq.nuvla.ui.pages.about.views :refer [About]]
@@ -24,6 +25,7 @@
             [sixsq.nuvla.ui.pages.edges.views :refer [DetailedViewPage edges-view]]
             [sixsq.nuvla.ui.pages.edges.views-cluster :as views-cluster]
             [sixsq.nuvla.ui.pages.profile.views :refer [profile]]
+            [sixsq.nuvla.ui.pages.groups.views :refer [GroupsViewPage]]
             [sixsq.nuvla.ui.pages.welcome.views :refer [home-view]]
             [sixsq.nuvla.ui.routing.events :as events]
             [sixsq.nuvla.ui.routing.routes :as routes]
@@ -32,6 +34,7 @@
             [sixsq.nuvla.ui.session.set-password-views :as set-password-views]
             [sixsq.nuvla.ui.session.sign-in-views :as sign-in-views]
             [sixsq.nuvla.ui.session.sign-up-views :as sign-up-views]
+            [sixsq.nuvla.ui.pages.callback.views :refer [CallbackView]]
             [sixsq.nuvla.ui.unknown-resource :refer [UnknownResource]]))
 
 (defn- create-route-name
@@ -59,6 +62,22 @@
              :layout #'LayoutPage
              :view   #'views-cluster/ClusterViewPage}]])
         (utils/canonical->all-page-names "edges")))
+
+(def groups-routes
+  (mapv (fn [page-alias]
+          [page-alias
+           {:name       (create-route-name page-alias)
+            :layout     #'LayoutPage
+            :view       #'GroupsViewPage
+            :protected? true
+            :dict-key   :groups}
+           [""]
+           ["/" (create-route-name page-alias "-slashed")]
+           ["/:uuid"
+            {:name   (create-route-name page-alias "-details")
+             :layout #'LayoutPage
+             :view   #'GroupsViewPage}]])
+        (utils/canonical->all-page-names "groups")))
 
 (def cloud-routes
   (mapv (fn [page-alias]
@@ -121,6 +140,7 @@
     cloud-routes
     deployment-routes
     deployment-group-routes
+    groups-routes
     ["sign-up"
      {:name          ::routes/sign-up
       :layout        #'LayoutAuthentication
@@ -151,6 +171,10 @@
       :layout    #'LayoutPage
       :view      #'About
       :link-text "About"}]
+    ["callback"
+     {:name          ::routes/callback
+      :layout        #'LayoutCallback
+      :view          #'CallbackView}]
     ["welcome"
      {:name      ::routes/home
       :link-text "home"}]

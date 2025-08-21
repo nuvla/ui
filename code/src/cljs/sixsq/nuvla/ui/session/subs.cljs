@@ -219,14 +219,20 @@
   :<- [::groups]
   (fn [groups]
     (->> groups
-         (map (juxt :id :name))
+         (map (juxt :id identity))
          (into {}))))
+
+(reg-sub
+  ::group
+  :<- [::groups-mapping]
+  (fn [groups-mapping [_ id]]
+    (get groups-mapping id)))
 
 (reg-sub
   ::groups-options
   :<- [::groups-mapping]
   (fn [groups-mapping]
-    (map (fn [[id name]] {:key id, :value id, :text (or name (utils/remove-group-prefix id))}) groups-mapping)))
+    (map (fn [[id {:keys [name]}]] {:key id, :value id, :text (or name (utils/remove-group-prefix id))}) groups-mapping)))
 
 (reg-sub
   ::resolve-principal
@@ -237,7 +243,7 @@
   (fn [[current-user-id identifier peers groups] [_ id]]
     (if (string? id)
       (if (str/starts-with? id "group/")
-        (or (get groups id) (utils/remove-group-prefix id))
+        (or (get-in groups [id :name]) (utils/remove-group-prefix id))
         (utils/resolve-user current-user-id identifier peers id))
       id)))
 

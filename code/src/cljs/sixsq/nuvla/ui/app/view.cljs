@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.app.view
   (:require [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.common-components.i18n.views :as i18n-views]
             [sixsq.nuvla.ui.common-components.intercom.views :as intercom]
             [sixsq.nuvla.ui.main.components :as main-components]
             [sixsq.nuvla.ui.main.subs :as subs]
@@ -36,8 +37,8 @@
   [:<>
    (let [session @(subscribe [::session-subs/session])]
      (if session
-      [FollowRedirect]
-      [WatcherRedirectProtectedPage]))])
+       [FollowRedirect]
+       [WatcherRedirectProtectedPage]))])
 
 (defn RouterView []
   (let [CurrentView   @(subscribe [::route-subs/current-view])
@@ -76,6 +77,23 @@
       [main-views/IgnoreChangesModal]
       [main-views/SubscriptionRequiredModal]
       [main-views/Footer]]]]])
+
+(defn LayoutCallback []
+  [:div {:class "login-left"}
+   [:div {:style {:background-color "#C10E12"}}
+    [:div {:style {:position :absolute
+                   :right    10
+                   :padding  10}} [i18n-views/LocaleDropdown]]
+    [ui/Image {:alt      "logo"
+               :src      "/ui/images/nuvla-logo.png"
+               :size     "small"
+               :centered true}]]
+   [:div {:style {:margin-top       "10%"
+                  :padding          "1em"
+                  :background-color "rgba(0,0,0,0.5)"
+                  :box-shadow       "0px 0px 50px black"
+                  }}
+    [RouterView]]])
 
 (defn Loader []
   (let [tr     (subscribe [::i18n-subs/tr])

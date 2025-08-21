@@ -49,5 +49,8 @@
 (def api ::api)
 (def api-slashed ::api-slashed)
 (def api-sub-page ::api-sub-page)
+(def groups ::groups)
+(def groups-details ::groups-details)
 (def profile ::profile)
+(def callback ::callback)
 (def catch-all ::catch-all)

@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.pages.profile.spec
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
-            [sixsq.nuvla.ui.common-components.plugins.nav-tab :as nav-tab]
-            [sixsq.nuvla.ui.utils.spec :as us]))
+            [sixsq.nuvla.ui.common-components.plugins.nav-tab :as nav-tab]))
 
 (s/def ::user any?)
 (s/def ::customer any?)
@@ -17,11 +16,6 @@
 (s/def ::loading set?)
 (s/def ::setup-intent any?)
 (s/def ::vendor any?)
-(s/def ::group any?)
-(s/def ::group-name us/nonblank-string)
-(s/def ::group-description us/nonblank-string)
-(s/def ::group-form (s/keys :req [::group-name
-                                  ::group-description]))
 (s/def ::tab any?)
 (s/def ::two-factor-step (s/nilable string?))
 (s/def ::two-factor-enable? boolean?)
@@ -43,7 +37,6 @@
                ::error-message       nil
                ::loading             #{}
                ::vendor              nil
-               ::group               nil
                ::tab                 (nav-tab/build-spec)
                ::two-factor-step     :install-app
                ::two-factor-enable?  true

@@ -2,6 +2,25 @@
 
 ## Released
 
+## [2.51.0](https://github.com/nuvla/ui/compare/2.50.0...2.51.0) (2025-08-21)
+
+
+### Features
+
+* **Callback page:** Implement a callback layout and page to protect callbacks execution from email scanners ([6f05889](https://github.com/nuvla/ui/commit/6f058894f7d74556fa589e3c7b60069b9fbd10db))
+* **Groups page:** Make possible to update group name and description ([6f05889](https://github.com/nuvla/ui/commit/6f058894f7d74556fa589e3c7b60069b9fbd10db))
+* **Groups page:** Moved to a new page ([6f05889](https://github.com/nuvla/ui/commit/6f058894f7d74556fa589e3c7b60069b9fbd10db))
+* **Groups page:** Pending invitations ([6f05889](https://github.com/nuvla/ui/commit/6f058894f7d74556fa589e3c7b60069b9fbd10db))
+* **Groups page:** Revoke invitation ([6f05889](https://github.com/nuvla/ui/commit/6f058894f7d74556fa589e3c7b60069b9fbd10db))
+* **Groups page:** Search/filter groups hierarchy by group name, group id, username ([6f05889](https://github.com/nuvla/ui/commit/6f058894f7d74556fa589e3c7b60069b9fbd10db))
+
+
+### Bug Fixes
+
+* **Group page:** Align spec and validation with group name of the server ([6f05889](https://github.com/nuvla/ui/commit/6f058894f7d74556fa589e3c7b60069b9fbd10db))
+* **Groups page:** Show hierarchy next to group edition ([6f05889](https://github.com/nuvla/ui/commit/6f058894f7d74556fa589e3c7b60069b9fbd10db))
+* **UIX:** TableRowCell is directly in error when value doesn't match the spec even if validate-form? is false ([6f05889](https://github.com/nuvla/ui/commit/6f058894f7d74556fa589e3c7b60069b9fbd10db))
+
 ## [2.50.0](https://github.com/nuvla/ui/compare/2.49.0...2.50.0) (2025-07-24)
 
 

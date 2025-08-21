@@ -3,6 +3,7 @@
 
 (def dictionary
   {:en {
+        :please-click-to-proceed                       "Please click here to proceed"
         :group-name-validation-error                   "Group name should start with an alphanumeric character. Space, dash and underscore characters are allowed but not at the end of the group name."
         :group-descr-validation-error                  "Description should not be an empty string."
         :stop-deployment-remove-volumes                "Remove volumes"
@@ -75,7 +76,7 @@
         :add-dropdown                                  "Add:"
         :add-edges                                     "Add edges"
         :add-first-tag                                 "Add your first tag"
-        :add-group                                     "Add Group"
+        :add-group                                     "add group"
         :add-group-members                             "add group members"
         :add-license                                   "Add a license"
         :add-payment-method                            "Add payment method"
@@ -1209,6 +1210,7 @@
         }
 
    :fr {
+        :please-click-to-proceed                       "Veuillez cliquer ici pour continuer"
         :group-name-validation-error                   "Le nom du groupe doit commencer par un caractère alphanumérique. Les espaces, les tirets et les traits de soulignement sont autorisés, mais pas à la fin du nom de groupe."
         :group-descr-validation-error                  "La description ne doit pas être une chaîne de caractères vide."
         :stop-deployment-remove-volumes                "Supprimer les volumes"

@@ -6,7 +6,8 @@
             [reitit.frontend.easy :as rfe]
             [reitit.frontend.history :as rfh]
             [sixsq.nuvla.ui.app.view :refer [LayoutAuthentication
-                                             LayoutPage]]
+                                             LayoutPage
+                                             LayoutCallback]]
             [sixsq.nuvla.ui.common-components.notifications.views :refer [notifications-view]]
             [sixsq.nuvla.ui.config :refer [base-path]]
             [sixsq.nuvla.ui.pages.about.views :refer [About]]
@@ -33,6 +34,7 @@
             [sixsq.nuvla.ui.session.set-password-views :as set-password-views]
             [sixsq.nuvla.ui.session.sign-in-views :as sign-in-views]
             [sixsq.nuvla.ui.session.sign-up-views :as sign-up-views]
+            [sixsq.nuvla.ui.pages.callback.views :refer [CallbackView]]
             [sixsq.nuvla.ui.unknown-resource :refer [UnknownResource]]))
 
 (defn- create-route-name
@@ -169,6 +171,10 @@
       :layout    #'LayoutPage
       :view      #'About
       :link-text "About"}]
+    ["callback"
+     {:name          ::routes/callback
+      :layout        #'LayoutCallback
+      :view          #'CallbackView}]
     ["welcome"
      {:name      ::routes/home
       :link-text "home"}]

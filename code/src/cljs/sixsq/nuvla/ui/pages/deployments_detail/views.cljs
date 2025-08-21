@@ -19,6 +19,7 @@
             [sixsq.nuvla.ui.pages.deployments-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.deployments-detail.subs :as subs]
             [sixsq.nuvla.ui.pages.deployments-detail.views-coe-resources-docker :as coe-resources-docker]
+            [sixsq.nuvla.ui.pages.deployments-detail.views-coe-resources-k8s :as coe-resources-k8s]
             [sixsq.nuvla.ui.pages.deployments.utils :as deployments-utils]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
@@ -224,7 +225,7 @@
         env-vars       (get @module-content :environmental-variables [])]
     (list-section env-vars :env-vars :env-variables)))
 
-(defn coe-resources-section
+(defn docker-resources-section
   []
   (let [coe-res-docker-available? @(subscribe [::subs/coe-resource-docker-available?])]
     (when coe-res-docker-available?
@@ -232,6 +233,17 @@
                   :key     :docker
                   :icon    icons/i-docker}
        :render   #(r/as-element [coe-resources-docker/Tab])})))
+
+(defn k8s-resources-section
+  []
+  (let [coe-res-k8s-available? @(subscribe [::subs/coe-resource-k8s-available?])]
+    (when coe-res-k8s-available?
+      {:menuItem {:content "Kubernetes"
+                  :key     :k8s
+                  :icon    (r/as-element [ui/Image {:src   "/ui/images/kubernetes-grey.svg"
+                                                    :style {:width  "16px"
+                                                            :margin "0 .35714286em 0 0"}}])}
+       :render   #(r/as-element [coe-resources-k8s/Tab])})))
 
 (defn logs-section
   []
@@ -655,7 +667,8 @@
           :filters {:href (:id @deployment)}}))
      (parameters-section)
      (env-vars-section)
-     (coe-resources-section)
+     (docker-resources-section)
+     (k8s-resources-section)
      (job-views/jobs-section)
      (acl/TabAcls {:e          deployment
                    :can-edit?  (not @read-only?)

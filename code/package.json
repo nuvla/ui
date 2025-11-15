@@ -61,7 +61,7 @@
     "date-fns": "^2.30.0",
     "diff": "^5.0.0",
     "highlight.js": "^11.5.1",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.1.1",
     "jszip": "^3.10.1",
     "leaflet": "^1.9.4",
     "leaflet-draw": "^1.0.4",

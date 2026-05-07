@@ -288,6 +288,25 @@
                (and (not menu-item?) (not label?)) (assoc :position "bottom center"))]
       button)))
 
+(defn mec-target-state
+  [latest-mec-job]
+  (or (get-in latest-mec-job [:mec-request-params :changeStateTo])
+      (get-in latest-mec-job [:mec-request-params "changeStateTo"])))
+
+(defn MecActionButton
+  [{:keys [deployment-id action button-text icon-name popup-text body success-header success-content disabled?]}]
+  (action-button {:menu-item?  true
+                  :icon-name   icon-name
+                  :button-text button-text
+                  :popup-text  popup-text
+                  :disabled?   disabled?
+                  :on-click    #(dispatch [::events/run-mec-lifecycle
+                                           deployment-id
+                                           action
+                                           {:body            body
+                                            :success-header  success-header
+                                            :success-content success-content}])}))
+
 
 (defn StopButton
   [_deployment & _opts]
@@ -491,6 +510,117 @@
         [:span {:style {:margin-left 5}} [icons/WarningIcon {:color "orange"}]
          (str (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]))]))))
 
+(defn MecStatusRows
+  []
+  (let [mec-app-instance-id           (subscribe [::subs/mec-app-instance-id])
+        mec-southbound-app-instance-id (subscribe [::subs/mec-southbound-app-instance-id])
+        mec-instantiation-state       (subscribe [::subs/mec-instantiation-state])
+        mec-operational-state         (subscribe [::subs/mec-operational-state])
+        mepm-id                       (subscribe [::subs/mepm-id])
+        mepm-endpoint                 (subscribe [::subs/mepm-endpoint])
+        mec-host-id                   (subscribe [::subs/mec-host-id])
+        latest-mec-job                (subscribe [::subs/latest-mec-job])]
+    [:<>
+     [ui/TableRow
+      [ui/TableCell "MEC instantiation state"]
+      [ui/TableCell @mec-instantiation-state]]
+     [ui/TableRow
+      [ui/TableCell "MEC operational state"]
+      [ui/TableCell (or @mec-operational-state "N/A")]]
+     [ui/TableRow
+      [ui/TableCell "MEC app instance"]
+      [ui/TableCell [values/AsLink @mec-app-instance-id :label (general-utils/id->uuid @mec-app-instance-id)]]]
+     (when @mec-southbound-app-instance-id
+       [ui/TableRow
+        [ui/TableCell "MEPM app instance"]
+        [ui/TableCell @mec-southbound-app-instance-id]])
+     (when @mec-host-id
+       [ui/TableRow
+        [ui/TableCell "MEC host"]
+        [ui/TableCell [deployments-utils/CloudNuvlaEdgeLink {:nuvlabox @mec-host-id}]]])
+     (when @mepm-id
+       [ui/TableRow
+        [ui/TableCell "MEPM"]
+        [ui/TableCell [values/AsLink @mepm-id :label (general-utils/id->short-uuid @mepm-id)]]])
+     (when @mepm-endpoint
+       [ui/TableRow
+        [ui/TableCell "MEPM endpoint"]
+        [ui/TableCell @mepm-endpoint]])
+     (when @latest-mec-job
+       [ui/TableRow
+        [ui/TableCell "Latest MEC operation"]
+        [ui/TableCell
+         (str (:mec-operation-type @latest-mec-job)
+              (when-let [target-state (mec-target-state @latest-mec-job)]
+                (str " -> " target-state))
+              " (" (:state @latest-mec-job) ")")]])]))
+
+(defn mec-operation-state-color
+  [state]
+  (case state
+    "COMPLETED" "green"
+    "FAILED" "red"
+    "FAILED_TEMP" "orange"
+    "ROLLED_BACK" "orange"
+    "PROCESSING" "blue"
+    "STARTING" "blue"
+    nil))
+
+(defn LifecycleOperationRow
+  [{:keys [id operation-type operation-state started-at state-entered-at app-instance-id error-detail]}]
+  (let [latest-mec-operation-id (subscribe [::subs/latest-mec-operation-id])]
+    [ui/TableRow {:positive (= id @latest-mec-operation-id)
+                  :error    (contains? #{"FAILED" "FAILED_TEMP"} operation-state)}
+     [ui/TableCell [values/AsLink id :label (general-utils/id->short-uuid id)]]
+     [ui/TableCell operation-type]
+     [ui/TableCell [ui/Label {:basic true
+                              :color (mec-operation-state-color operation-state)}
+                    operation-state]]
+     [ui/TableCell [uix/TimeAgo started-at]]
+     [ui/TableCell [uix/TimeAgo state-entered-at]]
+     [ui/TableCell [values/AsPageLink app-instance-id
+                    :label (general-utils/id->uuid app-instance-id)]]
+     [ui/TableCell
+      (when error-detail
+        [:div {:style {:max-width    "24rem"
+                       :white-space  "pre-wrap"
+                       :overflow-wrap "anywhere"}}
+         error-detail])]]))
+
+(defn lifecycle-section
+  []
+  (let [mec-enabled-deployment? (subscribe [::subs/mec-enabled-deployment?])
+        operations              (subscribe [::subs/mec-operation-occs])]
+    (when @mec-enabled-deployment?
+      {:menuItem {:content (r/as-element
+                            [:span "Lifecycle"
+                             (when (pos? (count @operations))
+                               [ui/Label {:circular true
+                                          :size     "mini"
+                                          :attached "top right"}
+                                (count @operations)])])
+                  :key     :lifecycle
+                  :icon    icons/i-bolt}
+       :render   #(r/as-element
+                    (if (empty? @operations)
+                      [uix/MsgNoItemsToShow "No MEC lifecycle operations yet."]
+                      [ui/TabPane
+                       [ui/Table {:basic "very"
+                                  :compact "very"}
+                        [ui/TableHeader
+                         [ui/TableRow
+                          [ui/TableHeaderCell "Operation ID"]
+                          [ui/TableHeaderCell "Type"]
+                          [ui/TableHeaderCell "State"]
+                          [ui/TableHeaderCell "Start time"]
+                          [ui/TableHeaderCell "State entered"]
+                          [ui/TableHeaderCell "App instance"]
+                          [ui/TableHeaderCell "Error detail"]]]
+                        [ui/TableBody
+                         (for [operation @operations]
+                           ^{:key (:id operation)}
+                           [LifecycleOperationRow operation])]]]))})))
+
 
 (defn TabOverviewModule
   []
@@ -549,6 +679,7 @@
   []
   (let [tr              (subscribe [::i18n-subs/tr])
         deployment      (subscribe [::subs/deployment])
+        mec-enabled?    (subscribe [::subs/mec-enabled-deployment?])
         version         (subscribe [::subs/current-module-version])
         versions        (subscribe [::subs/module-versions])
         nuvlabox        (subscribe [::subs/nuvlabox])
@@ -603,6 +734,8 @@
          [ui/TableCell
           [module-plugin/LinkToAppView {:path (:path module) :version-id @version} @version]
           (up-to-date? @version @versions)]]
+        (when @mec-enabled?
+          [MecStatusRows])
         (when deployment-set
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:deployment-group]))]
@@ -639,14 +772,60 @@
 
 (defn MenuBar
   [{:keys [id] :as deployment}]
-  (let [loading? (subscribe [::subs/loading?])]
+  (let [loading?                 (subscribe [::subs/loading?])
+        mec-enabled-deployment?  (subscribe [::subs/mec-enabled-deployment?])
+        mec-instantiation-state  (subscribe [::subs/mec-instantiation-state])
+        mec-operational-state    (subscribe [::subs/mec-operational-state])]
     [components/StickyBar
      [ui/Menu {:borderless true}
-      [StartUpdateButton deployment]
-      [StopButton deployment :menu-item? true]
-      [CloneButton deployment]
-      [DeleteButton deployment :menu-item? true]
-      [DetachButton deployment]
+      (if @mec-enabled-deployment?
+        [:<>
+         (when (and (= @mec-instantiation-state "NOT_INSTANTIATED")
+                    (not (deployments-utils/deployment-in-transition? (:state deployment))))
+           [MecActionButton {:deployment-id    id
+                             :action           "instantiate"
+                             :button-text      "Instantiate"
+                             :icon-name        icons/i-play
+                             :popup-text       "Instantiate this ETSI MEC application instance."
+                             :success-header   "MEC instantiate started"
+                             :success-content  "The MEC instantiate request was accepted."}])
+         (when (and (= @mec-instantiation-state "INSTANTIATED")
+                    (= @mec-operational-state "STOPPED")
+                    (not (deployments-utils/deployment-in-transition? (:state deployment))))
+           [MecActionButton {:deployment-id    id
+                             :action           "operate"
+                             :body             {:changeStateTo "STARTED"}
+                             :button-text      "Start"
+                             :icon-name        icons/i-play
+                             :popup-text       "Start the instantiated ETSI MEC application."
+                             :success-header   "MEC start started"
+                             :success-content  "The MEC operate STARTED request was accepted."}])
+         (when (and (= @mec-instantiation-state "INSTANTIATED")
+                    (= @mec-operational-state "STARTED")
+                    (not (deployments-utils/deployment-in-transition? (:state deployment))))
+           [MecActionButton {:deployment-id    id
+                             :action           "operate"
+                             :body             {:changeStateTo "STOPPED"}
+                             :button-text      "Stop"
+                             :icon-name        icons/i-stop
+                             :popup-text       "Stop the ETSI MEC application without terminating it."
+                             :success-header   "MEC stop started"
+                             :success-content  "The MEC operate STOPPED request was accepted."}])
+         (when (and (= @mec-instantiation-state "INSTANTIATED")
+                    (not (deployments-utils/deployment-in-transition? (:state deployment))))
+           [MecActionButton {:deployment-id    id
+                             :action           "terminate"
+                             :button-text      "Terminate"
+                             :icon-name        icons/i-power
+                             :popup-text       "Terminate this ETSI MEC application instance."
+                             :success-header   "MEC terminate started"
+                             :success-content  "The MEC terminate request was accepted."}])]
+        [:<>
+         [StartUpdateButton deployment]
+         [StopButton deployment :menu-item? true]
+         [CloneButton deployment]
+         [DeleteButton deployment :menu-item? true]
+         [DetachButton deployment]])
       [components/RefreshMenu
        {:action-id  refresh-action-id
         :loading?   @loading?
@@ -660,6 +839,7 @@
     [(overview)
      (urls-section)
      (module-version-section)
+     (lifecycle-section)
      (logs-section)
      (when @deployment
        (audit-log-plugin/events-section

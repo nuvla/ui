@@ -26,6 +26,7 @@
             [sixsq.nuvla.ui.pages.edges.views-cluster :as views-cluster]
             [sixsq.nuvla.ui.pages.profile.views :refer [profile]]
             [sixsq.nuvla.ui.pages.groups.views :refer [GroupsViewPage]]
+            [sixsq.nuvla.ui.pages.mec.views :refer [mec-view]]
             [sixsq.nuvla.ui.pages.welcome.views :refer [home-view]]
             [sixsq.nuvla.ui.routing.events :as events]
             [sixsq.nuvla.ui.routing.routes :as routes]
@@ -187,6 +188,12 @@
       :view       #'dashboard-view
       :protected? true
       :link-text  "dashboard"}]
+    ["mec"
+     {:name       ::routes/mec
+      :layout     #'LayoutPage
+      :view       #'mec-view
+      :protected? true
+      :link-text  "mec"}]
     ["apps"
      {:name       ::routes/apps
       :layout     #'LayoutPage

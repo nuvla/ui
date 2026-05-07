@@ -12,6 +12,7 @@
 (s/def ::upcoming-invoice any?)
 (s/def ::coe-resources any?)
 (s/def ::not-found? boolean?)
+(s/def ::latest-mec-operation-id (s/nilable string?))
 
 (def defaults
   {::not-found?                false
@@ -25,4 +26,5 @@
                                  :default-show-all-events? true)
    ::node-parameters           nil
    ::deployment-log-controller nil
-   ::coe-resources             nil})
+   ::coe-resources             nil
+   ::latest-mec-operation-id   nil})

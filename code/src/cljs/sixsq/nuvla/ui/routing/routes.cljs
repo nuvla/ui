@@ -33,6 +33,7 @@
 (def home ::home)
 (def home-slash ::home-slash)
 (def dashboard ::dashboard)
+(def mec ::mec)
 (def apps ::apps)
 (def apps-slashed ::apps-slashed)
 (def apps-details ::apps-details)

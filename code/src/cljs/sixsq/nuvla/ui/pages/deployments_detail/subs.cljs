@@ -1,8 +1,11 @@
 (ns sixsq.nuvla.ui.pages.deployments-detail.subs
   (:require [clojure.string :as str]
             [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.common-components.job.subs :as job-subs]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
+            [sixsq.nuvla.ui.pages.about.subs :as about-subs]
+            [sixsq.nuvla.ui.pages.about.utils :as about-utils]
             [sixsq.nuvla.ui.pages.deployments-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.deployments.utils :as deployments-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -70,6 +73,24 @@
   (fn [{:keys [subtype]}]
     (= subtype apps-utils/subtype-application-helm)))
 
+(reg-sub
+  ::etsi-mec-enabled?
+  :<- [::about-subs/feature-flag-enabled? about-utils/feature-etsi-mec]
+  identity)
+
+(reg-sub
+  ::is-deployment-application-mec?
+  :<- [::deployment-module]
+  (fn [{:keys [subtype]}]
+    (= subtype apps-utils/subtype-application-mec)))
+
+(reg-sub
+  ::mec-enabled-deployment?
+  :<- [::etsi-mec-enabled?]
+  :<- [::is-deployment-application-mec?]
+  (fn [[etsi-mec-enabled? is-deployment-application-mec?]]
+    (and etsi-mec-enabled? is-deployment-application-mec?)))
+
 
 (defn parse-application-yaml
   [docker-compose]
@@ -130,6 +151,114 @@
     (->> db
          ::spec/deployment-parameters
          (into (sorted-map)))))
+
+(defn deployment-state->mec-instantiation-state
+  [state]
+  (if (= state deployments-utils/CREATED)
+    "NOT_INSTANTIATED"
+    "INSTANTIATED"))
+
+(defn deployment-state->mec-operational-state
+  [state]
+  (case state
+    "STARTED" "STARTED"
+    "STOPPED" "STOPPED"
+    nil))
+
+(reg-sub
+  ::mec-instantiation-state
+  :<- [::deployment]
+  (fn [{:keys [state]}]
+    (deployment-state->mec-instantiation-state state)))
+
+(reg-sub
+  ::mec-operational-state
+  :<- [::deployment]
+  (fn [{:keys [state]}]
+    (deployment-state->mec-operational-state state)))
+
+(reg-sub
+  ::mec-app-instance-id
+  :<- [::deployment]
+  (fn [{:keys [id]}]
+    id))
+
+(reg-sub
+  ::mec-southbound-app-instance-id
+  :<- [::deployment-parameters]
+  (fn [deployment-parameters]
+    (get-in deployment-parameters ["mec.app-instance-id" :value])))
+
+(reg-sub
+  ::mec-jobs
+  :<- [::job-subs/jobs]
+  (fn [jobs]
+    (->> (:resources jobs)
+         (filter :mec-operation-type)
+         vec)))
+
+(def nuvla-job->mec-operation-state
+  {"QUEUED"   "STARTING"
+   "RUNNING"  "PROCESSING"
+   "SUCCESS"  "COMPLETED"
+   "FAILED"   "FAILED"
+   "STOPPING" "PROCESSING"
+   "STOPPED"  "FAILED_TEMP"
+   "CANCELED" "ROLLED_BACK"})
+
+(defn mec-job->operation-occ
+  [{:keys [id state mec-operation-type mec-app-instance-id target-resource
+           state-entered-time updated start-time created status-message]
+    :as   job}]
+  (let [app-instance-id (or mec-app-instance-id
+                            (if (map? target-resource)
+                              (:href target-resource)
+                              target-resource))]
+    (cond-> {:id               id
+             :job              job
+             :operation-type   mec-operation-type
+             :operation-state  (get nuvla-job->mec-operation-state state "STARTING")
+             :state-entered-at (or state-entered-time updated)
+             :started-at       (or start-time created)
+             :app-instance-id  app-instance-id}
+      (#{"FAILED" "STOPPED"} state)
+      (assoc :error-detail (or status-message "Operation failed")))))
+
+(reg-sub
+  ::mec-operation-occs
+  :<- [::mec-jobs]
+  (fn [jobs]
+    (mapv mec-job->operation-occ jobs)))
+
+(reg-sub
+  ::latest-mec-job
+  :<- [::mec-jobs]
+  (fn [jobs]
+    (first jobs)))
+
+(reg-sub
+  ::latest-mec-operation-id
+  :-> ::spec/latest-mec-operation-id)
+
+(reg-sub
+  ::mec-host-id
+  :<- [::latest-mec-job]
+  :<- [::deployment]
+  (fn [[latest-job deployment]]
+    (or (:mec-host-id latest-job)
+        (:nuvlabox deployment))))
+
+(reg-sub
+  ::mepm-id
+  :<- [::latest-mec-job]
+  (fn [latest-job]
+    (:mepm-id latest-job)))
+
+(reg-sub
+  ::mepm-endpoint
+  :<- [::latest-mec-job]
+  (fn [latest-job]
+    (:mepm-endpoint latest-job)))
 
 
 (reg-sub

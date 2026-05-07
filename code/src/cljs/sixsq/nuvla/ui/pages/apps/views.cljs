@@ -3,12 +3,15 @@
             [sixsq.nuvla.ui.common-components.deployment-dialog.views :as deployment-dialog-views]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.pages.about.subs :as about-subs]
+            [sixsq.nuvla.ui.pages.about.utils :as about-utils]
             [sixsq.nuvla.ui.pages.apps.apps-application.events :as apps-application-events]
             [sixsq.nuvla.ui.pages.apps.apps-application.views :as apps-application-views]
             [sixsq.nuvla.ui.pages.apps.apps-applications-sets.events :as apps-applications-sets-events]
             [sixsq.nuvla.ui.pages.apps.apps-applications-sets.views :as apps-applications-sets-views]
             [sixsq.nuvla.ui.pages.apps.apps-component.events :as apps-component-events]
             [sixsq.nuvla.ui.pages.apps.apps-component.views :as apps-component-views]
+            [sixsq.nuvla.ui.pages.apps.apps-mec.views :as apps-mec-views]
             [sixsq.nuvla.ui.pages.apps.apps-project.events :as apps-project-events]
             [sixsq.nuvla.ui.pages.apps.apps-project.views :as apps-project-views]
             [sixsq.nuvla.ui.pages.apps.apps-store.views :as apps-store-views]
@@ -36,13 +39,15 @@
   []
   (let [module            (subscribe [::subs/module])
         module-content-id (subscribe [::subs/module-content-id])
-        new-subtype       (subscribe [::route-subs/query-param :subtype])]
+        new-subtype       (subscribe [::route-subs/query-param :subtype])
+        etsi-mec-enabled? (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-etsi-mec])]
     (fn []
       (let [subtype (or (:subtype @module) @new-subtype)
             comp-fn (cond
                       (#{utils/subtype-application
                          utils/subtype-application-k8s
                          utils/subtype-application-helm} subtype) apps-application-views/ViewEdit
+                      (and (= utils/subtype-application-mec subtype) @etsi-mec-enabled?) apps-mec-views/ViewEdit
                       (utils/component? subtype) apps-component-views/view-edit
                       (= utils/subtype-applications-sets subtype) apps-applications-sets-views/ViewEdit
                       :else apps-project-views/ViewEdit)]

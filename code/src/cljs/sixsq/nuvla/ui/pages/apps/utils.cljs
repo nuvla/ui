@@ -13,6 +13,7 @@
 (def subtype-application "application")
 (def subtype-application-k8s "application_kubernetes")
 (def subtype-application-helm "application_helm")
+(def subtype-application-mec "application_mec")
 (def subtype-applications-sets "applications_sets")
 (def compatibility-docker-compose "docker-compose")
 (def compatibility-swarm "swarm")
@@ -69,12 +70,45 @@ For more information on how to format your app description using Markdown syntax
 
 ")
 
+(def mec-appd-template
+  {:appDId                   "module/replace-me"
+   :appDVersion              "1.0"
+   :appName                  "Replace Me"
+   :appProvider              "Replace Me"
+   :appSoftVersion           "1.0"
+   :mecVersion               "3.1.1"
+   :virtualComputeDescriptor {:virtualCpu    {:numVirtualCpu 1}
+                              :virtualMemory {:virtualMemSize 256}}
+   :swImageDescriptor        [{:swImageName    "replace-me"
+                               :swImageVersion "1.0"
+                               :containerFormat "DOCKER"
+                               :swImage        "repo/image:tag"}]})
+
 (def subtype->descr-template
   {subtype-application       apps-description-template
    subtype-application-k8s   apps-description-template
    subtype-application-helm  apps-description-template
+   subtype-application-mec   apps-description-template
    subtype-applications-sets apps-sets-description-template
    subtype-project           projects-description-template})
+
+(defn mec-appd-template-json
+  []
+  (utils-general/edn->json mec-appd-template))
+
+(defn module->mec-appd-json
+  [module]
+  (utils-general/edn->json (or (:content module) mec-appd-template)))
+
+(defn mec-appd-json->content
+  [json]
+  (utils-general/json->edn json :throw-exceptions true))
+
+(defn mec-appd-json-valid?
+  [json]
+  (try
+    (map? (mec-appd-json->content json))
+    (catch :default _ false)))
 
 (defn descr-not-template?
   [module-subtype description]
@@ -172,6 +206,7 @@ For more information on how to format your app description using Markdown syntax
 (def application-k8s? (subtype? subtype-application-k8s))
 (def applications-sets? (subtype? subtype-applications-sets))
 (def application-helm? (subtype? subtype-application-helm))
+(def application-mec? (subtype? subtype-application-mec))
 
 (defn IconK8s
   [selected]
@@ -198,6 +233,7 @@ For more information on how to format your app description using Markdown syntax
     subtype-component icons/i-grid
     subtype-application icons/i-cubes
     subtype-application-k8s icons/i-cubes
+    subtype-application-mec icons/i-cubes
     subtype-applications-sets icons/i-table-cells
     icons/i-circle-question))
 
@@ -216,6 +252,7 @@ For more information on how to format your app description using Markdown syntax
     subtype-application [icons/DockerIcon]
     subtype-application-k8s [IconK8s selected]
     subtype-application-helm [IconHelm selected]
+    subtype-application-mec [icons/CubesIcon]
     [icons/QuestionCircleIcon]))
 
 (defn SubtypeDockerK8sListIcon
@@ -225,6 +262,7 @@ For more information on how to format your app description using Markdown syntax
     (condp = subtype
       subtype-application-k8s [IconK8s false]
       subtype-application docker-icon
+      subtype-application-mec docker-icon
       subtype-component docker-icon
       unknown-icon)))
 
@@ -459,6 +497,19 @@ For more information on how to format your app description using Markdown syntax
                      :license-description (:description license)
                      :license-url         (:url license)}))
         (assoc ::spec/helm-info (merge {:repo-or-url? repo-or-url?} helm-info)))))
+
+(defn module->db-mec
+  [db module]
+  (-> db
+      (module->db module)
+      (assoc ::spec/mec-appd-json (module->mec-appd-json module))))
+
+(defn db->module-mec
+  [module _commit-map db]
+  (let [base    (-> (db->module module nil db)
+                    (dissoc :data-accept-content-types))
+        content (mec-appd-json->content (get db ::spec/mec-appd-json))]
+    (assoc base :content content)))
 
 
 (defn mandatory-name

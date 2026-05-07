@@ -73,6 +73,11 @@
                                                           :label-kw   :dashboard
                                                           :icon       icons/i-gauge
                                                           :order      10}
+                                       "mec"             {:key             routes/mec
+                                                          :label-kw        :mec
+                                                          :icon            icons/i-cubes
+                                                          :feature-flag-kw about-utils/feature-etsi-mec
+                                                          :order           15}
                                        "apps"            {:key        routes/apps
                                                           :label-kw   :apps
                                                           :icon       icons/i-layer-group

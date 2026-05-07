@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.pages.deployments-detail.events
-  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.common-components.job.events :as job-events]
             [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
@@ -10,6 +11,7 @@
             [sixsq.nuvla.ui.pages.deployments.events :as deployments-events]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
 (reg-event-db
@@ -49,6 +51,11 @@
     (assoc db ::spec/deployment-parameters
               (into {} (map (juxt :name identity) (get resources :resources []))))))
 
+(reg-event-db
+  ::set-latest-mec-operation-id
+  (fn [db [_ op-id]]
+    (assoc db ::spec/latest-mec-operation-id op-id)))
+
 (reg-event-fx
   ::get-deployment-parameters
   (fn [_ [_ resource-id]]
@@ -79,6 +86,80 @@
                         (dispatch [::get-deployment href])
                         (dispatch [::deployments-events/get-deployments]))]
       {::cimi-api-fx/operation [href "stop" on-success :data params]})))
+
+(defn deployment-id->mec-app-instance-url
+  [deployment-id action]
+  (let [[resource-name uuid] (str/split deployment-id #"/" 2)]
+    (str @cimi-api-fx/NUVLA_URL
+         "/api/mec/app_lcm/v2/app_instances/"
+         resource-name
+         "/"
+         uuid
+         "/"
+         action)))
+
+(defn response-text->edn
+  [text]
+  (when-not (str/blank? text)
+    (try
+      (general-utils/json->edn text)
+      (catch :default _
+        {:message text}))))
+
+(reg-fx
+  ::mec-lifecycle-request
+  (fn [{:keys [deployment-id action body on-success on-error]}]
+    (let [url      (deployment-id->mec-app-instance-url deployment-id action)
+          opts     (cond-> {:credentials "same-origin"
+                            :headers     {"Content-Type" "application/json"}
+                            :method      "POST"}
+                     body (assoc :body (js/JSON.stringify (clj->js body))))
+          callback (fn [resp]
+                     (-> (.text resp)
+                         (.then (fn [text]
+                                  (let [payload {:status (.-status resp)
+                                                 :body   (response-text->edn text)}]
+                                    (if (.-ok resp)
+                                      (on-success payload)
+                                      (on-error payload)))))))]
+      (-> (js/fetch url (clj->js opts))
+          (.then callback)
+          (.catch (fn [e]
+                    (on-error {:status nil
+                               :body   {:message (.-message e)}})))))))
+
+(defn refresh-after-mec-lifecycle!
+  [deployment-id]
+  (dispatch [::get-deployment deployment-id])
+  (dispatch [::deployments-events/get-deployments]))
+
+(reg-event-fx
+  ::run-mec-lifecycle
+  (fn [_ [_ deployment-id action {:keys [body success-header success-content]}]]
+    (let [on-success (fn [{resp-body :body}]
+                       (let [op-id (:lcmOpOccId resp-body)]
+                         (dispatch [::set-latest-mec-operation-id op-id])
+                         (dispatch [::messages-events/add
+                                    {:header  success-header
+                                     :content (cond-> success-content
+                                                      op-id (str " Operation occurrence: " op-id))
+                                     :type    :success}])
+                         (dispatch [:sixsq.nuvla.ui.common-components.plugins.nav-tab/change-tab
+                                    {:db-path [::spec/tab]
+                                     :tab-key :lifecycle}])
+                         (refresh-after-mec-lifecycle! deployment-id)))
+          on-error   (fn [{:keys [status body]}]
+                       (let [{:keys [message detail]} body]
+                         (dispatch [::messages-events/add
+                                    {:header  (cond-> (str "MEC " action " failed")
+                                                      status (str " (" status ")"))
+                                     :content (or detail message "Lifecycle action failed.")
+                                     :type    :error}])))]
+      {::mec-lifecycle-request {:deployment-id deployment-id
+                                :action        action
+                                :body          body
+                                :on-success    on-success
+                                :on-error      on-error}})))
 
 (reg-event-db
   ::set-node-parameters

@@ -204,6 +204,8 @@
 
 (s/def ::helm-info any?)
 
+(s/def ::mec-appd-json (s/nilable string?))
+
 (def default-tab :overview)
 
 (def defaults
@@ -232,4 +234,5 @@
    ::copy-module                    nil
    ::paste-modal-visible?           false
    ::module-not-found?              false
-   ::details-validation-errors      #{}})
+   ::details-validation-errors      #{}
+   ::mec-appd-json                  nil})

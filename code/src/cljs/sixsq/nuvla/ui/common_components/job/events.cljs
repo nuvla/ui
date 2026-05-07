@@ -20,9 +20,11 @@
        ::cimi-api-fx/search
        [:job
         (->> {:filter  (str "target-resource/href='" href "'")
-              :select  (str "id, action, time-of-status-change, updated, state,"
+              :select  (str "id, action, created, time-of-status-change, updated, "
+                            "state, state-entered-time, start-time,"
                             " target-resource, return-code, progress, "
-                            "status-message")
+                            "status-message, mepm-endpoint, mepm-id, mec-host-id, "
+                            "mec-operation-type, mec-app-instance-id, mec-request-params")
               :orderby "created:desc"}
              (pagination-plugin/first-last-params
                db [::spec/pagination]))

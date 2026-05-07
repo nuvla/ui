@@ -41,6 +41,7 @@
       utils/subtype-project project
       utils/subtype-application application
       utils/subtype-application-k8s application
+      utils/subtype-application-mec application
       utils/subtype-applications-sets apps-sets
       project)))
 
@@ -112,6 +113,7 @@
                      utils/subtype-application (apps-application-utils/module->db db module)
                      utils/subtype-application-helm (apps-application-utils/module->db db module)
                      utils/subtype-application-k8s (apps-application-utils/module->db db module)
+                     utils/subtype-application-mec (utils/module->db-mec db module)
                      utils/subtype-applications-sets (apps-applications-sets-utils/module->db db module)
                      db)}
               (= subtype utils/subtype-applications-sets)
@@ -153,6 +155,8 @@
           (assoc-in [::spec/module-common ::spec/urls] (sorted-map))
           (assoc-in [::spec/module-common ::spec/output-parameters] (sorted-map))
           (assoc-in [::spec/module-common ::spec/data-types] (sorted-map))
+          (assoc ::spec/mec-appd-json (when (= new-subtype utils/subtype-application-mec)
+                                        (utils/mec-appd-template-json)))
 
           (assoc-in [::spec/module-common ::spec/minimum-requirements] {})))))
 
@@ -234,6 +238,11 @@
   ::subtype
   (fn [db [_ subtype]]
     (assoc-in db [::spec/module-common ::spec/subtype] subtype)))
+
+(reg-event-db
+  ::set-mec-appd-json
+  (fn [db [_ value]]
+    (assoc db ::spec/mec-appd-json value)))
 
 
 (reg-event-db

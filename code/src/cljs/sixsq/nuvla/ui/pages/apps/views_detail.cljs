@@ -3,6 +3,8 @@
             [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.pages.about.subs :as about-subs]
+            [sixsq.nuvla.ui.pages.about.utils :as about-utils]
             [sixsq.nuvla.ui.common-components.acl.utils :as acl-utils]
             [sixsq.nuvla.ui.common-components.acl.views :as acl-views]
             [sixsq.nuvla.ui.common-components.deployment-dialog.events :as deployment-dialog-events]
@@ -167,7 +169,7 @@
         editable?        (subscribe [::subs/editable?])
         module-id        (subscribe [::subs/module-id-version])
         is-project?      (subscribe [::subs/is-project?])
-        is-app?          (subscribe [::subs/is-app?])
+        is-deployable-app? (subscribe [::subs/is-deployable-app?])
         is-apps-sets?    (subscribe [::subs/is-applications-sets?])
         can-copy?        (subscribe [::subs/can-copy?])
         paste-disabled?  (subscribe [::subs/paste-disabled?])
@@ -187,7 +189,7 @@
             :disabled @save-disabled?
             :on-click #(dispatch [::events/open-save-modal])}])
 
-        (when @is-app?
+        (when @is-deployable-app?
           [uix/MenuItem
            {:name     (@tr [:deploy])
             :icon     icons/i-rocket
@@ -313,7 +315,8 @@
   []
   (let [tr       (subscribe [::i18n-subs/tr])
         visible? (subscribe [::subs/add-modal-visible?])
-        nav-path (subscribe [::route-subs/nav-path])]
+        nav-path (subscribe [::route-subs/nav-path])
+        etsi-mec-enabled? (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-etsi-mec])]
     (fn []
       (let [parent    (utils/nav-path->module-path @nav-path)
             base-path (pathify (remove str/blank?
@@ -371,6 +374,15 @@
               [ui/Image {:src     (if parent "/ui/images/helm.svg" "/ui/images/helm-grey.svg")
                          :floated "right"
                          :style   {:width "50px"}}]]]]
+           (when @etsi-mec-enabled?
+             [ui/Card
+              {:href     (when parent (pathify [base-path (str "New Application?subtype=" utils/subtype-application-mec)]))
+               :on-click (when parent
+                           #(dispatch [::events/close-add-modal]))}
+              [ui/CardContent {:text-align :center}
+               [ui/Header "ETSI MEC Application"]
+               [icons/CubesIcon {:size  :massive
+                                 :color (when-not parent :grey)}]]])
            [ui/Card
             {:href     (when parent (pathify [base-path (str "New Application Bouquet?subtype=" utils/subtype-applications-sets)]))
              :on-click (when parent
@@ -542,7 +554,8 @@
           utils/subtype-application "Docker"
           utils/subtype-application-k8s "Kubernetes"
           utils/subtype-applications-sets "Application bouquets"
-          utils/subtype-application-helm "Helm application")]])))
+          utils/subtype-application-helm "Helm application"
+          utils/subtype-application-mec "ETSI MEC application")]])))
 
 
 (defn Details

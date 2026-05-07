@@ -58,9 +58,34 @@
     (utils/application-helm? subtype)))
 
 (reg-sub
+  ::is-application-mec?
+  :<- [::module-subtype]
+  (fn [subtype]
+    (utils/application-mec? subtype)))
+
+(reg-sub
+  ::mec-appd-json
+  :-> ::spec/mec-appd-json)
+
+(reg-sub
+  ::mec-appd-json-valid?
+  :<- [::is-application-mec?]
+  :<- [::mec-appd-json]
+  (fn [[is-application-mec? mec-appd-json]]
+    (or (not is-application-mec?)
+        (utils/mec-appd-json-valid? mec-appd-json))))
+
+(reg-sub
   ::is-app?
   :<- [::is-project?]
   :-> not)
+
+(reg-sub
+  ::is-deployable-app?
+  :<- [::is-app?]
+  :<- [::is-application-mec?]
+  (fn [[is-app? is-application-mec?]]
+    (and is-app? (not is-application-mec?))))
 
 (reg-sub
   ::can-edit?
@@ -135,8 +160,13 @@
   :<- [::main-subs/changes-protection?]
   :<- [::is-description-template?]
   :<- [::helm-info-correct?]
-  (fn [[form-valid? page-changed? is-description-template? helm-info-correct?]]
-    (or (not page-changed?) (not form-valid?) is-description-template? (not helm-info-correct?))))
+  :<- [::mec-appd-json-valid?]
+  (fn [[form-valid? page-changed? is-description-template? helm-info-correct? mec-appd-json-valid?]]
+    (or (not page-changed?)
+        (not form-valid?)
+        is-description-template?
+        (not helm-info-correct?)
+        (not mec-appd-json-valid?))))
 
 (reg-sub
   ::module-license

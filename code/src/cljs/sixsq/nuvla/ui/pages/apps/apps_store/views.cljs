@@ -6,6 +6,7 @@
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.pages.apps.apps-mec.deploy :as apps-mec-deploy]
             [sixsq.nuvla.ui.pages.apps.apps-project.views :as apps-project-views]
             [sixsq.nuvla.ui.pages.apps.apps-store.events :as events]
             [sixsq.nuvla.ui.pages.apps.apps-store.spec :as spec]
@@ -43,41 +44,51 @@
 
 (defn ModuleCard
   [{:keys [id name description path subtype logo-url price published versions tags]} show-published-tick?]
-  (let [tr             (subscribe [::i18n-subs/tr])
-        map-versions   (apps-utils/map-versions-index versions)
-        module-id      (if (true? published) (apps-utils/latest-published-module-with-index id map-versions) id)
-        module-index   (apps-utils/latest-published-index map-versions)
-        detail-href    (pathify [(name->href routes/apps) path (when (true? published) (str "?version=" module-index))])
-        follow-trial?  (get price :follow-customer-trial false)
-        button-icon    (if (and price (not follow-trial?)) :cart icons/i-rocket)
-        button-color   (if follow-trial? "green" "blue")
-        deploy-price   (str (@tr [(if follow-trial?
-                                    :free-trial-and-then
-                                    :deploy-for)])
-                            (format-money (/ (:cent-amount-daily price) 100)) "/"
-                            (@tr [:day]))
-        button-content (if price deploy-price (@tr [:deploy]))
-        on-click       (fn [event]
-                         (apps-views-detail/deploy-click module-id (apps-utils/applications-sets? subtype))
-                         (.preventDefault event)
-                         (.stopPropagation event))
-        button-ops     {:fluid    true
-                        :color    button-color
-                        :icon     button-icon
-                        :content  button-content
-                        :on-click on-click}
-        desc-summary   (utils-values/markdown->summary description)]
-    [ModuleCardView
-     {:logo-url logo-url
-      :subtype subtype
-      :name name
-      :id id
-      :desc-summary desc-summary
-      :tags tags
-      :published published
-      :show-published-tick? show-published-tick?
-      :detail-href detail-href
-      :button-ops button-ops}]))
+  (let [tr           (subscribe [::i18n-subs/tr])
+        map-versions (apps-utils/map-versions-index versions)
+        module-id    (if (true? published) (apps-utils/latest-published-module-with-index id map-versions) id)
+        module-index (apps-utils/latest-published-index map-versions)
+        detail-href  (pathify [(name->href routes/apps) path (when (true? published) (str "?version=" module-index))])
+        is-mec-app?  (= subtype apps-utils/subtype-application-mec)]
+    (r/with-let [mec-deploy-state (apps-mec-deploy/new-deploy-state)]
+      (let [follow-trial?  (get price :follow-customer-trial false)
+            button-icon    (if (and price (not follow-trial?)) :cart icons/i-rocket)
+            button-color   (if follow-trial? "green" "blue")
+            deploy-price   (str (@tr [(if follow-trial?
+                                        :free-trial-and-then
+                                        :deploy-for)])
+                                (format-money (/ (:cent-amount-daily price) 100)) "/"
+                                (@tr [:day]))
+            button-content (if price deploy-price (@tr [:deploy]))
+            on-click       (fn [event]
+                             (.preventDefault event)
+                             (.stopPropagation event)
+                             (if is-mec-app?
+                               (apps-mec-deploy/open-modal! (assoc mec-deploy-state :disabled? false))
+                               (apps-views-detail/deploy-click module-id (apps-utils/applications-sets? subtype))))
+            button-ops     {:fluid    true
+                            :color    button-color
+                            :icon     button-icon
+                            :content  button-content
+                            :on-click on-click}
+            desc-summary   (utils-values/markdown->summary description)]
+        [:<>
+         [ModuleCardView
+          {:logo-url logo-url
+           :subtype subtype
+           :name name
+           :id id
+           :desc-summary desc-summary
+           :tags tags
+           :published published
+           :show-published-tick? show-published-tick?
+           :detail-href detail-href
+           :button-ops button-ops}]
+         (when is-mec-app?
+           [apps-mec-deploy/DeployModal
+            {:module-id  module-id
+             :disabled? false
+             :state     mec-deploy-state}])]))))
 
 (defn ModulesCardsGroupView
   [& children]

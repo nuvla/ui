@@ -14,6 +14,7 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.pages.apps.apps-application.events :as apps-application-events]
+            [sixsq.nuvla.ui.pages.apps.apps-mec.deploy :as apps-mec-deploy]
             [sixsq.nuvla.ui.pages.apps.events :as events]
             [sixsq.nuvla.ui.pages.apps.spec :as spec]
             [sixsq.nuvla.ui.pages.apps.subs :as subs]
@@ -163,78 +164,91 @@
                 module-id :infra-services])]))
 
 (defn MenuBar []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        module           (subscribe [::subs/module])
-        is-new?          (subscribe [::subs/is-new?])
-        editable?        (subscribe [::subs/editable?])
-        module-id        (subscribe [::subs/module-id-version])
-        is-project?      (subscribe [::subs/is-project?])
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        module             (subscribe [::subs/module])
+        is-new?            (subscribe [::subs/is-new?])
+        editable?          (subscribe [::subs/editable?])
+        module-id          (subscribe [::subs/module-id-version])
+        is-project?        (subscribe [::subs/is-project?])
+        is-mec-app?        (subscribe [::subs/is-application-mec?])
         is-deployable-app? (subscribe [::subs/is-deployable-app?])
-        is-apps-sets?    (subscribe [::subs/is-applications-sets?])
-        can-copy?        (subscribe [::subs/can-copy?])
-        paste-disabled?  (subscribe [::subs/paste-disabled?])
-        deploy-disabled? (subscribe [::subs/deploy-disabled?])
-        can-publish?     (subscribe [::subs/can-publish?])
-        can-unpublish?   (subscribe [::subs/can-unpublish?])
-        save-disabled?   (subscribe [::subs/save-btn-disabled?])
-        page-changed?    (subscribe [::main-subs/changes-protection?])]
-    (fn []
+        is-apps-sets?      (subscribe [::subs/is-applications-sets?])
+        can-copy?          (subscribe [::subs/can-copy?])
+        paste-disabled?    (subscribe [::subs/paste-disabled?])
+        deploy-disabled?   (subscribe [::subs/deploy-disabled?])
+        can-publish?       (subscribe [::subs/can-publish?])
+        can-unpublish?     (subscribe [::subs/can-unpublish?])
+        save-disabled?     (subscribe [::subs/save-btn-disabled?])
+        page-changed?      (subscribe [::main-subs/changes-protection?])]
+    (r/with-let [mec-deploy-state (apps-mec-deploy/new-deploy-state)]
       [components/StickyBar
-       [ui/Menu {:borderless true}
-        (when @editable?
-          [uix/MenuItem
-           {:name     (@tr [:save])
-            :icon     icons/i-floppy
-            :class    (when-not @save-disabled? "primary-menu-item")
-            :disabled @save-disabled?
-            :on-click #(dispatch [::events/open-save-modal])}])
+       [:<>
+        [ui/Menu {:borderless true}
+         (when @editable?
+           [uix/MenuItem
+            {:name     (@tr [:save])
+             :icon     icons/i-floppy
+             :class    (when-not @save-disabled? "primary-menu-item")
+             :disabled @save-disabled?
+             :on-click #(dispatch [::events/open-save-modal])}])
 
-        (when @is-deployable-app?
-          [uix/MenuItem
-           {:name     (@tr [:deploy])
-            :icon     icons/i-rocket
-            :disabled @deploy-disabled?
-            :on-click #(deploy-click @module-id @is-apps-sets?)}])
+         (when @is-deployable-app?
+           [uix/MenuItem
+            {:name     (@tr [:deploy])
+             :icon     icons/i-rocket
+             :disabled @deploy-disabled?
+             :on-click #(deploy-click @module-id @is-apps-sets?)}])
 
-        (when @is-project?
-          [ui/MenuItem
-           {:name     (@tr [:add])
-            :icon     (r/as-element [icons/AddIconLarge])
-            :disabled (or @deploy-disabled? (not @editable?))
-            :on-click #(dispatch [::events/open-add-modal])}])
-        (when @can-copy?
-          [ui/Popup
-           {:trigger        (r/as-element
-                              [ui/MenuItem
-                               {:name     (@tr [:copy])
-                                :icon     (r/as-element [icons/CopyIcon])
-                                :disabled @is-new?
-                                :on-click #(dispatch [::events/copy])}])
-            :content        (@tr [:module-copied])
-            :on             "click"
-            :position       "top center"
-            :wide           true
-            :hide-on-scroll true}])
+         (when (and @is-mec-app? (not @is-deployable-app?))
+           [apps-mec-deploy/DeployMenuItem
+            {:disabled? @deploy-disabled?
+             :state     mec-deploy-state}])
 
-        (when (and (not @is-new?) @is-project?)
-          [ui/MenuItem
-           {:name     (@tr [:paste])
-            :icon     (r/as-element [icons/CopyIcon])
-            :disabled (or @paste-disabled? (not @editable?))
-            :on-click #(dispatch [::events/open-paste-modal])}])
+         (when @is-project?
+           [ui/MenuItem
+            {:name     (@tr [:add])
+             :icon     (r/as-element [icons/AddIconLarge])
+             :disabled (or @deploy-disabled? (not @editable?))
+             :on-click #(dispatch [::events/open-add-modal])}])
+         (when @can-copy?
+           [ui/Popup
+            {:trigger        (r/as-element
+                               [ui/MenuItem
+                                {:name     (@tr [:copy])
+                                 :icon     (r/as-element [icons/CopyIcon])
+                                 :disabled @is-new?
+                                 :on-click #(dispatch [::events/copy])}])
+             :content        (@tr [:module-copied])
+             :on             "click"
+             :position       "top center"
+             :wide           true
+             :hide-on-scroll true}])
 
-        (when (general-utils/can-delete? @module)
-          [DeleteButton @module])
+         (when (and (not @is-new?) @is-project?)
+           [ui/MenuItem
+            {:name     (@tr [:paste])
+             :icon     (r/as-element [icons/CopyIcon])
+             :disabled (or @paste-disabled? (not @editable?))
+             :on-click #(dispatch [::events/open-paste-modal])}])
 
-        (when @can-unpublish?
-          (if @page-changed?
-            [DisabledPublishUnPublish {:mode "un-publish"}]
-            [UnPublishButton @module]))
+         (when (general-utils/can-delete? @module)
+           [DeleteButton @module])
 
-        (when @can-publish?
-          (if @page-changed?
-            [DisabledPublishUnPublish {:mode "publish"}]
-            [PublishButton @module]))]])))
+         (when @can-unpublish?
+           (if @page-changed?
+             [DisabledPublishUnPublish {:mode "un-publish"}]
+             [UnPublishButton @module]))
+
+         (when @can-publish?
+           (if @page-changed?
+             [DisabledPublishUnPublish {:mode "publish"}]
+             [PublishButton @module]))]
+
+        (when (and @is-mec-app? (not @is-deployable-app?))
+          [apps-mec-deploy/DeployModal
+           {:module-id (:id @module)
+            :disabled? @deploy-disabled?
+            :state     mec-deploy-state}])]])))
 
 
 (defn save-modal
@@ -313,9 +327,9 @@
 
 (defn AddModal
   []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        visible? (subscribe [::subs/add-modal-visible?])
-        nav-path (subscribe [::route-subs/nav-path])
+  (let [tr                (subscribe [::i18n-subs/tr])
+        visible?          (subscribe [::subs/add-modal-visible?])
+        nav-path          (subscribe [::route-subs/nav-path])
         etsi-mec-enabled? (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-etsi-mec])]
     (fn []
       (let [parent    (utils/nav-path->module-path @nav-path)

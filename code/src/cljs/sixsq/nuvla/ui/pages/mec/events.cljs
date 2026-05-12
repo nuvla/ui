@@ -17,7 +17,7 @@
        :type    :error}]))
 
 (defn- mec-subscriptions-url
-  ([] (str @cimi-api-fx/NUVLA_URL "/api/mec/app_lcm/v2/subscriptions"))
+  ([] (str @cimi-api-fx/NUVLA_URL "/api/mec/mm1/app_lcm/v1/subscriptions"))
   ([subscription-id]
    (str (mec-subscriptions-url)
         "/"

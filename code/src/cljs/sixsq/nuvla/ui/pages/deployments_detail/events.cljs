@@ -91,7 +91,7 @@
   [deployment-id action]
   (let [[resource-name uuid] (str/split deployment-id #"/" 2)]
     (str @cimi-api-fx/NUVLA_URL
-         "/api/mec/app_lcm/v2/app_instances/"
+         "/api/mec/mm1/app_lcm/v1/app_instances/"
          resource-name
          "/"
          uuid

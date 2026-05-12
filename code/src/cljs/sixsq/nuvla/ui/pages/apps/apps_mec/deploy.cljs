@@ -26,7 +26,7 @@
 
 (defn- app-instances-url
   []
-  (str @cimi-api-fx/NUVLA_URL "/api/mec/app_lcm/v2/app_instances"))
+  (str @cimi-api-fx/NUVLA_URL "/api/mec/mm1/app_lcm/v1/app_instances"))
 
 (defn- host-options-from-response
   [{:keys [resources]}]

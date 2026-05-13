@@ -35,7 +35,7 @@
 
  (defn subscription-template
    [owner]
-   {:subscription-type   "AppLcmOpOccStateChangeNotification"
+  {:subscription-type   "AppLcmOpOccStateChange"
     :callback-uri        "https://example.com/mec/notifications"
     :owner               owner
     :active              true

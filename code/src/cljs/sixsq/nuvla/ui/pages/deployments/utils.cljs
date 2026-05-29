@@ -154,21 +154,33 @@
   (set/superset? selected-set visible-deps-ids-set))
 
 (defn CloudNuvlaEdgeLink
-  [{:keys [parent nuvlabox nuvlabox-name credential-name
-           infrastructure-service infrastructure-service-name] :as _deployment}
+  [{:keys [id parent nuvlabox nuvlabox-name credential-name
+           infrastructure-service infrastructure-service-name
+           mec-app-instance-id mec-mepm-id mec-mepm-name] :as _deployment}
    & {:keys [link color] :or {link true}}]
-  (let [href  (or nuvlabox infrastructure-service parent)
-        label (or nuvlabox-name
+  (let [mec-facing-deployment? (and mec-mepm-id (= id mec-app-instance-id))
+        href  (if mec-facing-deployment?
+                mec-mepm-id
+                (or nuvlabox infrastructure-service parent))
+        label (if mec-facing-deployment?
+                mec-mepm-name
+                (or nuvlabox-name
+                    infrastructure-service-name
+                    credential-name
+                    (some-> href general-utils/id->short-uuid)))
+        label (or label
+                nuvlabox-name
                 infrastructure-service-name
                 credential-name
                 (some-> href general-utils/id->short-uuid))]
     (when href
       [:<>
-       (cond nuvlabox [icons/BoxIcon {:color color}]
+       (cond mec-facing-deployment? [icons/LayerGroupIcon {:color color}]
+             nuvlabox [icons/BoxIcon {:color color}]
              infrastructure-service [icons/CloudIcon]
              parent [icons/KeyIcon]
              :else nil)
-       (if link
+       (if (and link (not mec-facing-deployment?))
          [values/AsLink (general-utils/id->uuid href)
           :label label
           :page (cond nuvlabox "edges"

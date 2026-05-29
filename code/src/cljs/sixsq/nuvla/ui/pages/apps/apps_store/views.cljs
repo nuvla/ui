@@ -26,12 +26,21 @@
 
 (defn ModuleCardView
   [{:keys [logo-url subtype name id desc-summary tags published target
-           show-published-tick? detail-href on-click button-ops]}]
+           show-published-tick? detail-href on-click button-ops mec-badge-label]}]
   [uix/Card
    {:image         logo-url
     :header        [:<>
-                    [apps-utils/ModuleSubtypeIcon subtype]
-                    (or name id)]
+                    [:span {:style {:display     "inline-flex"
+                                    :align-items "center"
+                                    :gap         ".45rem"}}
+                     [apps-utils/ModuleSubtypeIcon subtype]
+                     [:span (or name id)]
+                     (when mec-badge-label
+                       [ui/Label {:size   "mini"
+                                  :color  "blue"
+                                  :basic  true
+                                  :style  {:margin-left ".1rem"}}
+                        mec-badge-label])]]
     :description   desc-summary
     :content       [uix/Tags tags]
     :corner-button (when (and published show-published-tick?)
@@ -79,6 +88,7 @@
            :name name
            :id id
            :desc-summary desc-summary
+           :mec-badge-label (when is-mec-app? (@tr [:mec]))
            :tags tags
            :published published
            :show-published-tick? show-published-tick?

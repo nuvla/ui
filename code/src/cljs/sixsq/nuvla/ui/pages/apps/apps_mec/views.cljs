@@ -8,6 +8,7 @@
             [sixsq.nuvla.ui.pages.apps.events :as apps-events]
             [sixsq.nuvla.ui.pages.apps.spec :as apps-spec]
             [sixsq.nuvla.ui.pages.apps.subs :as apps-subs]
+            [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.pages.apps.views-detail :as apps-views-detail]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -58,28 +59,91 @@
 (defn AppDPane
   []
   (let [appd-json      (subscribe [::apps-subs/mec-appd-json])
-        appd-valid?    (subscribe [::apps-subs/mec-appd-json-valid?])
+        package-source (subscribe [::apps-subs/mec-package-source])
+        package-valid? (subscribe [::apps-subs/mec-package-input-valid?])
+        package-file   (subscribe [::apps-subs/mec-package-file])
+        package-name   (subscribe [::apps-subs/mec-package-filename])
+        package-stored? (subscribe [::apps-subs/mec-package-existing?])
         validate-form? (subscribe [::apps-subs/validate-form?])
         editable?      (subscribe [::apps-subs/editable?])]
     (fn []
       [:div {:class :uix-apps-details-details}
-       [:h4 {:class :tab-app-detail} "AppD JSON"]
-       [ui/Message {:info true}
-        "This editor stores the ETSI MEC AppD payload that will be sent as the MEC module content."]
-       [uix/EditorJson {:value     @appd-json
-                        :on-change #(do (dispatch [::apps-events/set-mec-appd-json %])
-                                        (dispatch [::main-events/changes-protection? true]))
-                        :read-only (not @editable?)}]
-       (when (and @validate-form? (not @appd-valid?))
-         [ui/Label {:pointing "above" :basic true :color "red"}
-          "The AppD JSON must be valid JSON."])])))
+       [:h4 {:class :tab-app-detail} "App package"]
+       [ui/Form
+        [ui/FormField
+         [ui/Radio {:label     "TOSCA YAML CSAR (.zip)"
+                    :name      "mec-package-source"
+                    :value     "csar"
+                    :checked   (= @package-source apps-utils/mec-source-csar)
+                    :disabled  (not @editable?)
+                    :on-change #(do (dispatch [::apps-events/set-mec-package-source apps-utils/mec-source-csar])
+                                    (dispatch [::main-events/changes-protection? true]))}]]
+        [ui/FormField {:style {:margin-top "0.75rem"}}
+         [ui/Radio {:label     "Manual AppD JSON"
+                    :name      "mec-package-source"
+                    :value     "appd"
+                    :checked   (= @package-source apps-utils/mec-source-appd)
+                    :disabled  (or (not @editable?) @package-stored?)
+                    :on-change #(do (dispatch [::apps-events/set-mec-package-source apps-utils/mec-source-appd])
+                                    (dispatch [::main-events/changes-protection? true]))}]]]
+       (if (= @package-source apps-utils/mec-source-csar)
+         [:<>
+          [ui/Message {:info true}
+           "Upload a CSAR ZIP package. If the archive contains a valid AppD, it will replace the stored descriptor on save."]
+          [ui/Segment {:secondary true}
+           [:div {:style {:display         "flex"
+                          :justify-content "space-between"
+                          :align-items     "center"
+                          :gap             "1rem"
+                          :margin-bottom   "0.75rem"
+                          :flex-wrap       "wrap"}}
+            [:div
+             [:strong "Current package: "]
+             (or @package-name "No package uploaded yet")]
+            (when @package-stored?
+              [ui/Button {:basic    true
+                          :icon     true
+                          :labelPosition "left"
+                          :on-click #(dispatch [::apps-events/download-mec-package])}
+               [icons/DownloadIcon]
+               "Download ZIP"])]
+           (when @editable?
+             [:input {:type      "file"
+                      :accept    ".zip,application/zip,application/x-zip-compressed"
+                      :on-change (fn [event]
+                                   (let [file (aget (.. event -target -files) 0)]
+                                     (dispatch [::apps-events/set-mec-package-file file])
+                                     (dispatch [::main-events/changes-protection? true])))}])
+           (when (and (not @package-file) @package-stored?)
+             [ui/Message {:size "tiny"}
+              "The currently stored CSAR will be kept until you select a new ZIP file."])]
+          (when @package-stored?
+            [:<>
+             [ui/Message {:size "tiny"}
+              "Manual AppD editing is disabled because this app package is backed by an uploaded CSAR."]
+             [:h5 {:style {:margin-top "1rem"}} "Extracted AppD (read-only)"]
+             [uix/EditorJson {:value     @appd-json
+                              :read-only true}]])
+          (when (and @validate-form? (not @package-valid?))
+            [ui/Label {:pointing "above" :basic true :color "red"}
+             "Select a CSAR ZIP file, or keep the existing uploaded package."])]
+         [:<>
+          [ui/Message {:info true}
+           "This editor stores the ETSI MEC AppD payload that will be sent as the MEC module content."]
+          [uix/EditorJson {:value     @appd-json
+                           :on-change #(do (dispatch [::apps-events/set-mec-appd-json %])
+                                           (dispatch [::main-events/changes-protection? true]))
+                           :read-only (not @editable?)}]
+          (when (and @validate-form? (not @package-valid?))
+            [ui/Label {:pointing "above" :basic true :color "red"}
+             "The AppD JSON must be valid JSON."])])])))
 
-(defn TabMenuAppD
+(defn TabMenuAppPackage
   []
-  (let [appd-valid? (subscribe [::apps-subs/mec-appd-json-valid?])]
-    [:span {:style {:color (if @appd-valid? "black" "#9f3a38")}}
+  (let [package-valid? (subscribe [::apps-subs/mec-package-input-valid?])]
+    [:span {:style {:color (if @package-valid? "black" "#9f3a38")}}
      [icons/FileCodeIcon]
-     "AppD"]))
+     "App package"]))
 
 (defn module-detail-panes
   []
@@ -94,7 +158,7 @@
                  :key     :details}
       :pane     {:content (r/as-element [DetailsPane])
                  :key     :details-pane}}
-     {:menuItem {:content (r/as-element [TabMenuAppD])
+     {:menuItem {:content (r/as-element [TabMenuAppPackage])
                  :key     :configuration}
       :pane     {:content (r/as-element [AppDPane])
                  :key     :configuration-pane}}

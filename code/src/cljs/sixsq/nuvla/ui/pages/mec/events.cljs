@@ -50,6 +50,26 @@
     (seq app-instance-filter) (assoc :appInstanceFilter app-instance-filter)
     (seq app-lcm-op-occ-filter) (assoc :appLcmOpOccFilter app-lcm-op-occ-filter)))
 
+(defn- normalize-edge
+  [edge]
+  {:id     (:id edge)
+   :name   (:name edge)
+   :online (:online edge)
+   :state  (:state edge)})
+
+(defn- mepm-managed-edges
+  [mepm]
+  (let [managed-edges (:managed-edges mepm)]
+    (if (contains? mepm :managed-edges)
+      (vec managed-edges)
+      (cond-> []
+        (:mec-host-id mepm) (conj (:mec-host-id mepm))))))
+
+(defn- managed-edge-update
+  [managed-edges]
+  (cond-> {:managed-edges managed-edges}
+    (seq managed-edges) (assoc :mec-host-id (first managed-edges))))
+
 (reg-fx
   ::mec-subscriptions-request
   (fn [{:keys [method subscription-id body on-success on-error]}]
@@ -84,6 +104,7 @@
    ::refresh
    (fn [_ _]
      {:fx [[:dispatch [::get-mepms]]
+           [:dispatch [::get-available-edges]]
            [:dispatch [::get-subscriptions]]]}))
 
  (reg-event-db
@@ -141,6 +162,25 @@
       ::cimi-api-fx/search [:mepm {:orderby "created:desc"}
                             #(dispatch [::set-mepms %])]}))
 
+(reg-event-fx
+  ::set-available-edges
+  (fn [{db :db} [_ edges]]
+    (if (instance? js/Error edges)
+      {:db       (assoc db ::spec/available-edges [] ::spec/loading-available-edges? false)
+       :dispatch (error-message "failure getting Nuvla Edges" edges)}
+      {:db (assoc db
+             ::spec/available-edges (mapv normalize-edge (or (:resources edges) []))
+             ::spec/loading-available-edges? false)})))
+
+(reg-event-fx
+  ::get-available-edges
+  (fn [{db :db} _]
+    {:db                  (assoc db ::spec/loading-available-edges? true)
+     ::cimi-api-fx/search [:nuvlabox {:orderby "name:asc"
+                                      :last    1000
+                                      :select  "id,name,online,state"}
+                           #(dispatch [::set-available-edges %])]}))
+
  (reg-event-fx
    ::add-mepm
    (fn [_ [_ data]]
@@ -169,6 +209,46 @@
                          (dispatch [::get-mepms]))
            on-error   #(dispatch (error-message (str "error deleting " id) %))]
        {::cimi-api-fx/delete [id on-success :on-error on-error]})))
+
+(reg-event-fx
+  ::update-mepm
+  (fn [_ [_ id data success-label]]
+    (let [on-result #(if (instance? js/Error %)
+                       (dispatch (error-message (str "failure updating " id) %))
+                       (let [{:keys [status]} (response/parse %)]
+                         (dispatch [::messages-events/add
+                                    {:header  (cond-> (or success-label (str "updated " id))
+                                                      status (str " (" status ")"))
+                                     :content "MEPM updated."
+                                     :type    :success}])
+                         (dispatch [::get-mepms])
+                         (dispatch [::get-mepm id])))]
+      {::cimi-api-fx/edit [id data on-result]})))
+
+(reg-event-fx
+  ::add-managed-edge
+  (fn [{db :db} [_ mepm-id edge-id]]
+    (let [mepm          (or (::spec/selected-mepm db)
+                            (some #(when (= mepm-id (:id %)) %) (::spec/mepms db)))
+          managed-edges (->> (conj (mepm-managed-edges mepm) edge-id)
+                             (remove str/blank?)
+                             distinct
+                             vec)]
+      {:fx [[:dispatch [::update-mepm mepm-id
+                        (managed-edge-update managed-edges)
+                        (str "added managed Edge " edge-id)]]]})))
+
+(reg-event-fx
+  ::remove-managed-edge
+  (fn [{db :db} [_ mepm-id edge-id]]
+    (let [mepm          (or (::spec/selected-mepm db)
+                            (some #(when (= mepm-id (:id %)) %) (::spec/mepms db)))
+          managed-edges (->> (mepm-managed-edges mepm)
+                             (remove #(= edge-id %))
+                             vec)]
+      {:fx [[:dispatch [::update-mepm mepm-id
+                        (managed-edge-update managed-edges)
+                        (str "removed managed Edge " edge-id)]]]})))
 
  (reg-event-fx
    ::run-mepm-action

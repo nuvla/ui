@@ -258,11 +258,15 @@
         username       (subscribe [::session-subs/user])
         commit-message (subscribe [::subs/commit-message])
         need-commit?   (subscribe [::subs/module-content-updated?])
-        subtype        (subscribe [::subs/module-subtype])]
+        subtype        (subscribe [::subs/module-subtype])
+        is-mec-app?    (subscribe [::subs/is-application-mec?])]
     (fn []
       (let [commit-map {:author @username
                         :commit @commit-message}
-            save-fn    #(do (dispatch [::events/edit-module (when @need-commit? commit-map)])
+            save-fn    #(do (dispatch [(if @is-mec-app?
+                                         ::events/save-mec-module
+                                         ::events/edit-module)
+                                       (when @need-commit? commit-map)])
                             (dispatch [::events/close-save-modal])
                             (dispatch [::events/commit-message nil])
                             (dispatch [::intercom-events/set-event "Last save module" (time/timestamp)]))]

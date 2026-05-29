@@ -6,6 +6,7 @@
             [sixsq.nuvla.ui.pages.apps.spec :as spec]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
+            [sixsq.nuvla.ui.utils.spec :as spec-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (def subtype-project "project")
@@ -17,6 +18,16 @@
 (def subtype-applications-sets "applications_sets")
 (def compatibility-docker-compose "docker-compose")
 (def compatibility-swarm "swarm")
+
+(def mec-source-appd :appd)
+(def mec-source-csar :csar)
+
+(def mec-package-content-fields
+  [:packageContentData
+   :packageContentEncoding
+   :packageContentMediaType
+   :packageContentFilename
+   :packageContentSha256])
 
 (def apps-description-template "# App Description Placeholder
 
@@ -96,9 +107,17 @@ For more information on how to format your app description using Markdown syntax
   []
   (utils-general/edn->json mec-appd-template))
 
+(defn public-mec-content
+  [content]
+  (apply dissoc content mec-package-content-fields))
+
+(defn package-artifact-present?
+  [content]
+  (boolean (seq (:packageContentData content))))
+
 (defn module->mec-appd-json
   [module]
-  (utils-general/edn->json (or (:content module) mec-appd-template)))
+  (utils-general/edn->json (or (some-> module :content public-mec-content) mec-appd-template)))
 
 (defn mec-appd-json->content
   [json]
@@ -109,6 +128,28 @@ For more information on how to format your app description using Markdown syntax
   (try
     (map? (mec-appd-json->content json))
     (catch :default _ false)))
+
+(defn mec-package-source
+  [module]
+  (if (package-artifact-present? (:content module))
+    mec-source-csar
+    mec-source-appd))
+
+(defn mec-package-file-valid?
+  [file]
+  (boolean
+    (and file
+         (let [file-name (some-> file .-name str/lower-case)
+               file-type (some-> file .-type str/lower-case)]
+           (or (str/ends-with? file-name ".zip")
+               (= file-type "application/zip")
+               (= file-type "application/x-zip-compressed"))))))
+
+(defn mec-package-input-valid?
+  [source selected-file existing-package? json]
+  (case source
+    :csar (or (mec-package-file-valid? selected-file) existing-package?)
+    (mec-appd-json-valid? json)))
 
 (defn descr-not-template?
   [module-subtype description]
@@ -363,9 +404,11 @@ For more information on how to format your app description using Markdown syntax
           (assoc-in m [:name] name)
           (assoc-in m [:description] description)
           (assoc-in m [:parent-path] parent-path)
-          (assoc-in m [:logo-url] logo-url)
           (assoc-in m [:subtype] subtype)
           (assoc-in m [:path] path)
+          (if (spec-utils/nonblank-string logo-url)
+            (assoc-in m [:logo-url] logo-url)
+            (dissoc m :logo-url))
           (cond-> m acl (assoc-in [:acl] acl))
           (if (empty? env-variables)
             (update-in m [:content] dissoc :environmental-variables)
@@ -502,14 +545,17 @@ For more information on how to format your app description using Markdown syntax
   [db module]
   (-> db
       (module->db module)
-      (assoc ::spec/mec-appd-json (module->mec-appd-json module))))
+      (assoc ::spec/mec-appd-json (module->mec-appd-json module))
+      (assoc ::spec/mec-package-source (mec-package-source module))
+      (assoc ::spec/mec-package-file nil)))
 
 (defn db->module-mec
   [module _commit-map db]
   (let [base    (-> (db->module module nil db)
                     (dissoc :data-accept-content-types))
-        content (mec-appd-json->content (get db ::spec/mec-appd-json))]
-    (assoc base :content content)))
+        content (mec-appd-json->content (get db ::spec/mec-appd-json))
+        package-content (select-keys (:content module) mec-package-content-fields)]
+    (assoc base :content (merge content package-content))))
 
 
 (defn mandatory-name

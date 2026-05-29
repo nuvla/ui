@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.pages.apps.events
   (:require [cljs.spec.alpha :as s]
-            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.common-components.job.events :as job-events]
             [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
@@ -45,6 +46,90 @@
       utils/subtype-applications-sets apps-sets
       project)))
 
+(defn- response-text->edn
+  [text]
+  (when-not (str/blank? text)
+    (try
+      (general-utils/json->edn text)
+      (catch :default _
+        {:message text}))))
+
+(defn- mec-package-content-url
+  [app-pkg-id]
+  (str @cimi-api-fx/NUVLA_URL
+       "/api/mec/mm1/app_pkgm/v1/app_packages/"
+       app-pkg-id
+       "/package_content"))
+
+(defn- trigger-browser-download!
+  [blob filename]
+  (let [url    (.createObjectURL js/URL blob)
+        anchor (.createElement js/document "a")]
+    (set! (.-href anchor) url)
+    (set! (.-download anchor) filename)
+    (.appendChild (.-body js/document) anchor)
+    (.click anchor)
+    (.remove anchor)
+    (.revokeObjectURL js/URL url)))
+
+(reg-fx
+  ::put-mec-package-content
+  (fn [{:keys [app-pkg-id zip-file on-success on-error]}]
+    (when (and app-pkg-id zip-file)
+      (let [request #js {:method      "PUT"
+                         :credentials "same-origin"
+                         :headers     #js {"Content-Type" "application/zip"
+                                           "Accept"       "application/json, text/plain, */*"}
+                         :body        zip-file}]
+        (-> (js/fetch (mec-package-content-url app-pkg-id) request)
+            (.then (fn [response]
+                     (.then (.text response)
+                            (fn [text]
+                              (let [payload {:status (.-status response)
+                                             :body   (response-text->edn text)}]
+                                (if (.-ok response)
+                                  (on-success payload)
+                                  (on-error payload)))))))
+            (.catch (fn [e]
+                      (on-error {:status nil
+                                 :body   {:message (.-message e)}}))))))))
+
+(reg-fx
+  ::download-mec-package-content
+  (fn [{:keys [app-pkg-id filename on-success on-error]}]
+    (when app-pkg-id
+      (let [request #js {:method      "GET"
+                         :credentials "same-origin"
+                         :headers     #js {"Accept" "application/zip, application/octet-stream, */*"}}]
+        (-> (js/fetch (mec-package-content-url app-pkg-id) request)
+            (.then (fn [response]
+                     (.then (.blob response)
+                            (fn [blob]
+                              (if (.-ok response)
+                                (do
+                                  (trigger-browser-download! blob (or filename "app-package.csar.zip"))
+                                  (when on-success
+                                    (on-success {:status (.-status response)})))
+                                (if on-error
+                                  (on-error {:status (.-status response)
+                                             :body   {:message "Failed to download the CSAR package."}})
+                                  nil))))))
+            (.catch (fn [e]
+                      (when on-error
+                        (on-error {:status nil
+                                   :body   {:message (.-message e)}})))))))))
+
+(defn- mec-package-input-valid?
+  [db]
+  (let [module-subtype (-> db ::spec/module-common ::spec/subtype)]
+    (if (= module-subtype utils/subtype-application-mec)
+      (utils/mec-package-input-valid?
+        (::spec/mec-package-source db)
+        (::spec/mec-package-file db)
+        (utils/package-artifact-present? (get-in db [::spec/module :content]))
+        (::spec/mec-appd-json db))
+      true)))
+
 
 (reg-event-db
   ::set-validate-form?
@@ -59,7 +144,8 @@
     (and
      (utils/module-common-valid?
       module-common module-subtype)
-     (or (nil? form-spec) (s/valid? form-spec module)))))
+     (or (nil? form-spec) (s/valid? form-spec module))
+     (mec-package-input-valid? db))))
 
 ; Perform form validation if validate-form? is true.
 (reg-event-db
@@ -157,6 +243,10 @@
           (assoc-in [::spec/module-common ::spec/data-types] (sorted-map))
           (assoc ::spec/mec-appd-json (when (= new-subtype utils/subtype-application-mec)
                                         (utils/mec-appd-template-json)))
+          (assoc ::spec/mec-package-source (if (= new-subtype utils/subtype-application-mec)
+                                             utils/mec-source-appd
+                                             nil))
+          (assoc ::spec/mec-package-file nil)
 
           (assoc-in [::spec/module-common ::spec/minimum-requirements] {})))))
 
@@ -243,6 +333,19 @@
   ::set-mec-appd-json
   (fn [db [_ value]]
     (assoc db ::spec/mec-appd-json value)))
+
+(reg-event-db
+  ::set-mec-package-source
+  (fn [db [_ value]]
+    (if (and (= value utils/mec-source-appd)
+             (utils/package-artifact-present? (get-in db [::spec/module :content])))
+      (assoc db ::spec/mec-package-source utils/mec-source-csar)
+      (assoc db ::spec/mec-package-source value))))
+
+(reg-event-db
+  ::set-mec-package-file
+  (fn [db [_ value]]
+    (assoc db ::spec/mec-package-file value)))
 
 
 (reg-event-db
@@ -657,6 +760,104 @@
   (let [version-id   (-> module :content :id)
         map-versions (utils/map-versions-index versions)]
     (ffirst (filter #(-> % second :href (= version-id)) map-versions))))
+
+(defn- mec-upload-error-content
+  [{:keys [status body]}]
+  (or (:detail body)
+      (:message body)
+      (when status (str "Request failed with status " status))
+      "The CSAR upload failed."))
+
+(reg-event-fx
+  ::download-mec-package
+  (fn [{{:keys [::spec/module] :as _db} :db} _]
+    (let [app-pkg-id (some-> module :id)
+          filename   (get-in module [:content :packageContentFilename])]
+      (when app-pkg-id
+        {::download-mec-package-content
+         {:app-pkg-id app-pkg-id
+          :filename   filename
+          :on-error   (fn [response]
+                        (dispatch [::messages-events/add
+                                   {:header  "Failed to download ETSI MEC package"
+                                    :content (mec-upload-error-content response)
+                                    :type    :error}]))}}))))
+
+(reg-event-fx
+  ::save-mec-module
+  (fn [{{:keys [::spec/module
+                ::spec/mec-package-source
+                ::spec/mec-package-file] :as db} :db} [_ commit-map]]
+    (let [{:keys [id] :as sanitized-module} (utils-detail/db->module module commit-map db)
+          upload-csar? (and (= mec-package-source utils/mec-source-csar)
+                            mec-package-file)]
+      (cond
+        (not upload-csar?)
+        {:dispatch [::edit-module commit-map]}
+
+        (nil? id)
+        {::cimi-api-fx/add [:module sanitized-module
+                            #(let [{:keys [resource-id]} (response/parse %)]
+                               (when resource-id
+                                 (dispatch [::put-mec-package-content resource-id])))
+                            :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
+                                         (cimi-api-fx/default-add-on-error :module %)
+                                         (when (= status 409)
+                                           (dispatch [::name nil])
+                                           (dispatch [::validate-form])))]}
+
+        :else
+        {::cimi-api-fx/edit [id (if commit-map
+                                  sanitized-module
+                                  (dissoc sanitized-module :content))
+                             #(if (instance? js/Error %)
+                                (let [{:keys [status message]} (response/parse-ex-info %)]
+                                  (dispatch [::messages-events/add
+                                             {:header  (cond-> (str "error editing " id)
+                                                               status (str " (" status ")"))
+                                              :content message
+                                              :type    :error}]))
+                                (dispatch [::put-mec-package-content id]))]}))))
+
+(reg-event-fx
+  ::put-mec-package-content
+  (fn [{{:keys [::spec/module
+                ::spec/mec-package-file] :as db} :db} [_ resource-id]]
+    (let [is-existing? (some? (:id module))
+          module-path  (or (:path module)
+                           (get-in db [::spec/module-common ::spec/path])
+                           (utils/contruct-path (get-in db [::spec/module-common ::spec/parent-path])
+                                                (get-in db [::spec/module-common ::spec/name])))]
+      (when resource-id
+        {::put-mec-package-content
+         {:app-pkg-id resource-id
+          :zip-file   mec-package-file
+          :on-success (fn [_]
+                        (dispatch [::set-mec-package-file nil])
+                        (dispatch [::messages-events/add
+                                   {:header  "ETSI MEC app package saved"
+                                    :content "The module and package content were updated successfully."
+                                    :type    :success}])
+                        (if is-existing?
+                          (do
+                            (dispatch [::get-module -1])
+                            (dispatch [::main-events/reset-changes-protection]))
+                          (dispatch [::main-events/reset-changes-protection
+                                     [::routing-events/navigate
+                                      (str-pathify (name->href routes/apps) module-path)]])))
+          :on-error   (fn [response]
+                        (dispatch [::messages-events/add
+                                   {:header  "Failed to upload ETSI MEC package"
+                                    :content (mec-upload-error-content response)
+                                    :type    :error}])
+                        (dispatch [::set-mec-package-file nil])
+                        (if is-existing?
+                          (do
+                            (dispatch [::get-module -1])
+                            (dispatch [::main-events/reset-changes-protection]))
+                          (dispatch [::main-events/reset-changes-protection
+                                     [::routing-events/navigate
+                                      (str-pathify (name->href routes/apps) module-path)]])))}}))))
 
 (reg-event-fx
   ::edit-module

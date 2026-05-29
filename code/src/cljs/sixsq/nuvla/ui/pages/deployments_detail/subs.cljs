@@ -185,9 +185,17 @@
 
 (reg-sub
   ::mec-southbound-app-instance-id
+  :<- [::deployment]
   :<- [::deployment-parameters]
-  (fn [deployment-parameters]
-    (get-in deployment-parameters ["mec.app-instance-id" :value])))
+  (fn [[deployment deployment-parameters]]
+    (or (:mec-backing-deployment-id deployment)
+        (get-in deployment-parameters ["mec.app-instance-id" :value]))))
+
+(reg-sub
+  ::mec-backing-deployment-id
+  :<- [::deployment]
+  (fn [deployment]
+    (:mec-backing-deployment-id deployment)))
 
 (reg-sub
   ::mec-jobs
@@ -246,19 +254,28 @@
   :<- [::deployment]
   (fn [[latest-job deployment]]
     (or (:mec-host-id latest-job)
+        (:mec-host-id deployment)
         (:nuvlabox deployment))))
 
 (reg-sub
   ::mepm-id
   :<- [::latest-mec-job]
-  (fn [latest-job]
-    (:mepm-id latest-job)))
+  :<- [::deployment]
+  (fn [[latest-job deployment]]
+    (or (:mepm-id latest-job)
+        (:mec-mepm-id deployment))))
 
 (reg-sub
   ::mepm-endpoint
   :<- [::latest-mec-job]
   (fn [latest-job]
     (:mepm-endpoint latest-job)))
+
+(reg-sub
+  ::mec-backend-mode
+  :<- [::deployment]
+  (fn [deployment]
+    (:mec-backend-mode deployment)))
 
 
 (reg-sub

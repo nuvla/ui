@@ -30,10 +30,19 @@
    ::loading-selected-mepm?
    :-> ::spec/loading-selected-mepm?)
 
+(reg-sub
+  ::available-edges
+  :-> ::spec/available-edges)
+
+(reg-sub
+  ::loading-available-edges?
+  :-> ::spec/loading-available-edges?)
+
  (reg-sub
    ::loading?
    :<- [::loading-mepms?]
    :<- [::loading-subscriptions?]
    :<- [::loading-selected-mepm?]
-   (fn [[loading-mepms? loading-subscriptions? loading-selected-mepm?]]
-     (or loading-mepms? loading-subscriptions? loading-selected-mepm?)))
+  :<- [::loading-available-edges?]
+  (fn [[loading-mepms? loading-subscriptions? loading-selected-mepm? loading-available-edges?]]
+    (or loading-mepms? loading-subscriptions? loading-selected-mepm? loading-available-edges?)))

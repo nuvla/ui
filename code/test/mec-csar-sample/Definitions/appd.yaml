@@ -1,0 +1,23 @@
+appDId: module/replace-me
+appName: UI Test MEC App
+appDescription: Example MEC application package for UI upload testing
+appProvider: SixSq
+appDVersion: 1.0.0
+appSoftVersion: 1.0.0
+mecVersion: 2.2.1
+virtualComputeDescriptor:
+  virtualCpu:
+    numVirtualCpu: 1
+  virtualMemory:
+    virtualMemSize: 512
+swImageDescriptor:
+  - swImageName: ui-test-mec-app
+    swImageVersion: 1.0.0
+    containerFormat: DOCKER
+    swImage: sixsq/ui-test-mec-app:1.0.0
+virtualStorageDescriptor: []
+appExtCpd: []
+appServiceRequired: []
+trafficRuleDescriptor: []
+dnsRuleDescriptor: []
+appFeatureRequired: []

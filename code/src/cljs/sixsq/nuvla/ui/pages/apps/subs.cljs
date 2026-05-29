@@ -68,12 +68,45 @@
   :-> ::spec/mec-appd-json)
 
 (reg-sub
+  ::mec-package-source
+  :-> ::spec/mec-package-source)
+
+(reg-sub
+  ::mec-package-file
+  :-> ::spec/mec-package-file)
+
+(reg-sub
+  ::mec-package-existing?
+  :<- [::module]
+  (fn [module]
+    (utils/package-artifact-present? (:content module))))
+
+(reg-sub
+  ::mec-package-filename
+  :<- [::mec-package-file]
+  :<- [::module]
+  (fn [[selected-file module]]
+    (or (some-> selected-file .-name)
+        (get-in module [:content :packageContentFilename]))))
+
+(reg-sub
   ::mec-appd-json-valid?
   :<- [::is-application-mec?]
   :<- [::mec-appd-json]
   (fn [[is-application-mec? mec-appd-json]]
     (or (not is-application-mec?)
         (utils/mec-appd-json-valid? mec-appd-json))))
+
+(reg-sub
+  ::mec-package-input-valid?
+  :<- [::is-application-mec?]
+  :<- [::mec-package-source]
+  :<- [::mec-package-file]
+  :<- [::mec-package-existing?]
+  :<- [::mec-appd-json]
+  (fn [[is-application-mec? source selected-file existing-package? mec-appd-json]]
+    (or (not is-application-mec?)
+        (utils/mec-package-input-valid? source selected-file existing-package? mec-appd-json))))
 
 (reg-sub
   ::is-app?
@@ -160,13 +193,13 @@
   :<- [::main-subs/changes-protection?]
   :<- [::is-description-template?]
   :<- [::helm-info-correct?]
-  :<- [::mec-appd-json-valid?]
-  (fn [[form-valid? page-changed? is-description-template? helm-info-correct? mec-appd-json-valid?]]
+  :<- [::mec-package-input-valid?]
+  (fn [[form-valid? page-changed? is-description-template? helm-info-correct? mec-package-input-valid?]]
     (or (not page-changed?)
         (not form-valid?)
         is-description-template?
         (not helm-info-correct?)
-        (not mec-appd-json-valid?))))
+        (not mec-package-input-valid?))))
 
 (reg-sub
   ::module-license
@@ -368,11 +401,15 @@
   ::module-content-updated?
   (fn [{:keys [::spec/module
                ::spec/module-immutable] :as db}]
-    (not= (-> module
-              (utils-detail/db->module nil db)
-              :content
-              (dissoc :commit :author :children))
-          (-> module-immutable :content (dissoc :commit :author :children)))))
+    (not= (some-> module
+                  (utils-detail/db->module nil db)
+                  :content
+                  (utils/public-mec-content)
+                  (dissoc :commit :author :children))
+          (some-> module-immutable
+                  :content
+                  (utils/public-mec-content)
+                  (dissoc :commit :author :children)))))
 
 
 (reg-sub

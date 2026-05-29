@@ -23,11 +23,17 @@
    (when value
      (with-out-str (pprint value))))
 
+(def wrap-anywhere-style
+  {:overflow-wrap "anywhere"
+   :word-break    "break-word"})
+
  (defn mepm-template
    []
    {:name         "Example MEPM"
     :description  "MEPM created from the MEC admin page."
     :endpoint     "http://localhost:8080/mepm"
+   :backend-mode "MOCK"
+   :managed-edges []
     :capabilities {:platforms   ["kubernetes"]
                    :services    ["traffic-rules"]
                    :api-version "2.2.1"}
@@ -69,6 +75,22 @@
           str/trim
           (str/replace #"/+$" "")))
 
+(defn mepm-managed-edges
+  [mepm]
+  (let [managed-edges (:managed-edges mepm)]
+    (if (contains? mepm :managed-edges)
+      (vec managed-edges)
+      (cond-> []
+        (:mec-host-id mepm) (conj (:mec-host-id mepm))))))
+
+(defn managed-edges-summary
+  [mepm]
+  (let [managed-edges (mepm-managed-edges mepm)]
+    (cond
+      (empty? managed-edges) "-"
+      (= 1 (count managed-edges)) (first managed-edges)
+      :else (str (first managed-edges) " +" (dec (count managed-edges))))))
+
 (defn validate-unique-mepm
   [existing-mepms candidate]
   (let [candidate-endpoint (normalize-endpoint (:endpoint candidate))
@@ -85,16 +107,125 @@
       :else
       candidate)))
 
- (defn MepmRow
-   [{:keys [id name endpoint status mec-host-id last-check]}]
+(defn AddManagedEdgeButton
+  [{:keys [mepm-id managed-edges]}]
+  (let [available-edges (subscribe [::subs/available-edges])
+        loading-edges?  (subscribe [::subs/loading-available-edges?])
+        show?           (r/atom false)
+        selected-edge   (r/atom nil)]
+    (fn [{:keys [mepm-id managed-edges]}]
+      (let [assigned-edges   (set managed-edges)
+            edge-options     (->> @available-edges
+                                  (remove #(contains? assigned-edges (:id %)))
+                                  (mapv (fn [{:keys [id name online state]}]
+                                          {:key   id
+                                           :text  (str (or name id)
+                                                       " ["
+                                                       (if online "online" "offline")
+                                                       ", "
+                                                       (or state "unknown")
+                                                       "]")
+                                           :value id})))]
+        [uix/ModalActionButton
+         {:show?                show?
+          :title-text           "Add managed Nuvla Edge"
+          :button-confirm-label "Add"
+          :icon                 icons/i-plus
+          :menu-item-label      "Add managed Edge"
+          :Trigger              [uix/Button {:text "Add Edge"
+                                             :icon icons/i-plus
+                                             :on-click #(reset! show? true)}]
+          :Content              [ui/Form
+                                 [ui/FormField
+                                  [:label "Nuvla Edge"]
+                                  [ui/Dropdown {:fluid       true
+                                                :selection   true
+                                                :search      true
+                                                :placeholder "Select a Nuvla Edge"
+                                                :loading     @loading-edges?
+                                                :value       @selected-edge
+                                                :options     edge-options
+                                                :on-change   (fn [_ data]
+                                                               (reset! selected-edge (.-value data)))}]]
+                                 (when (empty? edge-options)
+                                   [uix/MsgInfo {:header  "No unassigned Edges available"
+                                                 :content "All discovered Nuvla Edges are already managed by this MEPM, or no Edges are currently available."}])]
+          :validate-fn          #(if (str/blank? @selected-edge)
+                                   (js/Error. "Select a Nuvla Edge to add.")
+                                   @selected-edge)
+          :on-confirm           #(do
+                                   (reset! selected-edge nil)
+                                   (dispatch [::events/add-managed-edge mepm-id %]))
+          :on-cancel            #(reset! selected-edge nil)}]))))
+
+(defn JsonDataPanel
+  [title value]
+  (when value
+    [ui/Segment {:secondary true
+                 :style     {:max-width "100%"
+                             :overflow-x "auto"}}
+     [:h4 title]
+     [:pre {:style {:white-space "pre-wrap"
+                    :overflow-wrap "anywhere"
+                    :word-break    "break-word"
+                    :max-width     "100%"}}
+      (pretty-json value)]]))
+
+(defn ManagedEdgeRow
+  [mepm-id edge-id]
+  [:div {:style {:display         "flex"
+                 :justify-content "space-between"
+                 :align-items     "center"
+                 :gap             "1rem"
+                 :padding         "0.5rem 0"
+                 :border-bottom   "1px solid rgba(34,36,38,.08)"}}
+   [:div {:style {:min-width 0}}
+    [values/AsPageLink edge-id
+     :label (general-utils/id->short-uuid edge-id)]
+    [:div {:style {:color "#666"
+                   :font-size "0.9em"
+                   :overflow-wrap "anywhere"}}
+     edge-id]]
+   [ui/Button {:basic    true
+               :size     "tiny"
+               :on-click #(dispatch [::events/remove-managed-edge mepm-id edge-id])}
+    [icons/Icon {:name icons/i-trash}]
+    "Remove"]])
+
+(defn ManagedEdgesPanel
+  [mepm-id managed-edges]
+  [ui/Segment {:secondary true}
+   [:div {:style {:display         "flex"
+                  :justify-content "space-between"
+                  :align-items     "center"
+                  :gap             "0.75rem"
+                  :margin-bottom   "1rem"}}
+    [:h4 {:style {:margin 0}} "Managed Nuvla Edges"]
+    [:span {:style {:color "#666"}}
+     (str (count managed-edges) " edge"
+          (when (not= 1 (count managed-edges)) "s"))]]
+   (if (empty? managed-edges)
+     [uix/MsgNoItemsToShow "No Nuvla Edges are currently managed by this MEPM."]
+     [:div {:style {:display        "flex"
+                    :flex-direction "column"
+                    :gap            "0.75rem"}}
+      (doall
+        (for [edge-id managed-edges]
+          ^{:key edge-id}
+          [ManagedEdgeRow mepm-id edge-id]))])])
+
+(defn MepmRow
+  [{:keys [id name endpoint status last-check backend-mode] :as mepm}]
    (let [selected-id (subscribe [::subs/selected-mepm-id])]
      [ui/TableRow {:active   (= id @selected-id)
                    :style    {:cursor "pointer"}
                    :on-click #(dispatch [::events/get-mepm id])}
-      [ui/TableCell (or name [values/AsLink id :label (general-utils/id->short-uuid id)])]
+      [ui/TableCell {:style wrap-anywhere-style}
+       (or name [values/AsLink id :label (general-utils/id->short-uuid id)])]
       [ui/TableCell status]
-      [ui/TableCell endpoint]
-      [ui/TableCell (or mec-host-id "-")]
+      [ui/TableCell (or backend-mode "MOCK")]
+      [ui/TableCell {:style wrap-anywhere-style} endpoint]
+     [ui/TableCell {:style wrap-anywhere-style} (managed-edges-summary mepm)]
       [ui/TableCell (if last-check [uix/TimeAgo last-check] "-")]]))
 
  (defn MepmList
@@ -122,18 +253,91 @@
                      :on-click #(dispatch [::events/get-mepms])}]]]
       (if (empty? @mepms)
         [uix/MsgNoItemsToShow "No MEPM resources available."]
-        [ui/Table {:basic "very" :selectable true}
-         [ui/TableHeader
-          [ui/TableRow
-           [ui/TableHeaderCell "Name"]
-           [ui/TableHeaderCell "Status"]
-           [ui/TableHeaderCell "Endpoint"]
-           [ui/TableHeaderCell "MEC host"]
-           [ui/TableHeaderCell "Last check"]]]
-         [ui/TableBody
-          (for [mepm @mepms]
-            ^{:key (:id mepm)}
-            [MepmRow mepm])]])]))
+        [:div {:style {:overflow-x "auto"}}
+         [ui/Table {:basic "very"
+                    :selectable true
+                    :style {:table-layout "fixed"
+                            :width        "100%"
+                            :min-width    "100%"}}
+          [ui/TableHeader
+           [ui/TableRow
+            [ui/TableHeaderCell "Name"]
+            [ui/TableHeaderCell "Status"]
+            [ui/TableHeaderCell "Mode"]
+            [ui/TableHeaderCell "Endpoint"]
+            [ui/TableHeaderCell "Managed Edges"]
+            [ui/TableHeaderCell "Last check"]]]
+          [ui/TableBody
+           (for [mepm @mepms]
+             ^{:key (:id mepm)}
+             [MepmRow mepm])]]])]))
+
+(defn MepmDetailContent
+  [{:keys [id name endpoint status backend-mode mec-host-id credential-id
+           version last-check capabilities resources] :as mepm}]
+  (let [managed-edges (mepm-managed-edges mepm)]
+    [:div
+     [:div {:style {:display         "flex"
+                    :justify-content "space-between"
+                    :align-items     "flex-start"
+                    :flex-wrap       "wrap"
+                    :gap             "0.75rem"
+                    :margin-bottom   "1rem"}}
+      [:h3 {:style {:margin 0}} (or name id)]
+      [:div {:style {:display   "flex"
+                     :gap       "0.75rem"
+                     :flex-wrap "wrap"}}
+       [uix/Button {:text     "Check health"
+                    :icon     icons/i-heartbeat
+                    :on-click #(dispatch [::events/run-mepm-action id "check-health"])}]
+       [uix/Button {:text     "Query capabilities"
+                    :icon     icons/i-info
+                    :on-click #(dispatch [::events/run-mepm-action id "query-capabilities"])}]
+       [uix/Button {:text     "Query resources"
+                    :icon     icons/i-db
+                    :on-click #(dispatch [::events/run-mepm-action id "query-resources"])}]
+       [AddManagedEdgeButton {:mepm-id       id
+                              :managed-edges managed-edges}]]]
+     [ui/Table {:basic "very"
+                :style {:table-layout "fixed"
+                        :width        "100%"}}
+      [ui/TableBody
+       [ui/TableRow
+        [ui/TableCell "ID"]
+        [ui/TableCell {:style {:overflow-wrap "anywhere"}}
+         [values/AsLink id :label (general-utils/id->uuid id)]]]
+       [ui/TableRow
+        [ui/TableCell "Endpoint"]
+        [ui/TableCell {:style {:overflow-wrap "anywhere"}} endpoint]]
+       [ui/TableRow
+        [ui/TableCell "Status"]
+        [ui/TableCell status]]
+       [ui/TableRow
+        [ui/TableCell "Mode"]
+        [ui/TableCell (or backend-mode "MOCK")]]
+       (when version
+         [ui/TableRow
+          [ui/TableCell "Version"]
+          [ui/TableCell version]])
+       (when last-check
+         [ui/TableRow
+          [ui/TableCell "Last check"]
+          [ui/TableCell [uix/TimeAgo last-check]]])
+       (when (and mec-host-id (not (contains? mepm :managed-edges)))
+         [ui/TableRow
+          [ui/TableCell "MEC host"]
+          [ui/TableCell
+           [values/AsPageLink mec-host-id
+            :label (general-utils/id->short-uuid mec-host-id)]]])
+       (when credential-id
+         [ui/TableRow
+          [ui/TableCell "Credential"]
+          [ui/TableCell
+           [values/AsPageLink credential-id
+            :label (general-utils/id->short-uuid credential-id)]]])]]
+     [ManagedEdgesPanel id managed-edges]
+     [JsonDataPanel "Capabilities" capabilities]
+     [JsonDataPanel "Resources" resources]]))
 
 (defn MepmDetail
   []
@@ -149,91 +353,16 @@
          [uix/MsgNoItemsToShow "Select an MEPM to inspect its status and actions."]
 
          :else
-         (let [{:keys [id name endpoint status mec-host-id credential-id
-                       version last-check capabilities resources]} @selected-mepm]
-           [:<>
-            [:div {:style {:display         "flex"
-                           :justify-content "space-between"
-                           :align-items     "flex-start"
-                           :flex-wrap       "wrap"
-                           :gap             "0.75rem"
-                           :margin-bottom   "1rem"}}
-             [:h3 {:style {:margin 0}} (or name id)]
-             [:div {:style {:display   "flex"
-                            :gap       "0.75rem"
-                            :flex-wrap "wrap"}}
-              [uix/Button {:text     "Check health"
-                           :icon     icons/i-heartbeat
-                           :on-click #(dispatch [::events/run-mepm-action id "check-health"])}]
-              [uix/Button {:text     "Query capabilities"
-                           :icon     icons/i-info
-                           :on-click #(dispatch [::events/run-mepm-action id "query-capabilities"])}]
-              [uix/Button {:text     "Query resources"
-                           :icon     icons/i-db
-                           :on-click #(dispatch [::events/run-mepm-action id "query-resources"])}]]
-            [ui/Table {:basic "very"
-                       :style {:table-layout "fixed"
-                               :width        "100%"}}
-             [ui/TableBody
-              [ui/TableRow
-               [ui/TableCell "ID"]
-               [ui/TableCell {:style {:overflow-wrap "anywhere"}}
-                [values/AsLink id :label (general-utils/id->uuid id)]]]
-              [ui/TableRow
-               [ui/TableCell "Endpoint"]
-               [ui/TableCell {:style {:overflow-wrap "anywhere"}} endpoint]]
-              [ui/TableRow
-               [ui/TableCell "Status"]
-               [ui/TableCell status]]
-              (when version
-                [ui/TableRow
-                 [ui/TableCell "Version"]
-                 [ui/TableCell version]])
-              (when last-check
-                [ui/TableRow
-                 [ui/TableCell "Last check"]
-                 [ui/TableCell [uix/TimeAgo last-check]]])
-              (when mec-host-id
-                [ui/TableRow
-                 [ui/TableCell "MEC host"]
-                 [ui/TableCell
-                  [values/AsPageLink mec-host-id
-                   :label (general-utils/id->short-uuid mec-host-id)]]])
-              (when credential-id
-                [ui/TableRow
-                 [ui/TableCell "Credential"]
-                 [ui/TableCell
-                  [values/AsPageLink credential-id
-                   :label (general-utils/id->short-uuid credential-id)]]])]]
-            (when capabilities
-              [ui/Segment {:secondary true
-                           :style     {:max-width "100%"
-                                       :overflow-x "auto"}}
-               [:h4 "Capabilities"]
-               [:pre {:style {:white-space "pre-wrap"
-                              :overflow-wrap "anywhere"
-                              :word-break    "break-word"
-                              :max-width     "100%"}}
-                (pretty-json capabilities)]])
-            (when resources
-              [ui/Segment {:secondary true
-                           :style     {:max-width "100%"
-                                       :overflow-x "auto"}}
-               [:h4 "Resources"]
-               [:pre {:style {:white-space "pre-wrap"
-                              :overflow-wrap "anywhere"
-                              :word-break    "break-word"
-                              :max-width     "100%"}}
-                (pretty-json resources)]])]]))])))
+         [MepmDetailContent @selected-mepm])])))
 
  (defn MepmsPane
    []
    [ui/TabPane
-    [ui/Grid {:stackable true :columns 2}
+   [ui/Grid {:stackable true :columns 1}
      [ui/GridRow
-      [ui/GridColumn {:width 8}
+     [ui/GridColumn {:width 16}
        [MepmList]]
-      [ui/GridColumn {:width 8}
+     [ui/GridColumn {:width 16}
        [MepmDetail]]]]])
 
  (defn subscription-filter-summary

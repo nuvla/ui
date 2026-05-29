@@ -9,6 +9,8 @@
  (s/def ::loading-mepms? boolean?)
  (s/def ::loading-subscriptions? boolean?)
  (s/def ::loading-selected-mepm? boolean?)
+(s/def ::available-edges any?)
+(s/def ::loading-available-edges? boolean?)
 
  (def defaults
    {::tab                   (tab-plugin/build-spec :default-tab :mepms)
@@ -18,4 +20,6 @@
     ::selected-mepm         nil
     ::loading-mepms?        false
     ::loading-subscriptions? false
-    ::loading-selected-mepm? false})
+   ::loading-selected-mepm? false
+   ::available-edges       []
+   ::loading-available-edges? false})

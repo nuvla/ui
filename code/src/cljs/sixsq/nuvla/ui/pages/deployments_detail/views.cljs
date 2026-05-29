@@ -513,9 +513,11 @@
 (defn MecStatusRows
   []
   (let [mec-app-instance-id           (subscribe [::subs/mec-app-instance-id])
+        mec-backing-deployment-id     (subscribe [::subs/mec-backing-deployment-id])
         mec-southbound-app-instance-id (subscribe [::subs/mec-southbound-app-instance-id])
         mec-instantiation-state       (subscribe [::subs/mec-instantiation-state])
         mec-operational-state         (subscribe [::subs/mec-operational-state])
+        mec-backend-mode              (subscribe [::subs/mec-backend-mode])
         mepm-id                       (subscribe [::subs/mepm-id])
         mepm-endpoint                 (subscribe [::subs/mepm-endpoint])
         mec-host-id                   (subscribe [::subs/mec-host-id])
@@ -530,10 +532,20 @@
      [ui/TableRow
       [ui/TableCell "MEC app instance"]
       [ui/TableCell [values/AsLink @mec-app-instance-id :label (general-utils/id->uuid @mec-app-instance-id)]]]
-     (when @mec-southbound-app-instance-id
+     (when @mec-backing-deployment-id
+       [ui/TableRow
+        [ui/TableCell "Backing deployment"]
+        [ui/TableCell [values/AsPageLink @mec-backing-deployment-id
+                       :label (general-utils/id->short-uuid @mec-backing-deployment-id)]]])
+     (when (and @mec-southbound-app-instance-id
+                (not= @mec-southbound-app-instance-id @mec-backing-deployment-id))
        [ui/TableRow
         [ui/TableCell "MEPM app instance"]
         [ui/TableCell @mec-southbound-app-instance-id]])
+     (when @mec-backend-mode
+       [ui/TableRow
+        [ui/TableCell "MEC backend mode"]
+        [ui/TableCell @mec-backend-mode]])
      (when @mec-host-id
        [ui/TableRow
         [ui/TableCell "MEC host"]

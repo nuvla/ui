@@ -206,6 +206,10 @@
 
 (s/def ::mec-appd-json (s/nilable string?))
 
+(s/def ::mec-package-source keyword?)
+
+(s/def ::mec-package-file any?)
+
 (def default-tab :overview)
 
 (def defaults
@@ -235,4 +239,6 @@
    ::paste-modal-visible?           false
    ::module-not-found?              false
    ::details-validation-errors      #{}
-   ::mec-appd-json                  nil})
+   ::mec-appd-json                  nil
+   ::mec-package-source             :appd
+   ::mec-package-file               nil})

@@ -10,7 +10,7 @@
 This repository contains the web user interface of the Nuvla solution. It is built as a modern
 single page application.
 
-The ui is built entirely in Clojurescript (that's cool), using [re-frame](https://github.com/Day8/re-frame)
+The ui is built entirely in Clojurescript, using [re-frame](https://github.com/Day8/re-frame)
 and [reagent](https://github.com/reagent-project/reagent) as foundation, and
 [Semantic UI](https://semantic-ui.com) for basic widgets and styling.
 
@@ -19,6 +19,41 @@ containers on any virtualised environments (e.g. public cloud, private cloud and
 as well as [NuvlaEdge](https://github.com/nuvlaedge) devices). And all this with no or minimum training.
 
 More details on the overall Nuvla eco-system is available [here](https://github.com/nuvla/nuvla).
+
+## ETSI MEC support
+
+The `etsi-mec` branch adds a user interface for
+[ETSI MEC](https://www.etsi.org/technologies/multi-access-edge-computing)
+orchestration, complementing the MEO APIs provided by the
+[Nuvla API server](https://github.com/nuvla/api-server).
+
+### Features
+
+- **MEC administration** (`/mec`) — manage MEPM resources, subscriptions, and
+  inspect MEC API responses.
+- **MEC application packages** — upload, validate, and publish CSAR-based MEC
+  application packages (`module-application-mec`).
+- **MEC deployments** — deploy MEC apps to registered MEPM targets and monitor
+  lifecycle operation status from the deployment detail page.
+
+The UI code lives under `code/src/cljs/sixsq/nuvla/ui/pages/mec/` and
+`code/src/cljs/sixsq/nuvla/ui/pages/apps/apps_mec/`.
+
+### Running MEC-related tests
+
+```bash
+cd code
+npm run test:unit
+```
+
+MEC-specific unit tests are in `test/cljs/sixsq/nuvla/ui/pages/apps/utils_test.cljs`.
+
+Sample CSAR fixtures for testing are in `code/test/mec-csar-sample/`.
+
+### Related repositories
+
+- [nuvla/api-server](https://github.com/nuvla/api-server) (`etsi-mec` branch) — MEO APIs and MEPM management
+- [nuvla/job-engine](https://github.com/nuvla/job-engine) (`etsi-mec` branch) — Mm3 lifecycle execution
 
 ## Artifacts
 
@@ -345,7 +380,7 @@ Release process instructions are available [here](RELEASE.md).
 
 ## Copyright
 
-Copyright &copy; 2019-2024, SixSq SA
+Copyright &copy; 2019-2026, SixSq SA
 
 ## License
 

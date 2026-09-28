@@ -126,19 +126,20 @@
 (reg-fx
   ::mec-subscriptions-hydrate
   (fn [{:keys [entries on-success on-error]}]
-    (let [fetch-one (fn [entry]
-                      (let [id  (subscription-id-from-link entry)
-                            url (mec-subscriptions-url id)]
-                        (-> (js/fetch url #js {:credentials "same-origin"
-                                               :method      "GET"})
-                            (.then (fn [resp]
-                                     (-> (.text resp)
-                                         (.then (fn [text]
-                                                  (when-not (.-ok resp)
-                                                    (throw (js/Error.
-                                                             (str "GET subscription " id
-                                                                  " failed (" (.-status resp) ")"))))
-                                                  (or (response-text->edn text) {}))))))))]
+    (let [fetch-one
+          (fn [entry]
+            (let [id  (subscription-id-from-link entry)
+                  url (mec-subscriptions-url id)]
+              (-> (js/fetch url #js {:credentials "same-origin"
+                                     :method      "GET"})
+                  (.then (fn [resp]
+                           (-> (.text resp)
+                               (.then (fn [text]
+                                        (when-not (.-ok resp)
+                                          (throw (js/Error.
+                                                   (str "GET subscription " id
+                                                        " failed (" (.-status resp) ")"))))
+                                        (or (response-text->edn text) {})))))))))]
       (if (seq entries)
         (-> (js/Promise.all (into-array (mapv fetch-one entries)))
             (.then (fn [results]

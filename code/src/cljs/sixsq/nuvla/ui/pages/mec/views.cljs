@@ -383,11 +383,13 @@
      [:div {:style {:font-weight 600
                     :margin-bottom "0.5rem"}}
       (or subscription-type "Subscription")
-      " "
-      [values/AsLink (str "mec-subscription/" (general-utils/id->uuid id))
-       :label (general-utils/id->short-uuid id)]]
-     [:div [:b "Callback URI:"] " " callback-uri]
-     [:div [:b "Active:"] " " (str active)]
+      (when id
+        [:<>
+         " "
+         [values/AsLink (str "mec-subscription/" (or (general-utils/id->uuid id) id))
+          :label (or (general-utils/id->short-uuid id) id)]])]
+     [:div [:b "Callback URI:"] " " (or callback-uri "-")]
+     [:div [:b "Active:"] " " (if (nil? active) "-" (str active))]
      [:div [:b "Owner:"] " " (or owner "-")]
      [:div {:style {:overflow-wrap "anywhere"}}
       [:b "Filter:"] " " (subscription-filter-summary subscription)]]]])

@@ -33,44 +33,67 @@
 
 (defn- normalize-subscription
   [subscription]
-  {:id                 (:id subscription)
-   :subscription-type  (:subscriptionType subscription)
-   :callback-uri       (:callbackUri subscription)
-   :app-instance-filter (:appInstanceFilter subscription)
-   :app-lcm-op-occ-filter (:appLcmOpOccFilter subscription)
-   :created            (:created subscription)
-   :updated            (:updated subscription)
-   :owner              (:owner subscription)
-   :active             (:active subscription)})
+  (when (map? subscription)
+    {:id                    (or (:id subscription)
+                                (:subscription-id subscription))
+     :subscription-type     (or (:subscriptionType subscription)
+                                (:subscription-type subscription))
+     :callback-uri          (or (:callbackUri subscription)
+                                (:callback-uri subscription))
+     :app-instance-filter   (or (:appInstanceFilter subscription)
+                                (:app-instance-filter subscription))
+     :app-lcm-op-occ-filter (or (:appLcmOpOccFilter subscription)
+                                (:app-lcm-op-occ-filter subscription))
+     :created               (:created subscription)
+     :updated               (:updated subscription)
+     :owner                 (:owner subscription)
+     :active                (:active subscription)}))
 
 (defn- subscription-id-from-link
   "Extract API subscription id (subscription/<uuid>) from a link-list entry or resource."
   [{:keys [href id] :as _entry}]
   (or id
       (when (and (string? href) (not (str/blank? href)))
-        (let [parts (vec (str/split href #"/"))
-              idx   (.indexOf parts "subscriptions")]
-          (when (and (not= idx -1) (< (inc idx) (count parts)))
-            (str/join "/" (subvec parts (inc idx))))))))
+        (some-> (re-find #"/subscriptions/(.+?)/?$" href) second))))
+
+(defn- subscription-links-from-body
+  [body]
+  (or (get-in body [:_links :subscriptions])
+      (get-in body [:links :subscriptions])
+      (get-in body ["_links" "subscriptions"])
+      (get-in body ["_links" :subscriptions])))
 
 (defn- subscription-list-entries
   "Mm1 GET /subscriptions returns {_links: {subscriptions: [{href, subscriptionType}]}}.
-   Tolerate CIMI-style collections as well."
+   Tolerate CIMI-style collections as well. Never treat a plain map as an entry list."
   [body]
   (cond
     (vector? body) body
-    (sequential? (:items body)) (:items body)
-    (sequential? (:resources body)) (:resources body)
-    (sequential? (get-in body [:_links :subscriptions])) (get-in body [:_links :subscriptions])
+    (sequential? (:items body)) (vec (:items body))
+    (sequential? (:resources body)) (vec (:resources body))
+    (sequential? (subscription-links-from-body body)) (vec (subscription-links-from-body body))
     :else []))
 
 (defn- link-list-entry?
   "True when the entry is a link stub without full subscription fields."
   [entry]
   (and (map? entry)
-       (string? (:href entry))
-       (nil? (:callbackUri entry))
-       (nil? (:callback-uri entry))))
+       (string? (or (:href entry) (get entry "href")))
+       (nil? (or (:callbackUri entry) (:callback-uri entry)))))
+
+(defn- link-entry->partial-subscription
+  "Enough fields to render a row before detail hydrate completes."
+  [entry]
+  (let [href (or (:href entry) (get entry "href"))
+        stype (or (:subscriptionType entry)
+                  (:subscription-type entry)
+                  (get entry "subscriptionType"))]
+    {:id               (subscription-id-from-link (assoc entry :href href))
+     :subscriptionType stype
+     :callbackUri      nil
+     :owner            nil
+     :active           nil
+     :href             href}))
 
 (defn- ui-subscription->api
   [{:keys [subscription-type callback-uri app-instance-filter app-lcm-op-occ-filter]}]
@@ -128,10 +151,12 @@
   (fn [{:keys [entries on-success on-error]}]
     (let [fetch-one
           (fn [entry]
-            (let [id  (subscription-id-from-link entry)
-                  url (mec-subscriptions-url id)]
-              (-> (js/fetch url #js {:credentials "same-origin"
-                                     :method      "GET"})
+            (let [href (or (:href entry)
+                           (get entry "href")
+                           (some-> (subscription-id-from-link entry) mec-subscriptions-url))
+                  id   (or (subscription-id-from-link entry) href)]
+              (-> (js/fetch href #js {:credentials "same-origin"
+                                      :method      "GET"})
                   (.then (fn [resp]
                            (-> (.text resp)
                                (.then (fn [text]
@@ -325,33 +350,38 @@
      (if (instance? js/Error subscriptions)
        {:db       (assoc db ::spec/subscriptions [] ::spec/loading-subscriptions? false)
         :dispatch (error-message "failure getting MEC subscriptions" subscriptions)}
-       {:db (assoc db
-              ::spec/subscriptions (mapv normalize-subscription (or subscriptions []))
-              ::spec/loading-subscriptions? false)})))
+       (let [rows (->> (cond
+                         (sequential? subscriptions) subscriptions
+                         (map? subscriptions) (subscription-list-entries subscriptions)
+                         :else [])
+                       (keep normalize-subscription)
+                       vec)]
+         {:db (assoc db
+                ::spec/subscriptions rows
+                ::spec/loading-subscriptions? false)}))))
 
  (reg-event-fx
    ::get-subscriptions
    (fn [{db :db} _]
-     (let [fail!     (fn [payload]
-                       (dispatch [::messages-events/add
-                                  {:header  (cond-> "failure getting MEC subscriptions"
-                                                    (:status payload) (str " (" (:status payload) ")"))
-                                   :content (or (get-in payload [:body :message])
-                                                (get-in payload [:body :detail])
-                                                "Unable to retrieve MEC subscriptions.")
-                                   :type    :error}])
-                       (dispatch [::set-subscriptions []]))
-           on-list   (fn [{:keys [body]}]
-                       (let [entries (subscription-list-entries body)]
-                         (cond
-                           (empty? entries)
-                           (dispatch [::set-subscriptions []])
-
-                           (every? link-list-entry? entries)
-                           (dispatch [::hydrate-subscriptions entries])
-
-                           :else
-                           (dispatch [::set-subscriptions entries]))))]
+     (let [fail!   (fn [payload]
+                     (dispatch [::messages-events/add
+                                {:header  (cond-> "failure getting MEC subscriptions"
+                                                  (:status payload) (str " (" (:status payload) ")"))
+                                 :content (or (get-in payload [:body :message])
+                                              (get-in payload [:body :detail])
+                                              "Unable to retrieve MEC subscriptions.")
+                                 :type    :error}])
+                     (dispatch [::set-subscriptions []]))
+           on-list (fn [{:keys [body]}]
+                     (let [entries (subscription-list-entries body)]
+                       (if (empty? entries)
+                         (dispatch [::set-subscriptions []])
+                         (do
+                           ;; Show types/ids immediately from the link list (avoids blank ghost row).
+                           (dispatch [::set-subscriptions
+                                      (mapv link-entry->partial-subscription entries)])
+                           (when (every? link-list-entry? entries)
+                             (dispatch [::hydrate-subscriptions entries]))))))]
        {:db                         (assoc db ::spec/loading-subscriptions? true)
         ::mec-subscriptions-request {:method     "GET"
                                      :on-success on-list
@@ -369,14 +399,8 @@
                                   :content (or (get-in % [:body :message])
                                                "Unable to retrieve MEC subscription details.")
                                   :type    :error}])
-                      (dispatch [::set-subscriptions
-                                 (mapv (fn [entry]
-                                         {:id                (subscription-id-from-link entry)
-                                          :subscriptionType  (:subscriptionType entry)
-                                          :callbackUri       nil
-                                          :owner             nil
-                                          :active            nil})
-                                       entries)]))}}))
+                      ;; Keep partial rows already shown from the link list.
+                      nil)}}))
 
  (reg-event-fx
    ::add-subscription

@@ -19,9 +19,9 @@
 (defn- mec-subscriptions-url
   ([] (str @cimi-api-fx/NUVLA_URL "/api/mec/mm1/app_lcm/v1/subscriptions"))
   ([subscription-id]
-   (str (mec-subscriptions-url)
-        "/"
-        (js/encodeURIComponent subscription-id))))
+   ;; Ids are "subscription/<uuid>"; keep the slash as two path segments
+   ;; (do not encodeURIComponent the whole id — %2F breaks the route).
+   (str (mec-subscriptions-url) "/" subscription-id)))
 
 (defn- response-text->edn
   [text]
@@ -42,6 +42,35 @@
    :updated            (:updated subscription)
    :owner              (:owner subscription)
    :active             (:active subscription)})
+
+(defn- subscription-id-from-link
+  "Extract API subscription id (subscription/<uuid>) from a link-list entry or resource."
+  [{:keys [href id] :as _entry}]
+  (or id
+      (when (and (string? href) (not (str/blank? href)))
+        (let [parts (vec (str/split href #"/"))
+              idx   (.indexOf parts "subscriptions")]
+          (when (and (not= idx -1) (< (inc idx) (count parts)))
+            (str/join "/" (subvec parts (inc idx))))))))
+
+(defn- subscription-list-entries
+  "Mm1 GET /subscriptions returns {_links: {subscriptions: [{href, subscriptionType}]}}.
+   Tolerate CIMI-style collections as well."
+  [body]
+  (cond
+    (vector? body) body
+    (sequential? (:items body)) (:items body)
+    (sequential? (:resources body)) (:resources body)
+    (sequential? (get-in body [:_links :subscriptions])) (get-in body [:_links :subscriptions])
+    :else []))
+
+(defn- link-list-entry?
+  "True when the entry is a link stub without full subscription fields."
+  [entry]
+  (and (map? entry)
+       (string? (:href entry))
+       (nil? (:callbackUri entry))
+       (nil? (:callback-uri entry))))
 
 (defn- ui-subscription->api
   [{:keys [subscription-type callback-uri app-instance-filter app-lcm-op-occ-filter]}]
@@ -93,6 +122,31 @@
           (.catch (fn [e]
                     (on-error {:status nil
                                :body   {:message (.-message e)}})))))))
+
+(reg-fx
+  ::mec-subscriptions-hydrate
+  (fn [{:keys [entries on-success on-error]}]
+    (let [fetch-one (fn [entry]
+                      (let [id  (subscription-id-from-link entry)
+                            url (mec-subscriptions-url id)]
+                        (-> (js/fetch url #js {:credentials "same-origin"
+                                               :method      "GET"})
+                            (.then (fn [resp]
+                                     (-> (.text resp)
+                                         (.then (fn [text]
+                                                  (when-not (.-ok resp)
+                                                    (throw (js/Error.
+                                                             (str "GET subscription " id
+                                                                  " failed (" (.-status resp) ")"))))
+                                                  (or (response-text->edn text) {}))))))))]
+      (if (seq entries)
+        (-> (js/Promise.all (into-array (mapv fetch-one entries)))
+            (.then (fn [results]
+                     (on-success (vec (array-seq results)))))
+            (.catch (fn [e]
+                      (on-error {:status nil
+                                 :body   {:message (.-message e)}}))))
+        (on-success [])))))
 
  (reg-event-fx
    ::init
@@ -271,29 +325,57 @@
        {:db       (assoc db ::spec/subscriptions [] ::spec/loading-subscriptions? false)
         :dispatch (error-message "failure getting MEC subscriptions" subscriptions)}
        {:db (assoc db
-              ::spec/subscriptions (mapv normalize-subscription
-                                         (or (:items subscriptions)
-                                             (:resources subscriptions)
-                                             subscriptions
-                                             []))
+              ::spec/subscriptions (mapv normalize-subscription (or subscriptions []))
               ::spec/loading-subscriptions? false)})))
 
  (reg-event-fx
    ::get-subscriptions
    (fn [{db :db} _]
-    (let [on-success #(dispatch [::set-subscriptions (:body %)])
-          on-error   #(do
-                        (dispatch [::messages-events/add
-                                   {:header  (cond-> "failure getting MEC subscriptions"
-                                                     (:status %) (str " (" (:status %) ")"))
-                                    :content (or (:message (:body %))
-                                                 "Unable to retrieve MEC subscriptions.")
-                                    :type    :error}])
-                        (dispatch [::set-subscriptions []]))]
-      {:db                        (assoc db ::spec/loading-subscriptions? true)
-       ::mec-subscriptions-request {:method     "GET"
-                                    :on-success on-success
-                                    :on-error   on-error}})))
+     (let [fail!     (fn [payload]
+                       (dispatch [::messages-events/add
+                                  {:header  (cond-> "failure getting MEC subscriptions"
+                                                    (:status payload) (str " (" (:status payload) ")"))
+                                   :content (or (get-in payload [:body :message])
+                                                (get-in payload [:body :detail])
+                                                "Unable to retrieve MEC subscriptions.")
+                                   :type    :error}])
+                       (dispatch [::set-subscriptions []]))
+           on-list   (fn [{:keys [body]}]
+                       (let [entries (subscription-list-entries body)]
+                         (cond
+                           (empty? entries)
+                           (dispatch [::set-subscriptions []])
+
+                           (every? link-list-entry? entries)
+                           (dispatch [::hydrate-subscriptions entries])
+
+                           :else
+                           (dispatch [::set-subscriptions entries]))))]
+       {:db                         (assoc db ::spec/loading-subscriptions? true)
+        ::mec-subscriptions-request {:method     "GET"
+                                     :on-success on-list
+                                     :on-error   fail!}})))
+
+ (reg-event-fx
+   ::hydrate-subscriptions
+   (fn [_ [_ entries]]
+     {::mec-subscriptions-hydrate
+      {:entries    entries
+       :on-success #(dispatch [::set-subscriptions %])
+       :on-error   #(do
+                      (dispatch [::messages-events/add
+                                 {:header  "failure loading MEC subscription details"
+                                  :content (or (get-in % [:body :message])
+                                               "Unable to retrieve MEC subscription details.")
+                                  :type    :error}])
+                      (dispatch [::set-subscriptions
+                                 (mapv (fn [entry]
+                                         {:id                (subscription-id-from-link entry)
+                                          :subscriptionType  (:subscriptionType entry)
+                                          :callbackUri       nil
+                                          :owner             nil
+                                          :active            nil})
+                                       entries)]))}}))
 
  (reg-event-fx
    ::add-subscription
